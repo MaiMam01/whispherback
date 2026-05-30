@@ -1,0 +1,10 @@
+{
+  "name": "whispherback-admin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WhisperBack admin dashboard — Phase 2 stub",
+  "scripts": {
+    "dev": "echo Run: npx create-next-app@latest . --typescript --app",
+    "build": "echo Phase 2 — not implemented"
+  }
+}

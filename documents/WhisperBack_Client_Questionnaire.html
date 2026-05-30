@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WhisperBack — Client Clarification Questionnaire</title>
+<style>
+  :root {
+    --brand:       #4C3A8A;
+    --brand-dark:  #2E2460;
+    --brand-soft:  #F3F0FB;
+    --accent:      #C9A34B;
+    --ink:         #1E1A2E;
+    --ink-2:       #3A354C;
+    --muted:       #6B6782;
+    --line:        #E4DEF1;
+    --line-2:      #F0ECF8;
+    --bg:          #FFFFFF;
+    --page-bg:     #EDEAF3;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--page-bg);
+    color: var(--ink);
+    font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    font-size: 12pt;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  p { margin: 0 0 8px 0; }
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--ink-2); }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 20px auto;
+    background: var(--bg);
+    padding: 22mm 20mm 22mm 20mm;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* =========================================================
+     COVER PAGE
+     ========================================================= */
+  .cover {
+    background: linear-gradient(165deg, #2E2460 0%, #4C3A8A 60%, #6B56B8 100%);
+    color: #fff;
+    padding: 28mm 22mm;
+  }
+  .cover .logo {
+    width: 70px;
+    height: 70px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.30);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30pt; font-weight: 700;
+  }
+  .cover .eyebrow {
+    margin-top: 32mm;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    font-size: 10pt;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .cover h1 {
+    font-size: 44pt;
+    line-height: 1.05;
+    margin: 14px 0 18px 0;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .cover .tagline {
+    font-size: 15pt;
+    font-weight: 400;
+    line-height: 1.5;
+    opacity: 0.92;
+    max-width: 150mm;
+    margin: 0 0 28mm 0;
+  }
+
+  .cover .intro {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 12px;
+    padding: 18px 22px;
+    max-width: 160mm;
+    font-size: 11.5pt;
+    line-height: 1.7;
+  }
+
+  .cover .meta {
+    margin-top: 22mm;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px 28px;
+    max-width: 160mm;
+  }
+  .cover .meta .label {
+    font-size: 8.5pt;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 4px;
+  }
+  .cover .meta .value {
+    font-size: 12pt;
+    font-weight: 500;
+  }
+  .cover .meta .cell {
+    border-top: 1px solid rgba(255,255,255,0.28);
+    padding-top: 10px;
+  }
+
+  .cover .foot {
+    position: absolute;
+    bottom: 18mm; left: 22mm; right: 22mm;
+    display: flex; justify-content: space-between;
+    font-size: 9.5pt;
+    opacity: 0.75;
+    border-top: 1px solid rgba(255,255,255,0.25);
+    padding-top: 10px;
+  }
+
+  /* =========================================================
+     CONTENT PAGES
+     ========================================================= */
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--brand);
+  }
+  .head .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700;
+    color: var(--brand-dark);
+    letter-spacing: 0.3px;
+    font-size: 11.5pt;
+  }
+  .head .brand .mark {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--brand);
+    color: #fff;
+    font-weight: 700; font-size: 11pt;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .head .page-tag {
+    font-size: 9pt;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+  }
+
+  .intro-note {
+    background: var(--brand-soft);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 11pt;
+    color: var(--brand-dark);
+    line-height: 1.65;
+    margin-bottom: 22px;
+  }
+
+  h2.section {
+    font-size: 14pt;
+    color: var(--brand-dark);
+    margin: 22px 0 4px 0;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .section-sub {
+    font-size: 10.5pt;
+    color: var(--muted);
+    margin: 0 0 14px 0;
+  }
+  .section-rule {
+    height: 3px;
+    width: 44px;
+    background: var(--accent);
+    margin-bottom: 12px;
+    border-radius: 2px;
+  }
+
+  /* Question block — single column, very readable */
+  .q {
+    padding: 14px 0 16px 0;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .q:last-child { border-bottom: none; }
+
+  .q-head {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+  .q-num {
+    flex: 0 0 auto;
+    min-width: 34px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background: var(--brand);
+    color: #fff;
+    font-weight: 700;
+    font-size: 10pt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.5px;
+  }
+  .q-text {
+    font-size: 12pt;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.45;
+    flex: 1;
+  }
+
+  .q-hint {
+    margin-left: 46px;
+    color: var(--muted);
+    font-size: 10.5pt;
+    line-height: 1.55;
+    margin-bottom: 8px;
+  }
+  .q-hint::before {
+    content: "Why we ask: ";
+    color: var(--brand);
+    font-weight: 600;
+  }
+
+  .q-answer {
+    margin-left: 46px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #FBFAFE;
+    padding: 10px 14px;
+    min-height: 42px;
+    font-size: 10.5pt;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .q-answer::before {
+    content: "Your answer:";
+    display: block;
+    font-style: normal;
+    font-size: 8.5pt;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--brand);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  /* Callouts / sign-off */
+  .callout {
+    background: var(--brand-soft);
+    border-left: 4px solid var(--brand);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 18px 0;
+    font-size: 11pt;
+    color: var(--brand-dark);
+    line-height: 1.6;
+  }
+
+  .sign {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .sign .box {
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 16px 16px 12px 16px;
+    background: #FBFAFE;
+  }
+  .sign .box .lbl {
+    font-size: 8.5pt;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    margin-bottom: 40px;
+    font-weight: 600;
+  }
+  .sign .box .line {
+    border-top: 1.5px solid var(--ink-2);
+    padding-top: 6px;
+    font-size: 9.5pt;
+    color: var(--muted);
+  }
+
+  .foot-note {
+    position: absolute;
+    bottom: 10mm; left: 20mm; right: 20mm;
+    display: flex; justify-content: space-between;
+    font-size: 9pt;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 8px;
+  }
+
+  /* Print tuning */
+  @media print {
+    html, body { background: #fff; }
+    .page {
+      margin: 0;
+      box-shadow: none;
+      width: auto;
+      min-height: auto;
+    }
+    .page { page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =============================================================
+     PAGE 1 — COVER
+     ============================================================= -->
+<section class="page cover">
+  <div class="logo">W</div>
+
+  <div class="eyebrow">Discovery · Client Questionnaire</div>
+  <h1>WhisperBack</h1>
+  <p class="tagline">
+    A short, clear set of questions to finalise the product scope
+    before we begin design and development.
+  </p>
+
+  <div class="intro">
+    Thank you for sharing the <strong>WhisperBack Features Document (v1.0)</strong>.
+    Before we lock the scope and begin the build, we need your input on a few
+    items that are either open in the specification, have trade-offs, or depend
+    on your product preferences.
+    <br/><br/>
+    Your answers will form <strong>Spec v1.1</strong> and directly shape the
+    design, estimate, and sprint plan.
+  </div>
+
+  <div class="meta">
+    <div class="cell">
+      <div class="label">Prepared For</div>
+      <div class="value">WhisperBack — Product Owner</div>
+    </div>
+    <div class="cell">
+      <div class="label">Prepared By</div>
+      <div class="value">FOUS Ventures — Engineering</div>
+    </div>
+    <div class="cell">
+      <div class="label">Document</div>
+      <div class="value">Clarification Questionnaire · v1.0</div>
+    </div>
+    <div class="cell">
+      <div class="label">Date</div>
+      <div class="value">April 2026</div>
+    </div>
+    <div class="cell">
+      <div class="label">Reference</div>
+      <div class="value">WhisperBack Features Doc · 31-01-2026</div>
+    </div>
+    <div class="cell">
+      <div class="label">Expected Turnaround</div>
+      <div class="value">5 business days</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>WhisperBack · Your Personalized Audio Whisperer</span>
+    <span>Page 1 of 4</span>
+  </div>
+</section>
+
+
+<!-- =============================================================
+     PAGE 2 — Scope & Limits
+     ============================================================= -->
+<section class="page">
+  <div class="head">
+    <div class="brand"><span class="mark">W</span> WhisperBack · Questionnaire</div>
+    <div class="page-tag">Section A · Scope &amp; Limits</div>
+  </div>
+
+  <div class="intro-note">
+    <strong>How to answer:</strong> Write your reply in the “Your answer” box under
+    each question, or reply inline by email — whichever is easier for you. Short
+    answers are fine. Where a recommended default is shown in the hint, a simple
+    <em>“Agreed”</em> is enough.
+  </div>
+
+  <h2 class="section">A · Branding &amp; Platforms</h2>
+  <div class="section-rule"></div>
+  <p class="section-sub">Foundational decisions that affect the UI, stores, and framework choice.</p>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">A1</div>
+      <div class="q-text">Which brand spelling is correct — WhisperBack or WhispherBack?</div>
+    </div>
+    <div class="q-hint">Both spellings appear in the document. We need one final spelling to use across the app, stores, and domain.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">A2</div>
+      <div class="q-text">Can you share the final logo, brand colour (hex codes), and typography?</div>
+    </div>
+    <div class="q-hint">The document references a colour swatch image. We need the exact hex values and any font files or licences.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">A3</div>
+      <div class="q-text">Target platforms — Android, iOS, or both? Any minimum OS version?</div>
+    </div>
+    <div class="q-hint">Platform choice affects the framework (native vs Flutter vs React Native) and how background audio is handled.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">A4</div>
+      <div class="q-text">Primary target audience and launch regions?</div>
+    </div>
+    <div class="q-hint">This drives localisation, right-to-left language support, and default prayer-time settings.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <h2 class="section">B · Open Limits from the Spec</h2>
+  <div class="section-rule"></div>
+  <p class="section-sub">The current document left a few numeric limits open. Please confirm.</p>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">B1</div>
+      <div class="q-text">Maximum number of playlists for the Premium plan? (Basic is 20)</div>
+    </div>
+    <div class="q-hint">We suggest 100 for Premium. Please confirm, or set your own number.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">B2</div>
+      <div class="q-text">Maximum clips per playlist? (Document says 20–50, “or more?”)</div>
+    </div>
+    <div class="q-hint">Affects UI pagination and memory use. Recommended: 50.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">B3</div>
+      <div class="q-text">Maximum scheduled playlists active at the same time? (Document says 10–20)</div>
+    </div>
+    <div class="q-hint">A higher limit increases risk of time conflicts and battery use. Recommended: 10.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="foot-note">
+    <span>WhisperBack · Client Clarification Questionnaire</span>
+    <span>Page 2 of 4</span>
+  </div>
+</section>
+
+
+<!-- =============================================================
+     PAGE 3 — Audio, Scheduling, Sleep
+     ============================================================= -->
+<section class="page">
+  <div class="head">
+    <div class="brand"><span class="mark">W</span> WhisperBack · Questionnaire</div>
+    <div class="page-tag">Section B · Audio · Scheduling · Sleep Mode</div>
+  </div>
+
+  <h2 class="section">C · Accounts &amp; Monetisation</h2>
+  <div class="section-rule"></div>
+  <p class="section-sub">How users sign in and how Basic vs Premium is sold.</p>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">C1</div>
+      <div class="q-text">Is login optional or required to use the app?</div>
+    </div>
+    <div class="q-hint">Google login is mentioned. Can users use the app fully offline without creating an account?</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">C2</div>
+      <div class="q-text">What is the monetisation model — free, one-time purchase, or subscription?</div>
+    </div>
+    <div class="q-hint">This affects in-app purchase integration, receipt validation, and cloud-storage budgeting.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">C3</div>
+      <div class="q-text">Which features are Premium-only, beyond cloud sync?</div>
+    </div>
+    <div class="q-hint">For example: higher playlist count, Prayer Mode, web access, higher recording quality.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <h2 class="section">D · Audio &amp; Recording</h2>
+  <div class="section-rule"></div>
+  <p class="section-sub">The document says recording quality “should be good” — we need concrete numbers.</p>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">D1</div>
+      <div class="q-text">What recording quality should the in-app recorder produce?</div>
+    </div>
+    <div class="q-hint">Recommended: AAC, 44.1 kHz, 128 kbps, mono. Please confirm or request higher.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">D2</div>
+      <div class="q-text">Maximum clip length and file size?</div>
+    </div>
+    <div class="q-hint">For example, 5 minutes or 10 MB per clip. Needed for storage and upload limits.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">D3</div>
+      <div class="q-text">Which import formats should be supported? (MP3, M4A, WAV, OGG…)</div>
+    </div>
+    <div class="q-hint">Also: should we support DRM-protected files? (We recommend: no.)</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <h2 class="section">E · Scheduling &amp; Sleep Mode</h2>
+  <div class="section-rule"></div>
+  <p class="section-sub">Background playback and Prayer Mode have important trade-offs.</p>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">E1</div>
+      <div class="q-text">If a scheduled clip’s time arrives during a phone call or other playback, should we skip it, queue it, or delay it?</div>
+    </div>
+    <div class="q-hint">Affects audio-focus logic and user expectation. Recommended: skip with a small notification.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">E2</div>
+      <div class="q-text">On iOS, exact-time background playback is restricted. Is a ±1–2 minute drift acceptable?</div>
+    </div>
+    <div class="q-hint">Strict exact timing on iOS requires the user to tap a notification — this changes the UX.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">E3</div>
+      <div class="q-text">Which prayer-time calculation method should be the default? (MWL, ISNA, Umm al-Qura, Karachi, Egyptian…)</div>
+    </div>
+    <div class="q-hint">Users should also be able to change it in settings, along with the madhab for Asr.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">E4</div>
+      <div class="q-text">What should happen if the internet is unavailable at prayer time?</div>
+    </div>
+    <div class="q-hint">Recommended: bundle offline prayer-time tables so Prayer Mode still works. Please confirm.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="foot-note">
+    <span>WhisperBack · Client Clarification Questionnaire</span>
+    <span>Page 3 of 4</span>
+  </div>
+</section>
+
+
+<!-- =============================================================
+     PAGE 4 — Cloud, UX, Delivery, Sign-off
+     ============================================================= -->
+<section class="page">
+  <div class="head">
+    <div class="brand"><span class="mark">W</span> WhisperBack · Questionnaire</div>
+    <div class="page-tag">Section C · Cloud · UX · Delivery</div>
+  </div>
+
+  <h2 class="section">F · Cloud Sync &amp; Website</h2>
+  <div class="section-rule"></div>
+  <p class="section-sub">Premium users can upload playlists to the cloud and share via a website.</p>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">F1</div>
+      <div class="q-text">On the website, should visitors download playlists, only stream them, or both?</div>
+    </div>
+    <div class="q-hint">This affects storage costs, DRM needs, and privacy rules.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">F2</div>
+      <div class="q-text">Are shared playlists public by default, private by default, or user-configurable?</div>
+    </div>
+    <div class="q-hint">The spec says “for others to download or play” — please confirm the visibility model.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">F3</div>
+      <div class="q-text">Preferred cloud provider or region? Any data residency requirements such as GDPR?</div>
+    </div>
+    <div class="q-hint">We recommend AWS or Firebase. Needed for cost planning and compliance.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <h2 class="section">G · UX, Accessibility &amp; Localisation</h2>
+  <div class="section-rule"></div>
+  <p class="section-sub">Icon-only UI needs care for accessibility and non-English markets.</p>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">G1</div>
+      <div class="q-text">Which languages should version 1 ship in? Is right-to-left (Arabic / Urdu) needed?</div>
+    </div>
+    <div class="q-hint">Prayer Mode strongly suggests RTL markets — please confirm.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">G2</div>
+      <div class="q-text">The UI is icon-only. Shall we add accessibility labels and an optional “show labels” mode?</div>
+    </div>
+    <div class="q-hint">Strongly recommended — it also helps pass app-store reviews.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">G3</div>
+      <div class="q-text">Should the app support dark mode, or only the current purple theme?</div>
+    </div>
+    <div class="q-hint">Low cost if designed in from the start; expensive to retrofit later.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <h2 class="section">H · Delivery &amp; Scope</h2>
+  <div class="section-rule"></div>
+  <p class="section-sub">Timeline, accounts, and the proposed v1 scope.</p>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">H1</div>
+      <div class="q-text">What is your target launch date and any key milestones such as beta or store submission?</div>
+    </div>
+    <div class="q-hint">We will align the sprint plan and the MVP scope with your dates.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">H2</div>
+      <div class="q-text">Proposed v1.0 scope: Active / Inactive · Playlists · Manual playback · Scheduling · Shuffle · basic Sleep Mode — local only. Is this acceptable, or do you want Prayer Mode and Cloud Sync in v1 as well?</div>
+    </div>
+    <div class="q-hint">Phasing keeps v1 lean and lets us prove background-audio reliability before adding complexity.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="q">
+    <div class="q-head">
+      <div class="q-num">H3</div>
+      <div class="q-text">Any additional features you have in mind that are not in the current document?</div>
+    </div>
+    <div class="q-hint">Much better to surface new ideas now than during QA.</div>
+    <div class="q-answer"></div>
+  </div>
+
+  <div class="callout">
+    <strong>Next step.</strong> Once we receive your answers, we will issue
+    <em>WhisperBack Spec v1.1</em> with a locked scope, data model, a playback
+    state diagram, wireframes, and a fixed-price estimate with timeline.
+    Expected turnaround from our side: <strong>5 working days</strong> after your reply.
+  </div>
+
+  <div class="sign">
+    <div class="box">
+      <div class="lbl">Client — Approved By</div>
+      <div class="line">Name &nbsp;·&nbsp; Signature &nbsp;·&nbsp; Date</div>
+    </div>
+    <div class="box">
+      <div class="lbl">FOUS Ventures — Prepared By</div>
+      <div class="line">Name &nbsp;·&nbsp; Signature &nbsp;·&nbsp; Date</div>
+    </div>
+  </div>
+
+  <div class="foot-note">
+    <span>WhisperBack · Client Clarification Questionnaire</span>
+    <span>Page 4 of 4</span>
+  </div>
+</section>
+
+</body>
+</html>

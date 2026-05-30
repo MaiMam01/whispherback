@@ -1,0 +1,9 @@
+{
+  "name": "whispherback-infra",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WhisperBack AWS CDK — Phase 2 stub",
+  "scripts": {
+    "cdk": "echo Phase 2 — run cdk init app --language typescript"
+  }
+}

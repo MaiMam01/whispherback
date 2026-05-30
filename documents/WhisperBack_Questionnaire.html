@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WhisperBack — Product Questionnaire</title>
+<style>
+  :root {
+    --brand:        #4C3A8A;
+    --brand-2:      #6B56B8;
+    --brand-dark:   #2A2057;
+    --brand-deep:   #1A1240;
+    --brand-soft:   #F4F1FB;
+    --brand-soft-2: #EDE7F8;
+    --accent:       #C9A34B;
+    --accent-soft:  #F7EFD8;
+    --ink:          #15122B;
+    --ink-2:        #3A354C;
+    --muted:        #6B6782;
+    --line:         #E6E0F2;
+    --line-2:       #F1ECF8;
+    --bg:           #FFFFFF;
+    --page-bg:      #ECE8F2;
+  }
+
+  * { box-sizing: border-box; }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--page-bg);
+    color: var(--ink);
+    font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  p { margin: 0 0 8px 0; }
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--ink-2); font-style: italic; }
+
+  .page {
+    width: 210mm;
+    height: 297mm;
+    margin: 14px auto;
+    background: var(--bg);
+    padding: 17mm 17mm 15mm 17mm;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.10);
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* =========================================================
+     COVER PAGE
+     ========================================================= */
+  .cover {
+    background:
+      radial-gradient(circle at 88% 12%, rgba(201,163,75,0.20), transparent 42%),
+      radial-gradient(circle at 8% 95%,  rgba(255,255,255,0.10), transparent 50%),
+      linear-gradient(160deg, #150F38 0%, #2A1F60 30%, #4C3A8A 70%, #6B56B8 100%);
+    color: #fff;
+    padding: 22mm 20mm 20mm 20mm;
+  }
+
+  .cover .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cover .logo {
+    width: 60px; height: 60px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.34);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24pt; font-weight: 700;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.22);
+    letter-spacing: -1px;
+  }
+  .cover .top .right {
+    text-align: right;
+    font-size: 8.5pt;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+  .cover .top .right strong {
+    display: block;
+    color: var(--accent);
+    font-size: 9.5pt;
+    margin-bottom: 3px;
+    letter-spacing: 4px;
+  }
+
+  .cover .eyebrow {
+    margin-top: 22mm;
+    text-transform: uppercase;
+    letter-spacing: 6px;
+    font-size: 9.5pt;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .cover h1 {
+    font-size: 44pt;
+    line-height: 0.98;
+    margin: 12px 0 14px 0;
+    font-weight: 700;
+    letter-spacing: -1.2px;
+  }
+  .cover .tagline {
+    font-size: 13pt;
+    font-weight: 400;
+    line-height: 1.5;
+    opacity: 0.92;
+    max-width: 168mm;
+    margin: 0 0 10mm 0;
+  }
+
+  .cover .intro {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 14px;
+    padding: 14px 20px;
+    max-width: 170mm;
+    font-size: 10.5pt;
+    line-height: 1.65;
+  }
+
+  .cover .meta {
+    margin-top: 9mm;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px 22px;
+    max-width: 170mm;
+  }
+  .cover .meta .label {
+    font-size: 7.5pt;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    opacity: 0.72;
+    margin-bottom: 3px;
+  }
+  .cover .meta .value {
+    font-size: 10.5pt;
+    font-weight: 500;
+  }
+  .cover .meta .cell {
+    border-top: 1px solid rgba(255,255,255,0.30);
+    padding-top: 7px;
+  }
+
+  /* Tracks: 7 sections, 4 + 3 layout */
+  .cover .tracks-title {
+    margin-top: 9mm;
+    font-size: 8.5pt;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .cover .tracks {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-width: 170mm;
+  }
+  .cover .track {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 9px;
+    padding: 8px 10px;
+  }
+  .cover .track .n {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 8pt;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+  }
+  .cover .track .t {
+    font-size: 9.5pt;
+    font-weight: 600;
+    margin-top: 2px;
+    line-height: 1.25;
+  }
+
+  .cover .foot {
+    position: absolute;
+    bottom: 12mm; left: 20mm; right: 20mm;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 8.5pt;
+    opacity: 0.78;
+    border-top: 1px solid rgba(255,255,255,0.25);
+    padding-top: 9px;
+  }
+
+  /* =========================================================
+     CONTENT PAGES
+     ========================================================= */
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 9px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid var(--brand);
+  }
+  .head .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700;
+    color: var(--brand-dark);
+    font-size: 10.5pt;
+  }
+  .head .brand .mark {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+    color: #fff;
+    font-weight: 700; font-size: 10pt;
+    display: flex; align-items: center; justify-content: center;
+    letter-spacing: -0.5px;
+  }
+  .head .brand .sep {
+    color: var(--line);
+    font-weight: 400;
+    margin: 0 2px;
+  }
+  .head .brand .doc {
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+
+  .head .pills {
+    display: flex; gap: 5px;
+  }
+  .head .pills .pill {
+    font-size: 7.5pt;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 2px 8px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .head .pills .pill.on {
+    color: #fff;
+    background: var(--brand);
+    border-color: var(--brand);
+  }
+
+  .note {
+    background: linear-gradient(180deg, var(--brand-soft) 0%, var(--brand-soft-2) 100%);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 0 0 12px 0;
+    font-size: 9.5pt;
+    color: var(--brand-dark);
+    line-height: 1.55;
+  }
+
+  /* Section block */
+  .section {
+    margin-bottom: 14px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .section .s-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+  .section .s-num {
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+    padding: 3px 10px;
+    border-radius: 100px;
+    letter-spacing: 1.6px;
+    box-shadow: 0 1px 3px rgba(42,32,87,0.25);
+  }
+  .section .s-name {
+    font-size: 12.5pt;
+    font-weight: 700;
+    color: var(--brand-dark);
+    letter-spacing: 0.1px;
+  }
+  .section .s-sub {
+    font-size: 9pt;
+    color: var(--muted);
+    margin: 2px 0 8px 0;
+    font-style: italic;
+  }
+  .section .s-rule {
+    height: 2px;
+    width: 32px;
+    background: var(--accent);
+    margin-bottom: 8px;
+    border-radius: 2px;
+  }
+
+  .qlist {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px 11px;
+  }
+  .qlist.single { grid-template-columns: 1fr; }
+
+  .q {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    padding: 8px 11px 8px 10px;
+    font-size: 9.6pt;
+    line-height: 1.5;
+    color: var(--ink-2);
+    background: #FBFAFE;
+    border: 1px solid var(--line-2);
+    border-left: 2.5px solid var(--brand-soft-2);
+    border-radius: 7px;
+  }
+  .q .num {
+    flex: 0 0 auto;
+    min-width: 28px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 5px;
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    font-weight: 700;
+    font-size: 8.5pt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.4px;
+    margin-top: 1px;
+  }
+  .q .text { flex: 1; }
+  .q .text strong { color: var(--ink); font-weight: 600; }
+
+  .closing {
+    background: linear-gradient(135deg, #2A1F60 0%, #4C3A8A 65%, #6B56B8 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    font-size: 10pt;
+    line-height: 1.6;
+    box-shadow: 0 4px 14px rgba(42,32,87,0.18);
+    position: relative;
+    overflow: hidden;
+  }
+  .closing::after {
+    content: "";
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,163,75,0.18), transparent 70%);
+    pointer-events: none;
+  }
+  .closing strong { color: var(--accent); }
+  .closing em { color: rgba(255,255,255,0.92); font-style: italic; }
+  .closing .label {
+    display: inline-block;
+    font-size: 7.5pt;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  .foot-note {
+    position: absolute;
+    bottom: 8mm; left: 17mm; right: 17mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 8pt;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 6px;
+  }
+  .foot-note .progress {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .foot-note .progress .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--line);
+  }
+  .foot-note .progress .dot.on {
+    background: var(--brand);
+  }
+
+  @media print {
+    html, body { background: #fff; }
+    .page {
+      margin: 0;
+      box-shadow: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- =============================================================
+     PAGE 1 — COVER
+     ============================================================= -->
+<section class="page cover">
+
+  <div class="top">
+    <div class="logo">W</div>
+    <div class="right">
+      <strong>FOUS Ventures</strong>
+      Engineering · Discovery
+    </div>
+  </div>
+
+  <div class="eyebrow">Product Discovery Questionnaire</div>
+  <h1>WhisperBack</h1>
+  <p class="tagline">
+    A short set of plain-language questions about how the app should
+    look, feel, and behave — so we can finalise the plan before
+    design and development begin.
+  </p>
+
+  <div class="intro">
+    After going through your <strong>WhisperBack Features Document (v1.0)</strong>,
+    we have prepared the questions whose answers will shape <strong>how the app
+    feels, what it costs, and how long it takes to build</strong>. There are
+    no right or wrong answers — pick what feels right for your users, and
+    we will turn it into a clear plan.
+  </div>
+
+  <div class="meta">
+    <div class="cell">
+      <div class="label">Reference</div>
+      <div class="value">Features Doc · 31-01-2026</div>
+    </div>
+    <div class="cell">
+      <div class="label">Document</div>
+      <div class="value">Questionnaire · v1.0</div>
+    </div>
+    <div class="cell">
+      <div class="label">Date</div>
+      <div class="value">April 2026</div>
+    </div>
+  </div>
+
+  <div class="tracks-title">What’s inside — 7 quick sections</div>
+  <div class="tracks">
+    <div class="track"><div class="n">Section 01</div><div class="t">Devices &amp; Platforms</div></div>
+    <div class="track"><div class="n">Section 02</div><div class="t">How Playback Behaves</div></div>
+    <div class="track"><div class="n">Section 03</div><div class="t">Recording &amp; Audio</div></div>
+    <div class="track"><div class="n">Section 04</div><div class="t">Accounts, Cloud &amp; Pricing</div></div>
+    <div class="track"><div class="n">Section 05</div><div class="t">Look, Feel &amp; Languages</div></div>
+    <div class="track"><div class="n">Section 06</div><div class="t">Notifications &amp; Privacy</div></div>
+    <div class="track"><div class="n">Section 07</div><div class="t">Launch &amp; Scope</div></div>
+  </div>
+
+  <div class="foot">
+    <span>WhisperBack · Your Personalized Audio Whisperer</span>
+    <span>Page 1 of 4</span>
+  </div>
+</section>
+
+
+<!-- =============================================================
+     PAGE 2 — Devices, Playback Behaviour
+     ============================================================= -->
+<section class="page">
+  <div class="head">
+    <div class="brand">
+      <span class="mark">W</span>
+      WhisperBack <span class="sep">·</span>
+      <span class="doc">Discovery Questionnaire</span>
+    </div>
+    <div class="pills">
+      <span class="pill on">01</span>
+      <span class="pill on">02</span>
+      <span class="pill">03</span>
+      <span class="pill">04</span>
+      <span class="pill">05</span>
+      <span class="pill">06</span>
+      <span class="pill">07</span>
+    </div>
+  </div>
+
+  <div class="note">
+    These first two sections cover the basics — which phones the app should
+    work on, and how it should behave when real life happens (calls, other
+    apps, the screen turning off).
+  </div>
+
+  <!-- ============== Section 01 ============== -->
+  <div class="section">
+    <div class="s-title">
+      <span class="s-num">01</span>
+      <span class="s-name">Devices &amp; Platforms</span>
+    </div>
+    <div class="s-rule"></div>
+    <p class="s-sub">Which devices the app should work on.</p>
+
+    <div class="qlist">
+      <div class="q"><div class="num">1.1</div><div class="text">Should the app launch on <strong>Android, iPhone, or both</strong>? If both, which one would you like us to focus on first?</div></div>
+      <div class="q"><div class="num">1.2</div><div class="text">Would you prefer <strong>one shared app</strong> for both Android and iPhone (faster, lower cost) or <strong>two separate apps</strong> tailored to each (smoother, slightly more expensive)?</div></div>
+      <div class="q"><div class="num">1.3</div><div class="text">How <strong>old can users’ phones be</strong>? For example, only phones from the last 4–5 years, or do we need to support older models too?</div></div>
+      <div class="q"><div class="num">1.4</div><div class="text">Should the app work nicely on <strong>tablets</strong> (iPad, Android tablets) at launch too, or just <strong>phones</strong> for now?</div></div>
+      <div class="q"><div class="num">1.5</div><div class="text">Will users want to use WhisperBack on a <strong>computer through a website</strong> as well, or is the phone app enough for launch?</div></div>
+    </div>
+  </div>
+
+  <!-- ============== Section 02 ============== -->
+  <div class="section">
+    <div class="s-title">
+      <span class="s-num">02</span>
+      <span class="s-name">How Playback Should Behave</span>
+    </div>
+    <div class="s-rule"></div>
+    <p class="s-sub">How clips should play when life gets in the way.</p>
+
+    <div class="qlist">
+      <div class="q"><div class="num">2.1</div><div class="text">When the user sets a <strong>gap between clips</strong> (say 10 minutes), should we count that gap from <strong>when one clip ends</strong>, or from <strong>when one clip starts to when the next starts</strong>?</div></div>
+      <div class="q"><div class="num">2.2</div><div class="text">If a clip is meant to play during a <strong>phone call</strong> or while the user is listening to music in another app, should we <strong>skip it, save it for later, or wait quietly</strong> until things are free?</div></div>
+      <div class="q"><div class="num">2.3</div><div class="text">On Android, to make sure clips play exactly on time, the app needs to show a <strong>small notification</strong> while it’s active (similar to Spotify or YouTube Music). Are you OK with that?</div></div>
+      <div class="q"><div class="num">2.4</div><div class="text">On iPhones, Apple sometimes <strong>delays apps in the background</strong> by 1–2 minutes to save battery. Is that small delay acceptable, or does timing need to be exact?</div></div>
+      <div class="q"><div class="num">2.5</div><div class="text">If a scheduled clip is about to play but the user is <strong>already playing something manually</strong> in the app, what should happen — schedule waits, manual track stops, or both stack?</div></div>
+      <div class="q"><div class="num">2.6</div><div class="text">If a user tries to <strong>delete a playlist</strong> that has an active schedule on it, should we just cancel the schedule and delete it, or stop them and ask “are you sure?”</div></div>
+      <div class="q"><div class="num">2.7</div><div class="text">Should the app <strong>automatically play through</strong> Bluetooth headphones, AirPods, and car speakers, or stick to the phone speaker unless the user changes it?</div></div>
+      <div class="q"><div class="num">2.8</div><div class="text">If the phone is on <strong>silent or Do-Not-Disturb</strong>, should scheduled clips stay quiet too, or play anyway because the user set them up on purpose?</div></div>
+    </div>
+  </div>
+
+  <div class="foot-note">
+    <span>WhisperBack · Discovery Questionnaire</span>
+    <span class="progress">
+      <span class="dot on"></span>
+      <span class="dot on"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </span>
+    <span>Page 2 of 4</span>
+  </div>
+</section>
+
+
+<!-- =============================================================
+     PAGE 3 — Recording, Accounts & Cloud
+     ============================================================= -->
+<section class="page">
+  <div class="head">
+    <div class="brand">
+      <span class="mark">W</span>
+      WhisperBack <span class="sep">·</span>
+      <span class="doc">Discovery Questionnaire</span>
+    </div>
+    <div class="pills">
+      <span class="pill">01</span>
+      <span class="pill">02</span>
+      <span class="pill on">03</span>
+      <span class="pill on">04</span>
+      <span class="pill">05</span>
+      <span class="pill">06</span>
+      <span class="pill">07</span>
+    </div>
+  </div>
+
+  <!-- ============== Section 03 ============== -->
+  <div class="section">
+    <div class="s-title">
+      <span class="s-num">03</span>
+      <span class="s-name">Recording &amp; Audio</span>
+    </div>
+    <div class="s-rule"></div>
+    <p class="s-sub">Recording, importing, and editing — the audio basics.</p>
+
+    <div class="qlist">
+      <div class="q"><div class="num">3.1</div><div class="text">What <strong>recording quality</strong> should we aim for — <strong>standard</strong> (clear voice, smaller files) or <strong>higher</strong> (richer sound, larger files)?</div></div>
+      <div class="q"><div class="num">3.2</div><div class="text">What’s a sensible <strong>maximum length</strong> for a single clip — for example <strong>5 minutes</strong>? And a maximum file size, like <strong>10 MB</strong>?</div></div>
+      <div class="q"><div class="num">3.3</div><div class="text">Which <strong>audio file types</strong> should users be able to import — common ones like <strong>MP3</strong> only, or also more specialised formats?</div></div>
+      <div class="q"><div class="num">3.4</div><div class="text">Should users be able to do <strong>basic editing</strong> inside the app — like trimming a clip, adding fade in/out, or evening out the volume?</div></div>
+      <div class="q"><div class="num">3.5</div><div class="text">When users record a clip, should we <strong>automatically clean up background noise</strong> and balance the volume, or keep their recording exactly as-is?</div></div>
+      <div class="q"><div class="num">3.6</div><div class="text">When a user imports an audio file from their phone, should the app <strong>keep its own safe copy</strong> (always works, uses more space) or just <strong>point to the original</strong> (saves space, but breaks if the file is moved)?</div></div>
+    </div>
+  </div>
+
+  <!-- ============== Section 04 ============== -->
+  <div class="section">
+    <div class="s-title">
+      <span class="s-num">04</span>
+      <span class="s-name">Accounts, Cloud &amp; Pricing</span>
+    </div>
+    <div class="s-rule"></div>
+    <p class="s-sub">Sign-in, cloud backup, and how the app makes money.</p>
+
+    <div class="qlist">
+      <div class="q"><div class="num">4.1</div><div class="text">Any preference on <strong>which cloud provider</strong> hosts the app’s data — Google, Amazon, or Microsoft — or are you happy for us to recommend?</div></div>
+      <div class="q"><div class="num">4.2</div><div class="text">Is there a <strong>region where user data must legally be stored</strong> — for example Europe, the Gulf, or the US — or is any region fine?</div></div>
+      <div class="q"><div class="num">4.3</div><div class="text">Should the app <strong>back up playlists to the cloud automatically</strong> as the user makes changes, or only when they tap a “Backup” button themselves?</div></div>
+      <div class="q"><div class="num">4.4</div><div class="text">Should a user be able to use the same account on <strong>more than one phone at the same time</strong> (we’ll handle conflicts), or only one device at a time?</div></div>
+      <div class="q"><div class="num">4.5</div><div class="text">How much <strong>cloud storage</strong> should each Premium user get — say 1 GB, 5 GB, or unlimited? More storage means higher running costs.</div></div>
+      <div class="q"><div class="num">4.6</div><div class="text">Which <strong>sign-in options</strong> should we offer — Google only, or also Apple, email + password, and phone-number with one-time code?</div></div>
+      <div class="q"><div class="num">4.7</div><div class="text">Should users have to <strong>create an account</strong> to use the app, or can they use the basic features without signing in (and only sign in if they want Premium)?</div></div>
+      <div class="q"><div class="num">4.8</div><div class="text">How should the app <strong>make money</strong> — fully free, a one-time payment to unlock everything, or a monthly / yearly subscription? And do you want a <strong>free trial</strong>?</div></div>
+      <div class="q"><div class="num">4.9</div><div class="text">Apart from cloud backup, what other features should be <strong>locked behind Premium</strong> — bigger playlist limits, web access, higher recording quality, anything else?</div></div>
+    </div>
+  </div>
+
+  <div class="foot-note">
+    <span>WhisperBack · Discovery Questionnaire</span>
+    <span class="progress">
+      <span class="dot on"></span>
+      <span class="dot on"></span>
+      <span class="dot on"></span>
+      <span class="dot"></span>
+    </span>
+    <span>Page 3 of 4</span>
+  </div>
+</section>
+
+
+<!-- =============================================================
+     PAGE 4 — Look & Feel, Privacy, Launch
+     ============================================================= -->
+<section class="page">
+  <div class="head">
+    <div class="brand">
+      <span class="mark">W</span>
+      WhisperBack <span class="sep">·</span>
+      <span class="doc">Discovery Questionnaire</span>
+    </div>
+    <div class="pills">
+      <span class="pill">01</span>
+      <span class="pill">02</span>
+      <span class="pill">03</span>
+      <span class="pill">04</span>
+      <span class="pill on">05</span>
+      <span class="pill on">06</span>
+      <span class="pill on">07</span>
+    </div>
+  </div>
+
+  <!-- ============== Section 05 ============== -->
+  <div class="section">
+    <div class="s-title">
+      <span class="s-num">05</span>
+      <span class="s-name">Look, Feel &amp; Languages</span>
+    </div>
+    <div class="s-rule"></div>
+    <p class="s-sub">Languages, theme, and accessibility for everyone.</p>
+
+    <div class="qlist">
+      <div class="q"><div class="num">5.1</div><div class="text">Which <strong>languages</strong> should the app support at launch — English only, or also Urdu, Arabic, Hindi, or others?</div></div>
+      <div class="q"><div class="num">5.2</div><div class="text">Arabic and Urdu are read <strong>right-to-left</strong>. Should the entire layout flip for those languages (proper local feel), or should only the text be translated while the layout stays left-to-right?</div></div>
+      <div class="q"><div class="num">5.3</div><div class="text">Should the app open in <strong>dark mode, light mode</strong>, or quietly match whatever theme the user has set on their phone?</div></div>
+      <div class="q"><div class="num">5.4</div><div class="text">The app uses <strong>mostly icons</strong>. Should we add support for <strong>screen readers</strong> (so visually impaired users can use it) and an option to <strong>show text labels</strong> for everyone else?</div></div>
+    </div>
+  </div>
+
+  <!-- ============== Section 06 ============== -->
+  <div class="section">
+    <div class="s-title">
+      <span class="s-num">06</span>
+      <span class="s-name">Notifications &amp; Privacy</span>
+    </div>
+    <div class="s-rule"></div>
+    <p class="s-sub">Alerts, data handling, and post-launch quality.</p>
+
+    <div class="qlist">
+      <div class="q"><div class="num">6.1</div><div class="text">Which moments should send a <strong>notification</strong> — a schedule starting, sleep mode beginning or ending soon, an import finishing, or something going wrong? Should the user be able to switch each one on or off?</div></div>
+      <div class="q"><div class="num">6.2</div><div class="text">Are you OK with us using <strong>standard tools</strong> to see how the app is being used and to catch crashes early? If you have a preferred tool, please share — otherwise we’ll pick a good one.</div></div>
+      <div class="q"><div class="num">6.3</div><div class="text">Should the user’s clips and playlists be <strong>extra-secured (encrypted)</strong> on their phone, on top of the standard protection that Android and iPhone already provide?</div></div>
+      <div class="q"><div class="num">6.4</div><div class="text">When a user <strong>deletes their account</strong>, should we wipe their cloud data right away, or hold it for a few days in case they change their mind?</div></div>
+      <div class="q"><div class="num">6.5</div><div class="text">Will you provide the <strong>privacy policy and terms of service</strong> text, or would you like us to draft a starter version for your review?</div></div>
+      <div class="q"><div class="num">6.6</div><div class="text">Are there any <strong>age restrictions</strong> for the app — for example only 13 and above — or no age limits at all?</div></div>
+    </div>
+  </div>
+
+  <!-- ============== Section 07 ============== -->
+  <div class="section">
+    <div class="s-title">
+      <span class="s-num">07</span>
+      <span class="s-name">Launch &amp; Scope</span>
+    </div>
+    <div class="s-rule"></div>
+    <p class="s-sub">Timeline, store accounts, and what we’re proposing for v1.</p>
+
+    <div class="qlist">
+      <div class="q"><div class="num">7.1</div><div class="text">When are you <strong>hoping to launch</strong>? And are there any specific dates we should plan around — beta release, store submission, marketing campaigns?</div></div>
+      <div class="q"><div class="num">7.2</div><div class="text">Do you already have an <strong>Apple Developer</strong> account and a <strong>Google Play</strong> publisher account, or should we set them up for you?</div></div>
+      <div class="q"><div class="num">7.3</div><div class="text">For <strong>v1.0</strong> we’re proposing: Active/Inactive switch, Playlists, manual playback, Scheduling, Shuffle, and basic Sleep Mode — all stored on the phone only. Happy with that, or should we include cloud backup in v1 as well?</div></div>
+      <div class="q"><div class="num">7.4</div><div class="text">Would you like a <strong>small private testing round</strong> (where a hand-picked group tries the app on their phones) before the public launch?</div></div>
+      <div class="q"><div class="num">7.5</div><div class="text">Anything else on your mind that <strong>isn’t in the current document</strong> but should be planned for?</div></div>
+    </div>
+  </div>
+
+  <div class="closing">
+    <span class="label">Next Step</span>
+    <p style="margin:0">
+      Once we have your answers, we’ll send back <em>WhisperBack Spec v1.1</em> — with
+      the final feature list, screen designs, a simple flow showing how playback works,
+      and a <strong>fixed-price proposal</strong> with timeline. Expected turnaround on our side:
+      <strong>5 working days</strong> from your reply.
+    </p>
+  </div>
+
+  <div class="foot-note">
+    <span>WhisperBack · Discovery Questionnaire</span>
+    <span class="progress">
+      <span class="dot on"></span>
+      <span class="dot on"></span>
+      <span class="dot on"></span>
+      <span class="dot on"></span>
+    </span>
+    <span>Page 4 of 4</span>
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/.pub-cache/
+mobile/.pub/
+mobile/**/doc/api/
+mobile/**/ios/Flutter/.last_build_id
+mobile/**/ios/Pods/
+mobile/**/ios/.symlinks/
+mobile/**/android/.gradle/
+mobile/**/android/local.properties
+mobile/**/android/**/GeneratedPluginRegistrant.java
+mobile/**/android/key.properties
+mobile/**/*.iml
+mobile/.idea/
+
+# Node
+admin/node_modules/
+admin/.next/
+admin/out/
+infra/node_modules/
+infra/cdk.out/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Secrets
+.env
+.env.*
+*.pem
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# IDE
+.vscode/
+*.code-workspace
+
+# Temp extracts
+documents/_*_extract.txt
