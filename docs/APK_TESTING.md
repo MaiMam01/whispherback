@@ -27,7 +27,8 @@ From repo root:
 Output file:
 
 ```text
-whispherback\dist\whisperback-test.apk
+whispherback\dist\whisperback-client-arm64.apk   # -Client (release)
+whispherback\dist\whisperback-test-debug.apk    # default (debug, dev only)
 ```
 
 ### NDK troubleshooting (common on Windows)
@@ -46,13 +47,26 @@ Remove-Item "$env:LOCALAPPDATA\Android\Sdk\ndk\*" -Recurse -Force -ErrorAction S
 .\scripts\build_apk.ps1
 ```
 
-### Option C — GitHub Actions (no local NDK)
+### Option C — GitHub Actions (recommended for clients)
 
-After pushing to `main`, GitHub builds the APK in the cloud:
+After pushing to `main`:
 
 1. Open [Actions → Build Android APK](https://github.com/MaiMam01/whispherback/actions/workflows/build_apk.yml)
-2. Open the latest green run → **Artifacts** → download `whisperback-debug-apk`
-3. Rename `app-debug.apk` if needed, copy to your phone, install
+2. Open the latest green run → **Artifacts**
+3. Download **`whisperback-release-arm64`** (~25–40 MB) — **`app-arm64-v8a-release.apk`**
+4. Send that file to the client (email, Drive, etc.)
+
+| Artifact | Use |
+|----------|-----|
+| **whisperback-release-arm64** | **Default for clients** (modern phones) |
+| whisperback-release-all-abis | Older arm32 phones or emulators |
+
+### Option D — Local client build
+
+```powershell
+.\scripts\build_apk.ps1 -Client
+# → dist\whisperback-client-arm64.apk
+```
 
 Manual build:
 
@@ -75,7 +89,7 @@ mobile\build\app\outputs\flutter-apk\app-debug.apk
 
 ### Option A — Copy APK to phone (easiest)
 
-1. Copy `dist\whisperback-test.apk` to the phone (USB, email, Google Drive, etc.).
+1. Copy `dist\whisperback-client-arm64.apk` (or the GitHub **whisperback-release-arm64** artifact) to the phone
 2. On the phone, open the file.
 3. Allow **Install unknown apps** for your file manager if prompted.
 4. Tap **Install**.
@@ -83,7 +97,7 @@ mobile\build\app\outputs\flutter-apk\app-debug.apk
 ### Option B — USB debugging
 
 ```powershell
-adb install -r whispherback\dist\whisperback-test.apk
+adb install -r whispherback\dist\whisperback-client-arm64.apk
 ```
 
 ---

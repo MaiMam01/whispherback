@@ -1,9 +1,10 @@
-# Builds a debug APK for sideloading on Android phones (testing).
-# Requires Android SDK — run setup_android_sdk.ps1 first if flutter doctor shows no SDK.
+# Builds an APK for sideloading on Android phones.
+# Default: debug (fast local smoke). Use -Client for lightweight release builds.
 param(
   [ValidateSet('debug', 'release')]
   [string]$Mode = 'debug',
-  [switch]$SplitPerAbi
+  [switch]$SplitPerAbi,
+  [switch]$Client
 )
 
 $ErrorActionPreference = 'Stop'
@@ -70,6 +71,11 @@ if (-not (Test-NdkInstall -SdkRoot $sdkRoot)) {
 
 Push-Location $mobile
 
+if ($Client) {
+  $Mode = 'release'
+  $SplitPerAbi = $true
+}
+
 Write-Host 'Checking Flutter...' -ForegroundColor Cyan
 flutter pub get
 
@@ -115,7 +121,13 @@ if (-not (Test-Path $apk)) {
 
 $destDir = Join-Path $repoRoot 'dist'
 New-Item -ItemType Directory -Force -Path $destDir | Out-Null
-$dest = Join-Path $destDir 'whisperback-test.apk'
+if ($Mode -eq 'release' -and $SplitPerAbi) {
+  $dest = Join-Path $destDir 'whisperback-client-arm64.apk'
+} elseif ($Mode -eq 'release') {
+  $dest = Join-Path $destDir 'whisperback-release.apk'
+} else {
+  $dest = Join-Path $destDir 'whisperback-test-debug.apk'
+}
 Copy-Item $apk $dest -Force
 
 Write-Host ''
@@ -123,12 +135,12 @@ Write-Host 'APK ready!' -ForegroundColor Green
 Write-Host "  $dest"
 if ($Mode -eq 'debug') {
   Write-Host ''
-  Write-Host 'Note: Debug APKs are ~150-200 MB (fat binary). For smaller client builds:' -ForegroundColor Yellow
-  Write-Host '  .\scripts\build_apk.ps1 -Mode release -SplitPerAbi'
+  Write-Host 'Debug APK (~150–200 MB). For client handoff use:' -ForegroundColor Yellow
+  Write-Host '  .\scripts\build_apk.ps1 -Client'
 }
 Write-Host ''
 Write-Host 'Install on your phone:' -ForegroundColor Cyan
-Write-Host '  1. Copy whisperback-test.apk to your phone (USB, email, or cloud)'
+Write-Host '  1. Copy the APK to your phone (USB, email, or cloud)'
 Write-Host '  2. Enable Install from unknown sources for your file app'
 Write-Host '  3. Tap the APK to install'
 Write-Host ''

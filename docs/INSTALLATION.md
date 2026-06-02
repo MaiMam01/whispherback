@@ -302,9 +302,9 @@ On push to `mobile/`:
 - `dart format` check
 - `flutter analyze`
 - `flutter test`
-- `flutter build apk --debug`
+- `flutter build apk --debug` (smoke compile only — **not** for clients)
 
-Match this locally before opening a PR.
+**Build Android APK** workflow produces **release** APKs for clients. See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
 
 ---
 

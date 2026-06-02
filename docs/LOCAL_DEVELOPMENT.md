@@ -9,7 +9,7 @@ Use **`flutter run`** while coding. Changes apply in seconds via **hot reload** 
 ```
 edit code  →  save  →  press r in terminal (hot reload)  →  see fix on phone
        ↓
-when stable  →  git push  →  GitHub builds APK for client/testing
+when stable  →  git push  →  GitHub builds **release** APK for clients
 ```
 
 | Task | Command |
@@ -17,7 +17,7 @@ when stable  →  git push  →  GitHub builds APK for client/testing
 | Run on phone (USB) | `.\scripts\run_android.ps1` |
 | Run on Windows desktop | `cd mobile && flutter run -d windows` |
 | Analyze + test | `.\scripts\setup_mobile.ps1` |
-| Client test APK | GitHub Actions → **Build Android APK** artifact |
+| Client test APK | GitHub → **whisperback-release-arm64** (~30 MB) |
 
 See also [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md) for versioning and client handoff.
 
@@ -71,8 +71,8 @@ First run compiles native code (~2–5 min). Later runs are much faster.
 | Method | When |
 |--------|------|
 | **`flutter run`** | Every day while fixing bugs and UI |
-| **Debug APK (CI)** | Share with tester who has no PC; smoke test release pipeline |
-| **Release APK** | Closer to store size/performance; before client demo |
+| **Release APK (CI)** | Client / tester without a PC (~30 MB arm64) |
+| **Debug APK** | Optional local smoke only (`build_apk.ps1` default) |
 
 ---
 

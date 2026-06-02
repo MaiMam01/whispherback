@@ -9,7 +9,7 @@ How to version, build, and hand off WhisperBack professionally.
 | Path | Purpose |
 |------|---------|
 | `mobile/` | Flutter app (source of truth for app version) |
-| `dist/` | Local APK output (`whisperback-test.apk`) — **not committed** |
+| `dist/` | Local APK output — **not committed** (`whisperback-client-arm64.apk`) |
 | `docs/qa-checklist.md` | Pre-release QA |
 | `docs/APK_TESTING.md` | Phone install + test flows |
 | `CHANGELOG.md` | Client-facing release notes |
@@ -90,16 +90,14 @@ Or use the setup script:
 
 1. Merge to `main` and push
 2. [Actions → Build Android APK](https://github.com/MaiMam01/whispherback/actions/workflows/build_apk.yml)
-3. Download artifact **`whisperback-debug-apk`**
-4. Rename for client: `WhisperBack-v1.0.0-build1-debug.apk`
+3. Download artifact **`whisperback-release-arm64`** (~25–40 MB)
+4. Rename for client: `WhisperBack-v1.0.0-build1.apk`
 
 ### Option B — Local Windows
 
-Prerequisites: `flutter doctor` all green, NDK installed (see `docs/APK_TESTING.md`).
-
 ```powershell
-.\scripts\build_apk.ps1
-# Output: dist\whisperback-test.apk
+.\scripts\build_apk.ps1 -Client
+# Output: dist\whisperback-client-arm64.apk
 ```
 
 ---
@@ -120,7 +118,7 @@ Before sending an APK or demo build:
 > **Date:** 2026-06-02  
 > **Changes:** Record/import clips, add to playlist, interval scheduling, playback modal  
 > **Test:** Home → Active ON → record clip → add to playlist → schedule 5 min → wait for playback  
-> **Note:** Debug build; no cloud sync yet (Phase 2)
+> **Note:** Release build; no cloud sync yet (Phase 2). First launch needs Wi‑Fi once for fonts.
 
 ---
 
@@ -152,7 +150,7 @@ These are already in `.gitignore` where applicable.
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | **Mobile CI** | PR/push to `main`/`develop` | Format, analyze, test, APK smoke |
-| **Build Android APK** | Push to `main`/`develop` + manual | Produces downloadable APK artifact |
+| **Build Android APK** | Push to `main`/`develop` + manual | **Release APK** for clients (`whisperback-release-arm64`) |
 
 Analyze uses `--no-fatal-infos` so style hints do not block APK builds; **warnings and errors still fail CI**.
 
