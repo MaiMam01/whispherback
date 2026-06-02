@@ -8,6 +8,7 @@ import '../../features/clips/clips_screen.dart';
 import '../../features/clips/import_screen.dart';
 import '../../features/clips/record_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/playlists/add_clips_to_playlist_screen.dart';
 import '../../features/playlists/new_playlist_screen.dart';
 import '../../features/playlists/playlist_detail_screen.dart';
 import '../../features/playlists/playlists_screen.dart';
@@ -53,6 +54,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/playlists/new',
             builder: (context, state) => const NewPlaylistScreen(),
+          ),
+          GoRoute(
+            path: '/playlists/:id/add-clips',
+            builder: (context, state) => AddClipsToPlaylistScreen(
+              playlistId: state.pathParameters['id']!,
+            ),
           ),
           GoRoute(
             path: '/playlists/:id',

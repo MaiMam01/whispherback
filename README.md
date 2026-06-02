@@ -7,6 +7,7 @@
 ```
 whispherback/
 ├── mobile/          Flutter app (iOS + Android) — Phase 1 local MVP
+├── api/             REST API (local dev + contract reference) — Phase 2
 ├── admin/           Next.js admin dashboard — Phase 2
 ├── infra/           AWS infrastructure (CDK) — Phase 2
 ├── design/          Design tokens, screen specs, Figma exports
@@ -18,7 +19,7 @@ whispherback/
 
 | Layer | Technology |
 |-------|------------|
-| Mobile | Flutter 3.x, Riverpod, Drift (SQLite) |
+| Mobile | Flutter 3.x, Riverpod, sqflite (SQLite) |
 | Audio | just_audio, audio_service |
 | Prayer times | adhan (offline, on-device GPS) |
 | Backend (Phase 2) | AWS Cognito, DynamoDB, S3, Lambda, API Gateway |
@@ -31,16 +32,19 @@ whispherback/
 
 - Flutter SDK 3.24+ ([install guide](https://docs.flutter.dev/get-started/install))
 - Android Studio / Xcode for device builds
-- Node.js 20+ (admin panel, Phase 2)
+- Node.js 20+ (API, admin panel, Phase 2)
 
 ### Setup
 
 ```bash
 cd mobile
 flutter pub get
-dart run build_runner build --delete-conflicting-outputs
-flutter run
+# First time only, if android/ is missing:
+flutter create . --project-name whisperback --org com.whisperback
+flutter run --dart-define=FLAVOR=dev
 ```
+
+See [docs/INSTALLATION.md](docs/INSTALLATION.md) for full setup on a new machine.
 
 ### Flavors
 
@@ -64,6 +68,17 @@ flutter run --dart-define=FLAVOR=dev
 - Popup playback modal
 - Fully offline — no account required
 
+## Quick start — API (Phase 2 dev)
+
+```bash
+cd api
+cp .env.example .env
+npm install
+npm run dev
+```
+
+See [api/README.md](api/README.md). Endpoints match [docs/api-contracts.md](docs/api-contracts.md).
+
 ## Phase 2 scope
 
 - AWS cloud sync (Premium)
@@ -73,11 +88,14 @@ flutter run --dart-define=FLAVOR=dev
 
 ## Documentation
 
+- [**Installation (new PC / laptop)**](docs/INSTALLATION.md) — Flutter, Android Studio, commands, checklist
+- [**Mobile walkthrough**](docs/MOBILE_WALKTHROUGH.md) — Architecture, design → code, learning path
 - [Project audit (May 2026)](docs/PROJECT_AUDIT.md)
 - [Playback state diagram](docs/playback-states.md)
 - [Screen specifications](design/screen-specs.md)
 - [Design tokens](design/tokens.json)
 - [API contracts (Phase 2)](docs/api-contracts.md)
+- [**API server (run locally)**](api/README.md)
 - [QA checklist](docs/qa-checklist.md)
 
 ## GitHub

@@ -381,16 +381,7 @@ class _ZzzButton extends StatelessWidget {
         child: SizedBox(
           width: 48,
           height: 48,
-          child: Center(
-            child: Text(
-              'Zzz',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: theme.muted,
-              ),
-            ),
-          ),
+          child: Icon(AppIcons.bedtime, size: 20, color: theme.muted),
         ),
       ),
     );
@@ -411,19 +402,19 @@ class _StatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
         color: isActive
-            ? AppColors.success.withValues(alpha: 0.12)
+            ? AppColors.neon.withValues(alpha: 0.14)
             : theme.glass,
         borderRadius: BorderRadius.circular(100),
         border: Border.all(
           color: isActive
-              ? AppColors.success.withValues(alpha: 0.35)
+              ? AppColors.neon.withValues(alpha: 0.45)
               : theme.glassBorder,
         ),
         boxShadow: isActive
             ? [
                 BoxShadow(
-                  color: AppColors.success.withValues(alpha: 0.15),
-                  blurRadius: 20,
+                  color: AppColors.neon.withValues(alpha: 0.22),
+                  blurRadius: 22,
                 ),
               ]
             : null,
@@ -438,7 +429,9 @@ class _StatusPill extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: isActive ? AppColors.success : theme.muted,
+              color: isActive
+                  ? AppColors.neonBright
+                  : theme.muted,
             ),
           ),
         ],
@@ -483,11 +476,11 @@ class _PulsingDotState extends State<_PulsingDot>
           height: 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: widget.active ? AppColors.success : AppColors.muted2,
+            color: widget.active ? AppColors.neonCyan : AppColors.muted2,
             boxShadow: widget.active
                 ? [
                     BoxShadow(
-                      color: AppColors.success.withValues(
+                      color: AppColors.neonCyan.withValues(
                         alpha: 0.4 + _c.value * 0.4,
                       ),
                       blurRadius: 6 + _c.value * 6,

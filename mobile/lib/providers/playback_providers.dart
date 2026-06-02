@@ -1,9 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/repositories/app_state_repository.dart';
-import '../../data/repositories/playlist_repository.dart';
-import '../../data/repositories/schedule_repository.dart';
-import '../../data/repositories/sleep_repository.dart';
 import '../../domain/playback/playback_state.dart';
 import '../services/audio/audio_services.dart';
 import '../services/playback/playback_coordinator.dart';

@@ -1,3 +1,5 @@
+import 'dart:ui' show DisplayFeatureType;
+
 import 'package:flutter/material.dart';
 
 /// Material-style width breakpoints for phones, foldables, and tablets.

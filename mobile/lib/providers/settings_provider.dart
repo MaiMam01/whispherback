@@ -6,13 +6,15 @@ final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async 
   return SharedPreferences.getInstance();
 });
 
-/// Supported app display languages (order: English, Urdu, French, Arabic, Dutch).
+/// Supported app display languages
+/// (order: English, Urdu, French, Arabic, Dutch, Vietnamese).
 enum AppLanguage {
   english('en', 'English'),
   urdu('ur', 'Urdu'),
   french('fr', 'French'),
   arabic('ar', 'Arabic'),
-  dutch('nl', 'Dutch');
+  dutch('nl', 'Dutch'),
+  vietnamese('vi', 'Vietnamese');
 
   const AppLanguage(this.code, this.label);
 
@@ -28,6 +30,7 @@ enum AppLanguage {
         AppLanguage.french => 'Fran\u00E7ais',
         AppLanguage.arabic => '\u0627\u0644\u0639\u0631\u0628\u064A\u0629',
         AppLanguage.dutch => 'Nederlands',
+        AppLanguage.vietnamese => 'Ti\u1EBFng Vi\u1EC7t',
       };
 
   static AppLanguage fromCode(String? code) {

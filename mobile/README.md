@@ -2,6 +2,8 @@
 
 Flutter cross-platform app (iOS + Android).
 
+**New to mobile?** Start with the full guide: [docs/MOBILE_WALKTHROUGH.md](../docs/MOBILE_WALKTHROUGH.md) (toolchain, architecture, design mapping, learning path).
+
 ## Setup
 
 ```powershell

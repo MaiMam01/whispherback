@@ -25,3 +25,5 @@ cdk deploy WhisperBackStaging
 See [docs/api-contracts.md](../docs/api-contracts.md) for API shapes.
 
 Status: **stub** — deploy after mobile local MVP passes QA checklist.
+
+**Local development:** use the runnable API in [`../api/`](../api/) (same routes as this stack; SQLite instead of DynamoDB).

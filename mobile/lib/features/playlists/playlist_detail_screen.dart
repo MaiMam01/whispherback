@@ -153,7 +153,8 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                         onShuffle: _toggleShuffle,
                         onSchedule: () =>
                             context.push('/schedule/build/${widget.playlistId}'),
-                        onAddClips: () => context.push('/clips'),
+                        onAddClips: () =>
+                            context.push('/playlists/${widget.playlistId}/add-clips'),
                       ),
                       if (_schedule != null) ...[
                         const SizedBox(height: 16),
@@ -179,7 +180,8 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                   hasScrollBody: false,
                   child: _EmptyClipsState(
                     theme: theme,
-                    onAdd: () => context.push('/clips'),
+                    onAdd: () =>
+                        context.push('/playlists/${widget.playlistId}/add-clips'),
                   ),
                 )
               else

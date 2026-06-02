@@ -4,13 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_radii.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/duration_format.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_icons.dart';
-import '../../core/theme/app_theme.dart';
-import '../../core/widgets/depth_surface.dart';
-import '../../core/widgets/prominent_play_button.dart';
-import '../../domain/entities/playlist.dart';
-import 'whisper_card.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/depth_surface.dart';
+import '../../../core/widgets/prominent_play_button.dart';
+import '../../../core/widgets/whisper_card.dart';
+import '../../../domain/entities/playlist.dart';
 
 /// Legacy English formatter; prefer [formatPlaylistDurationLocalized].
 String formatPlaylistDuration(int totalMs) {

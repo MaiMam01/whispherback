@@ -6,6 +6,7 @@ import '../../data/repositories/schedule_repository.dart';
 import '../../domain/entities/playback_schedule.dart';
 import '../../providers/playback_providers.dart';
 import '../../providers/repository_providers.dart';
+import '../../domain/playback/playback_state.dart';
 import '../playback/playback_coordinator.dart';
 
 /// Fires scheduled clip playback at interval boundaries.
@@ -31,6 +32,9 @@ class ScheduleEngine {
   }
 
   Future<void> _tick() async {
+    final snapshot = _coordinator.snapshot;
+    if (snapshot.state == AppPlaybackState.manualPlaying) return;
+
     final all = await _schedules.getAll();
     final now = DateTime.now();
     for (final schedule in all) {

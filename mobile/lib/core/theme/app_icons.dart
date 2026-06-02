@@ -20,6 +20,8 @@ abstract final class AppIcons {
   static const close = LucideIcons.x;
   static const back = LucideIcons.arrow_left;
   static const check = LucideIcons.check;
+  static const checkCircle = LucideIcons.circle_check;
+  static const circleOutline = LucideIcons.circle;
   static const shuffle = LucideIcons.shuffle;
   static const tune = LucideIcons.sliders_horizontal;
 
@@ -61,7 +63,7 @@ abstract final class AppIcons {
   static const micOff = LucideIcons.mic_off;
   static const record = LucideIcons.circle;
   static const upload = LucideIcons.upload;
-  static const audioFile = LucideIcons.file_audio;
+  static const audioFile = LucideIcons.music_2;
   static const folderOpen = LucideIcons.folder_open;
   static const volumeOff = LucideIcons.volume_x;
 }

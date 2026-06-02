@@ -1,21 +1,23 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:path/path.dart' as p;
+import 'package:sqflite/sqflite.dart';
 import 'package:whisperback/data/database/database_helper.dart';
 import 'package:whisperback/data/repositories/playlist_repository.dart';
 import 'package:whisperback/data/repositories/schedule_repository.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   late DatabaseHelper db;
   late PlaylistRepository playlists;
   late ScheduleRepository schedules;
 
   setUp(() async {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
     db = DatabaseHelper.instance;
     await db.close();
+    final dbPath = await getDatabasesPath();
+    final file = File(p.join(dbPath, 'whisperback.db'));
+    if (await file.exists()) await file.delete();
     playlists = PlaylistRepository(db);
     schedules = ScheduleRepository(db);
     await db.database;

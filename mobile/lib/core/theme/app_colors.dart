@@ -27,6 +27,27 @@ abstract final class AppColors {
   static const success = Color(0xFF4ADEAA);
   static const error = Color(0xFFC44B4B);
 
+  // Neon (power control) palette — electric blue with a cyan core.
+  static const neon = Color(0xFF2E8BFF);
+  static const neonBright = Color(0xFF4DA3FF);
+  static const neonCyan = Color(0xFF38E1FF);
+  static const neonDeep = Color(0xFF0B2A66);
+  static const neonGlow = Color(0x662E8BFF);
+
+  static const neonGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [neonCyan, neon, Color(0xFF1F5FD6)],
+    stops: [0, 0.55, 1],
+  );
+
+  /// Dim "powered-off" gradient for the home power control.
+  static const powerOffGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF0B1730), Color(0xFF060E22)],
+  );
+
   // Light palette
   static const lightBg = Color(0xFFF8FAFC);
   static const lightBg2 = Color(0xFFF1F5F9);

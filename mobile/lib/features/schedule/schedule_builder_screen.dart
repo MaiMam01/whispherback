@@ -47,6 +47,13 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
     final existing = await repo.getForPlaylist(widget.playlistId);
     if (!mounted) return;
     final l10n = context.l10n;
+    var alarm = true;
+    var intervalMinutes = 30;
+    if (existing == null) {
+      final prefs = await ref.read(sharedPreferencesProvider.future);
+      alarm = prefs.getBool('default_alarm') ?? true;
+      intervalMinutes = prefs.getInt('default_interval') ?? 30;
+    }
     setState(() {
       _playlistName = playlist?.name ?? l10n.playlist;
       if (existing != null) {
@@ -59,9 +66,8 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
         _alarm = existing.alarmEnabled;
         _daysMask = existing.daysMask;
       } else {
-        final prefs = await ref.read(sharedPreferencesProvider.future);
-        _alarm = prefs.getBool('default_alarm') ?? true;
-        _intervalMinutes = prefs.getInt('default_interval') ?? 30;
+        _alarm = alarm;
+        _intervalMinutes = intervalMinutes;
       }
       _loading = false;
     });
@@ -116,7 +122,8 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
         final l10n = context.l10n;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_alarm ? l10n.scheduleSavedWithAlarm : l10n.scheduleSaved),
+            content: Text(l10n.scheduleSavedTurnActive),
+            duration: const Duration(seconds: 4),
           ),
         );
         context.pop();

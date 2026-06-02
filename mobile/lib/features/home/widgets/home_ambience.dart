@@ -3,8 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Soft ambient orbs, sound arcs, and dot field for the home screen.
 class HomeAmbience extends StatelessWidget {
@@ -114,15 +114,14 @@ class _HomeAmbiencePainter extends CustomPainter {
 
   void _drawActiveGlow(Canvas canvas, Size size) {
     final center = Offset(size.width * 0.5, size.height * 0.46);
-    final glowColor = isDark ? AppColors.brandLight : AppColors.ink;
     final paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          glowColor.withValues(alpha: isDark ? 0.18 : 0.10),
-          glowColor.withValues(alpha: 0),
+          AppColors.neon.withValues(alpha: isDark ? 0.22 : 0.12),
+          AppColors.neonCyan.withValues(alpha: 0),
         ],
-      ).createShader(Rect.fromCircle(center: center, radius: 140));
-    canvas.drawCircle(center, 140, paint);
+      ).createShader(Rect.fromCircle(center: center, radius: 170));
+    canvas.drawCircle(center, 170, paint);
   }
 
   @override
@@ -162,8 +161,8 @@ class HomeWaveBars extends StatelessWidget {
                 end: Alignment.topCenter,
                 colors: active
                     ? [
-                        theme.actionFill,
-                        theme.isDark ? AppColors.brandLight : AppColors.inkSecondary,
+                        AppColors.neon,
+                        AppColors.neonCyan,
                       ]
                     : [
                         theme.muted.withValues(alpha: 0.3),

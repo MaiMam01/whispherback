@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-/// App-wide localized strings for English, Urdu, Arabic, Dutch, and French.
+/// App-wide localized strings for English, Urdu, Arabic, Dutch, French, and
+/// Vietnamese.
 class AppLocalizations {
   AppLocalizations(this.locale);
 
@@ -33,11 +34,12 @@ class AppLocalizations {
     Locale('ar'),
     Locale('nl'),
     Locale('fr'),
+    Locale('vi'),
   ];
 
   static const delegate = _AppLocalizationsDelegate();
 
-  String _s(String en, String ur, String ar, String nl, String fr) {
+  String _s(String en, String ur, String ar, String nl, String fr, String vi) {
     switch (_lang) {
       case 'ur':
         return ur;
@@ -47,201 +49,256 @@ class AppLocalizations {
         return nl;
       case 'fr':
         return fr;
+      case 'vi':
+        return vi;
       default:
         return en;
     }
   }
 
   // ── Language names ──────────────────────────────────────────────────────────
-  String get languageEnglish => _s('English', 'English', 'English', 'English', 'English');
-  String get languageUrdu => _s('Urdu', 'اردو', 'الأردية', 'Urdu', 'Ourdou');
-  String get languageArabic => _s('Arabic', 'عربی', 'العربية', 'Arabisch', 'Arabe');
-  String get languageDutch => _s('Dutch', 'ڈچ', 'الهولندية', 'Nederlands', 'Néerlandais');
-  String get languageFrench => _s('French', 'فرانسیسی', 'الفرنسية', 'Frans', 'Français');
+  String get languageEnglish => _s('English', 'انگریزی', 'الإنجليزية', 'Engels', 'Anglais', 'Tiếng Anh');
+  String get languageUrdu => _s('Urdu', 'اردو', 'الأردية', 'Urdu', 'Ourdou', 'Tiếng Urdu');
+  String get languageArabic => _s('Arabic', 'عربی', 'العربية', 'Arabisch', 'Arabe', 'Tiếng Ả Rập');
+  String get languageDutch => _s('Dutch', 'ولندیزی', 'الهولندية', 'Nederlands', 'Néerlandais', 'Tiếng Hà Lan');
+  String get languageFrench => _s('French', 'فرانسیسی', 'الفرنسية', 'Frans', 'Français', 'Tiếng Pháp');
+  String get languageVietnamese => _s('Vietnamese', 'ویتنامی', 'الفيتنامية', 'Vietnamees', 'Vietnamien', 'Tiếng Việt');
 
   String languageName(String code) => switch (code) {
         'ur' => languageUrdu,
         'ar' => languageArabic,
         'nl' => languageDutch,
         'fr' => languageFrench,
+        'vi' => languageVietnamese,
         _ => languageEnglish,
       };
 
   // ── Navigation ──────────────────────────────────────────────────────────────
-  String get navHome => _s('Home', 'ہوم', 'الرئيسية', 'Home', 'Accueil');
-  String get navLists => _s('Lists', 'لسٹیں', 'القوائم', 'Lijsten', 'Listes');
-  String get navClips => _s('Clips', 'کلپس', 'المقاطع', 'Clips', 'Clips');
-  String get navSchedule => _s('Schedule', 'شیڈول', 'الجدول', 'Schema', 'Planning');
-  String get navSettings => _s('Settings', 'ترتیبات', 'الإعدادات', 'Instellingen', 'Paramètres');
+  String get navHome => _s('Home', 'ہوم', 'الرئيسية', 'Home', 'Accueil', 'Trang chủ');
+  String get navLists => _s('Lists', 'لسٹیں', 'القوائم', 'Lijsten', 'Listes', 'Danh sách');
+  String get navClips => _s('Clips', 'کلپس', 'المقاطع', 'Clips', 'Clips', 'Đoạn ghi');
+  String get navSchedule => _s('Schedule', 'شیڈول', 'الجدول', 'Schema', 'Planning', 'Lịch');
+  String get navSettings => _s('Settings', 'ترتیبات', 'الإعدادات', 'Instellingen', 'Paramètres', 'Cài đặt');
 
   // ── Splash ──────────────────────────────────────────────────────────────────
   String get appTagline => _s(
         'Your Personalized Audio Whisperer',
-        'آپ کا ذاتی آڈیو Whisperer',
+        'آپ کا ذاتی آڈیو ساتھی',
         'مرافقك الصوتي الشخصي',
         'Jouw persoonlijke audio-whisperer',
         'Votre murmureur audio personnalisé',
+        'Trợ lý âm thanh cá nhân của bạn',
       );
 
   // ── Common ──────────────────────────────────────────────────────────────────
-  String get ok => _s('OK', 'ٹھیک', 'حسناً', 'OK', 'OK');
-  String get save => _s('Save', 'محفوظ', 'حفظ', 'Opslaan', 'Enregistrer');
-  String get cancel => _s('Cancel', 'منسوخ', 'إلغاء', 'Annuleren', 'Annuler');
-  String get edit => _s('Edit', 'ترمیم', 'تعديل', 'Bewerken', 'Modifier');
-  String get play => _s('Play', 'چلائیں', 'تشغيل', 'Afspelen', 'Lire');
-  String get pause => _s('Pause', 'روکیں', 'إيقاف', 'Pauzeren', 'Pause');
-  String get stop => _s('Stop', 'بند', 'إيقاف', 'Stoppen', 'Arrêter');
-  String get create => _s('Create', 'بنائیں', 'إنشاء', 'Maken', 'Créer');
-  String get browse => _s('Browse', 'براؤز', 'تصفح', 'Bladeren', 'Parcourir');
-  String get remove => _s('Remove', 'ہٹائیں', 'إزالة', 'Verwijderen', 'Supprimer');
-  String get live => _s('Live', 'لائیو', 'مباشر', 'Live', 'En direct');
-  String get active => _s('Active', 'فعال', 'نشط', 'Actief', 'Actif');
-  String get paused => _s('paused', 'روکا', 'متوقف', 'gepauzeerd', 'en pause');
-  String get playlist => _s('Playlist', 'پلے لسٹ', 'قائمة تشغيل', 'Afspeellijst', 'Playlist');
-  String get clipsUpper => _s('CLIPS', 'کلپس', 'المقاطع', 'CLIPS', 'CLIPS');
-  String get yourClips => _s('YOUR CLIPS', 'آپ کی کلپس', 'مقاطعك', 'JOUW CLIPS', 'VOS CLIPS');
-  String get yourSchedules => _s('YOUR SCHEDULES', 'آپ کے شیڈول', 'جداولك', 'JOUW SCHEMA\'S', 'VOS PLANNING');
+  String get ok => _s('OK', 'ٹھیک', 'حسناً', 'OK', 'OK', 'OK');
+  String get save => _s('Save', 'محفوظ کریں', 'حفظ', 'Opslaan', 'Enregistrer', 'Lưu');
+  String get cancel => _s('Cancel', 'منسوخ کریں', 'إلغاء', 'Annuleren', 'Annuler', 'Hủy');
+  String get edit => _s('Edit', 'ترمیم', 'تعديل', 'Bewerken', 'Modifier', 'Sửa');
+  String get play => _s('Play', 'چلائیں', 'تشغيل', 'Afspelen', 'Lire', 'Phát');
+  String get pause => _s('Pause', 'روکیں', 'إيقاف مؤقت', 'Pauzeren', 'Pause', 'Tạm dừng');
+  String get stop => _s('Stop', 'بند کریں', 'إيقاف', 'Stoppen', 'Arrêter', 'Dừng');
+  String get create => _s('Create', 'بنائیں', 'إنشاء', 'Maken', 'Créer', 'Tạo');
+  String get browse => _s('Browse', 'براؤز کریں', 'تصفح', 'Bladeren', 'Parcourir', 'Duyệt');
+  String get remove => _s('Remove', 'ہٹائیں', 'إزالة', 'Verwijderen', 'Supprimer', 'Xóa');
+  String get live => _s('Live', 'لائیو', 'مباشر', 'Live', 'En direct', 'Trực tiếp');
+  String get active => _s('Active', 'فعال', 'نشط', 'Actief', 'Actif', 'Đang bật');
+  String get paused => _s('paused', 'رکا ہوا', 'متوقف', 'gepauzeerd', 'en pause', 'đã tạm dừng');
+  String get playlist => _s('Playlist', 'پلے لسٹ', 'قائمة تشغيل', 'Afspeellijst', 'Playlist', 'Danh sách phát');
+  String get clipsUpper => _s('CLIPS', 'کلپس', 'المقاطع', 'CLIPS', 'CLIPS', 'ĐOẠN GHI');
+  String get yourClips => _s('YOUR CLIPS', 'آپ کی کلپس', 'مقاطعك', 'JOUW CLIPS', 'VOS CLIPS', 'ĐOẠN GHI CỦA BẠN');
+  String get yourSchedules => _s('YOUR SCHEDULES', 'آپ کے شیڈول', 'جداولك', 'JOUW SCHEMA\'S', 'VOS PLANNINGS', 'LỊCH CỦA BẠN');
 
   // ── Settings ────────────────────────────────────────────────────────────────
-  String get settings => _s('Settings', 'ترتیبات', 'الإعدادات', 'Instellingen', 'Paramètres');
+  String get settings => _s('Settings', 'ترتیبات', 'الإعدادات', 'Instellingen', 'Paramètres', 'Cài đặt');
   String get settingsSubtitle =>
-      _s('Preferences & defaults', 'ترجیحات اور ڈیفالٹ', 'التفضيلات والافتراضيات', 'Voorkeuren & standaard', 'Préférences et valeurs par défaut');
-  String get groupDisplay => _s('Display', 'ڈسپلے', 'العرض', 'Weergave', 'Affichage');
+      _s('Preferences & defaults', 'ترجیحات اور ڈیفالٹ', 'التفضيلات والافتراضيات', 'Voorkeuren & standaard', 'Préférences et valeurs par défaut', 'Tùy chọn & mặc định');
+  String get groupDisplay => _s('Display', 'ڈسپلے', 'العرض', 'Weergave', 'Affichage', 'Hiển thị');
   String get groupSchedulesAlarms =>
-      _s('Schedules & alarms', 'شیڈول اور الارم', 'الجداول والتنبيهات', 'Schema\'s & alarmen', 'Plannings et alarmes');
-  String get groupAccount => _s('Account', 'اکاؤنٹ', 'الحساب', 'Account', 'Compte');
-  String get groupModes => _s('Modes', 'موڈز', 'الأوضاع', 'Modi', 'Modes');
-  String get groupDevice => _s('Device', 'ڈیوائس', 'الجهاز', 'Apparaat', 'Appareil');
-  String get theme => _s('Theme', 'تھیم', 'السمة', 'Thema', 'Thème');
+      _s('Schedules & alarms', 'شیڈول اور الارم', 'الجداول والتنبيهات', 'Schema\'s & alarmen', 'Plannings et alarmes', 'Lịch & báo thức');
+  String get groupAccount => _s('Account', 'اکاؤنٹ', 'الحساب', 'Account', 'Compte', 'Tài khoản');
+  String get groupModes => _s('Modes', 'موڈز', 'الأوضاع', 'Modi', 'Modes', 'Chế độ');
+  String get groupDevice => _s('Device', 'ڈیوائس', 'الجهاز', 'Apparaat', 'Appareil', 'Thiết bị');
+  String get theme => _s('Theme', 'تھیم', 'السمة', 'Thema', 'Thème', 'Giao diện');
   String get themeSubtitle =>
-      _s('Light or dark appearance', 'روشن یا تاریک ظاہری شکل', 'المظهر الفاتح أو الداكن', 'Lichte of donkere weergave', 'Apparence claire ou sombre');
-  String get light => _s('Light', 'روشن', 'فاتح', 'Licht', 'Clair');
-  String get dark => _s('Dark', 'تاریک', 'داكن', 'Donker', 'Sombre');
-  String get auto => _s('Auto', 'خودکار', 'تلقائي', 'Auto', 'Auto');
-  String get showLabels => _s('Show labels', 'لیبل دکھائیں', 'إظهار التسميات', 'Labels tonen', 'Afficher les libellés');
+      _s('Light or dark appearance', 'روشن یا تاریک ظاہری شکل', 'المظهر الفاتح أو الداكن', 'Lichte of donkere weergave', 'Apparence claire ou sombre', 'Giao diện sáng hoặc tối');
+  String get light => _s('Light', 'روشن', 'فاتح', 'Licht', 'Clair', 'Sáng');
+  String get dark => _s('Dark', 'تاریک', 'داكن', 'Donker', 'Sombre', 'Tối');
+  String get auto => _s('Auto', 'خودکار', 'تلقائي', 'Auto', 'Auto', 'Tự động');
+  String get showLabels => _s('Show labels', 'لیبل دکھائیں', 'إظهار التسميات', 'Labels tonen', 'Afficher les libellés', 'Hiện nhãn');
   String get showLabelsSubtitle => _s(
         'Text under navigation icons',
         'نیویگیشن آئیکنز کے نیچے متن',
         'نص تحت أيقونات التنقل',
         'Tekst onder navigatiepictogrammen',
         'Texte sous les icônes de navigation',
+        'Chữ dưới biểu tượng điều hướng',
       );
-  String get language => _s('Language', 'زبان', 'اللغة', 'Taal', 'Langue');
+  String get language => _s('Language', 'زبان', 'اللغة', 'Taal', 'Langue', 'Ngôn ngữ');
   String get languageSubtitle => _s(
         'App display language',
         'ایپ کی زبان',
         'لغة عرض التطبيق',
         'Weergavetaal van de app',
         'Langue d\'affichage de l\'app',
+        'Ngôn ngữ hiển thị của ứng dụng',
       );
-  String get chooseLanguage => _s('Choose language', 'زبان منتخب کریں', 'اختر اللغة', 'Kies taal', 'Choisir la langue');
-  String get alarmsByDefault => _s('Alarms by default', 'ڈیفالٹ الارم', 'تنبيهات افتراضياً', 'Alarmen standaard', 'Alarmes par défaut');
+  String get chooseLanguage => _s('Choose language', 'زبان منتخب کریں', 'اختر اللغة', 'Kies taal', 'Choisir la langue', 'Chọn ngôn ngữ');
+  String get alarmsByDefault => _s('Alarms by default', 'ڈیفالٹ الارم', 'تنبيهات افتراضياً', 'Alarmen standaard', 'Alarmes par défaut', 'Báo thức mặc định');
   String get alarmsByDefaultSubtitle => _s(
         'New schedules notify when whispers are due',
-        'نئے شیڈول whisper کی وقت پر اطلاع دیں',
+        'نئے شیڈول سرگوشی کے وقت پر اطلاع دیں',
         'تُبلغ الجداول الجديدة عند موعد الهمسات',
         'Nieuwe schema\'s melden wanneer whispers klaar zijn',
-        'Les nouvelles plannings notifient quand les murmures sont dus',
+        'Les nouveaux plannings notifient quand les murmures sont dus',
+        'Lịch mới sẽ báo khi đến giờ phát lời thì thầm',
       );
-  String get defaultInterval => _s('Default interval', 'ڈیفالٹ وقفہ', 'الفاصل الافتراضي', 'Standaardinterval', 'Intervalle par défaut');
-  String get signIn => _s('Sign in', 'سائن ان', 'تسجيل الدخول', 'Inloggen', 'Se connecter');
+  String get defaultInterval => _s('Default interval', 'ڈیفالٹ وقفہ', 'الفاصل الافتراضي', 'Standaardinterval', 'Intervalle par défaut', 'Khoảng cách mặc định');
+  String get signIn => _s('Sign in', 'سائن ان', 'تسجيل الدخول', 'Inloggen', 'Se connecter', 'Đăng nhập');
   String get signInSubtitle =>
-      _s('Sync when cloud is enabled', 'کلاؤڈ فعال ہونے پر مطابقت', 'مزامنة عند تفعيل السحابة', 'Synchroniseren wanneer cloud aan staat', 'Synchroniser quand le cloud est activé');
-  String get createAccount => _s('Create account', 'اکاؤنٹ بنائیں', 'إنشاء حساب', 'Account maken', 'Créer un compte');
+      _s('Sync when cloud is enabled', 'کلاؤڈ فعال ہونے پر مطابقت', 'مزامنة عند تفعيل السحابة', 'Synchroniseren wanneer cloud aan staat', 'Synchroniser quand le cloud est activé', 'Đồng bộ khi bật đám mây');
+  String get createAccount => _s('Create account', 'اکاؤنٹ بنائیں', 'إنشاء حساب', 'Account maken', 'Créer un compte', 'Tạo tài khoản');
   String get createAccountSettingsSubtitle =>
-      _s('Backup clips and schedules', 'کلپس اور شیڈول بیک اپ', 'نسخ المقاطع والجداول احتياطياً', 'Clips en schema\'s back-uppen', 'Sauvegarder clips et plannings');
-  String get sleepMode => _s('Sleep mode', 'نیند موڈ', 'وضع النوم', 'Slaapmodus', 'Mode veille');
-  String get sleepModeSubtitle => _s('Silence windows', 'خاموشی کے اوقات', 'نوافذ الصمت', 'Stilteperiodes', 'Fenêtres de silence');
-  String get prayerMode => _s('Prayer mode', 'نماز موڈ', 'وضع الصلاة', 'Gebedsmodus', 'Mode prière');
+      _s('Backup clips and schedules', 'کلپس اور شیڈول بیک اپ', 'نسخ المقاطع والجداول احتياطياً', 'Clips en schema\'s back-uppen', 'Sauvegarder clips et plannings', 'Sao lưu đoạn ghi và lịch');
+  String get sleepMode => _s('Sleep mode', 'نیند موڈ', 'وضع النوم', 'Slaapmodus', 'Mode veille', 'Chế độ ngủ');
+  String get sleepModeSubtitle => _s('Silence windows', 'خاموشی کے اوقات', 'نوافذ الصمت', 'Stilteperiodes', 'Fenêtres de silence', 'Khung giờ im lặng');
+  String get prayerMode => _s('Prayer mode', 'نماز موڈ', 'وضع الصلاة', 'Gebedsmodus', 'Mode prière', 'Chế độ cầu nguyện');
   String get prayerModeSubtitle =>
-      _s('Karachi method · GPS', 'کراچی طریقہ · GPS', 'طريقة كراتشي · GPS', 'Karachi-methode · GPS', 'Méthode Karachi · GPS');
+      _s('Karachi method · GPS', 'کراچی طریقہ · GPS', 'طريقة كراتشي · GPS', 'Karachi-methode · GPS', 'Méthode Karachi · GPS', 'Phương pháp Karachi · GPS');
   String get batteryOptimization =>
-      _s('Battery optimization', 'بیٹری آپٹیمائزیشن', 'تحسين البطارية', 'Batterijoptimalisatie', 'Optimisation batterie');
+      _s('Battery optimization', 'بیٹری آپٹیمائزیشن', 'تحسين البطارية', 'Batterijoptimalisatie', 'Optimisation batterie', 'Tối ưu hóa pin');
   String get batteryOptimizationSubtitle =>
-      _s('Keep schedules reliable', 'شیڈول قابلِ اعتماد رکھیں', 'اجعل الجداول موثوقة', 'Schema\'s betrouwbaar houden', 'Garder les plannings fiables');
+      _s('Keep schedules reliable', 'شیڈول قابلِ اعتماد رکھیں', 'اجعل الجداول موثوقة', 'Schema\'s betrouwbaar houden', 'Garder les plannings fiables', 'Giữ lịch hoạt động ổn định');
   String get versionFooter =>
-      _s('WhisperBack v1.0.0 · Local MVP', 'WhisperBack v1.0.0 · Local MVP', 'WhisperBack v1.0.0 · Local MVP', 'WhisperBack v1.0.0 · Local MVP', 'WhisperBack v1.0.0 · Local MVP');
+      _s('WhisperBack v1.0.0 · Local MVP', 'WhisperBack v1.0.0 · Local MVP', 'WhisperBack v1.0.0 · Local MVP', 'WhisperBack v1.0.0 · Local MVP', 'WhisperBack v1.0.0 · Local MVP', 'WhisperBack v1.0.0 · Local MVP');
 
   String minutesBetweenWhispers(int minutes) => _s(
         '$minutes minutes between whispers',
-        'whispers کے درمیان $minutes منٹ',
+        'سرگوشیوں کے درمیان $minutes منٹ',
         '$minutes دقيقة بين الهمسات',
         '$minutes minuten tussen whispers',
         '$minutes minutes entre les murmures',
+        '$minutes phút giữa các lời thì thầm',
       );
 
-  String minutesCount(int minutes) => _s('$minutes minutes', '$minutes منٹ', '$minutes دقيقة', '$minutes minuten', '$minutes minutes');
+  String minutesCount(int minutes) => _s('$minutes minutes', '$minutes منٹ', '$minutes دقيقة', '$minutes minuten', '$minutes minutes', '$minutes phút');
 
   // ── Home ────────────────────────────────────────────────────────────────────
-  String get goodMorning => _s('Good morning', 'صبح بخیر', 'صباح الخير', 'Goedemorgen', 'Bonjour');
-  String get goodAfternoon => _s('Good afternoon', 'دوپہر بخیر', 'مساء الخير', 'Goedemiddag', 'Bon après-midi');
-  String get goodEvening => _s('Good evening', 'شام بخیر', 'مساء الخير', 'Goedenavond', 'Bonsoir');
+  String get goodMorning => _s('Good morning', 'صبح بخیر', 'صباح الخير', 'Goedemorgen', 'Bonjour', 'Chào buổi sáng');
+  String get goodAfternoon => _s('Good afternoon', 'دوپہر بخیر', 'مساء الخير', 'Goedemiddag', 'Bon après-midi', 'Chào buổi chiều');
+  String get goodEvening => _s('Good evening', 'شام بخیر', 'مساء الخير', 'Goedenavond', 'Bonsoir', 'Chào buổi tối');
   String get createPlaylistToStart => _s(
         'Create a playlist to get started',
         'شروع کرنے کے لیے پلے لسٹ بنائیں',
         'أنشئ قائمة تشغيل للبدء',
         'Maak een afspeellijst om te beginnen',
         'Créez une playlist pour commencer',
+        'Tạo danh sách phát để bắt đầu',
       );
-  String get nextWhisper => _s('Next whisper', 'اگلی whisper', 'الهمسة التالية', 'Volgende whisper', 'Prochain murmure');
+  String get nextWhisper => _s('Next whisper', 'اگلی سرگوشی', 'الهمسة التالية', 'Volgende whisper', 'Prochain murmure', 'Lời thì thầm tiếp theo');
   String get nextWhisperSample => _s(
         'Morning Whispers · ~30 min',
         'Morning Whispers · ~30 منٹ',
-        'Morning Whispers · ~30 د',
+        'Morning Whispers · ~30 دقيقة',
         'Morning Whispers · ~30 min',
         'Morning Whispers · ~30 min',
+        'Morning Whispers · ~30 phút',
       );
-  String get sleepModeActive => _s('Sleep mode active', 'نیند موڈ فعال', 'وضع النوم نشط', 'Slaapmodus actief', 'Mode veille actif');
-  String get prayerPauseActive => _s('Prayer pause active', 'نماز وقفہ فعال', 'توقف الصلاة نشط', 'Gebedspauze actief', 'Pause prière active');
+  String get sleepModeActive => _s('Sleep mode active', 'نیند موڈ فعال', 'وضع النوم نشط', 'Slaapmodus actief', 'Mode veille actif', 'Chế độ ngủ đang bật');
+  String get prayerPauseActive => _s('Prayer pause active', 'نماز وقفہ فعال', 'توقف الصلاة نشط', 'Gebedspauze actief', 'Pause prière active', 'Tạm dừng cầu nguyện đang bật');
   String get activeWhispersPlaying =>
-      _s('Active — whispers playing', 'فعال — whispers چل رہی ہیں', 'نشط — الهمسات تعمل', 'Actief — whispers spelen', 'Actif — murmures en cours');
+      _s('Active — whispers playing', 'فعال — سرگوشیاں چل رہی ہیں', 'نشط — الهمسات تعمل', 'Actief — whispers spelen', 'Actif — murmures en cours', 'Đang bật — đang phát lời thì thầm');
   String get tapPowerToBegin =>
-      _s('Tap power to begin', 'شروع کرنے کے لیے پاور دبائیں', 'اضغط للبدء', 'Tik op power om te beginnen', 'Appuyez sur power pour commencer');
-  String get statPlaylists => _s('Playlists', 'پلے لسٹ', 'قوائم التشغيل', 'Afspeellijsten', 'Playlists');
-  String get statScheduled => _s('Scheduled', 'شیڈول', 'مجدول', 'Gepland', 'Planifié');
-  String get statClips => _s('Clips', 'کلپس', 'المقاطع', 'Clips', 'Clips');
+      _s('Tap power to begin', 'شروع کرنے کے لیے پاور دبائیں', 'اضغط على الزر للبدء', 'Tik op power om te beginnen', 'Appuyez sur power pour commencer', 'Nhấn nút nguồn để bắt đầu');
+  String get statPlaylists => _s('Playlists', 'پلے لسٹ', 'قوائم التشغيل', 'Afspeellijsten', 'Playlists', 'Danh sách phát');
+  String get statScheduled => _s('Scheduled', 'شیڈول شدہ', 'مجدول', 'Gepland', 'Planifié', 'Đã lên lịch');
+  String get statClips => _s('Clips', 'کلپس', 'المقاطع', 'Clips', 'Clips', 'Đoạn ghi');
 
   String playlistsReady(int count) {
     if (count == 1) {
-      return _s('1 playlist ready to whisper', '1 پلے لسٹ whisper کے لیے تیار', 'قائمة واحدة جاهزة للهمس', '1 afspeellijst klaar om te whisperen', '1 playlist prête à murmurer');
+      return _s('1 playlist ready to whisper', '1 پلے لسٹ سرگوشی کے لیے تیار', 'قائمة واحدة جاهزة للهمس', '1 afspeellijst klaar om te whisperen', '1 playlist prête à murmurer', '1 danh sách phát sẵn sàng thì thầm');
     }
-    return _s('$count playlists ready to whisper', '$count پلے لسٹ whispers کے لیے تیار', '$count قوائم جاهزة للهمس', '$count afspeellijsten klaar', '$count playlists prêtes à murmurer');
+    return _s('$count playlists ready to whisper', '$count پلے لسٹ سرگوشی کے لیے تیار', '$count قوائم جاهزة للهمس', '$count afspeellijsten klaar', '$count playlists prêtes à murmurer', '$count danh sách phát sẵn sàng thì thầm');
   }
 
   // ── Playlists ───────────────────────────────────────────────────────────────
-  String get playlists => _s('Playlists', 'پلے لسٹ', 'قوائم التشغيل', 'Afspeellijsten', 'Playlists');
-  String get scheduled => _s('Scheduled', 'شیڈول', 'مجدول', 'Gepland', 'Planifié');
-  String get yourLibrary => _s('Your library', 'آپ کی لائبریری', 'مكتبتك', 'Jouw bibliotheek', 'Votre bibliothèque');
-  String get addClips => _s('Add clips', 'کلپس شامل کریں', 'إضافة مقاطع', 'Clips toevoegen', 'Ajouter des clips');
-  String get newPlaylist => _s('New playlist', 'نئی پلے لسٹ', 'قائمة جديدة', 'Nieuwe afspeellijst', 'Nouvelle playlist');
-  String get noPlaylistsYet => _s('No playlists yet', 'ابھی کوئی پلے لسٹ نہیں', 'لا توجد قوائم بعد', 'Nog geen afspeellijsten', 'Aucune playlist');
-  String get createPlaylist => _s('Create playlist', 'پلے لسٹ بنائیں', 'إنشاء قائمة', 'Afspeellijst maken', 'Créer une playlist');
-  String get totalClips => _s('Total clips', 'کل کلپس', 'إجمالي المقاطع', 'Totaal clips', 'Total clips');
-  String get shuffleOn => _s('Shuffle on', 'شفل آن', 'تشغيل عشوائي', 'Shuffle aan', 'Lecture aléatoire');
-  String get shuffleOff => _s('Shuffle off', 'شفل آف', 'إيقاف العشوائي', 'Shuffle uit', 'Lecture aléatoire off');
-  String get scheduledBadge => _s('Scheduled', 'شیڈول', 'مجدول', 'Gepland', 'Planifié');
-  String get playAll => _s('Play all', 'سب چلائیں', 'تشغيل الكل', 'Alles afspelen', 'Tout lire');
-  String get scheduledActiveNow => _s('Scheduled · Active now', 'شیڈول · ابھی فعال', 'مجدول · نشط الآن', 'Gepland · Nu actief', 'Planifié · Actif maintenant');
-  String get scheduledPlayback => _s('Scheduled playback', 'شیڈول پلے بیک', 'تشغيل مجدول', 'Geplande weergave', 'Lecture planifiée');
-  String get noClipsInPlaylist => _s('No clips in this playlist', 'اس پلے لسٹ میں کوئی کلپ نہیں', 'لا مقاطع في هذه القائمة', 'Geen clips in deze lijst', 'Aucun clip dans cette playlist');
+  String get playlists => _s('Playlists', 'پلے لسٹ', 'قوائم التشغيل', 'Afspeellijsten', 'Playlists', 'Danh sách phát');
+  String get scheduled => _s('Scheduled', 'شیڈول شدہ', 'مجدول', 'Gepland', 'Planifié', 'Đã lên lịch');
+  String get yourLibrary => _s('Your library', 'آپ کی لائبریری', 'مكتبتك', 'Jouw bibliotheek', 'Votre bibliothèque', 'Thư viện của bạn');
+  String get addClips => _s('Add clips', 'کلپس شامل کریں', 'إضافة مقاطع', 'Clips toevoegen', 'Ajouter des clips', 'Thêm đoạn ghi');
+  String get newPlaylist => _s('New playlist', 'نئی پلے لسٹ', 'قائمة جديدة', 'Nieuwe afspeellijst', 'Nouvelle playlist', 'Danh sách phát mới');
+  String get noPlaylistsYet => _s('No playlists yet', 'ابھی کوئی پلے لسٹ نہیں', 'لا توجد قوائم بعد', 'Nog geen afspeellijsten', 'Aucune playlist', 'Chưa có danh sách phát');
+  String get createPlaylist => _s('Create playlist', 'پلے لسٹ بنائیں', 'إنشاء قائمة', 'Afspeellijst maken', 'Créer une playlist', 'Tạo danh sách phát');
+  String get totalClips => _s('Total clips', 'کل کلپس', 'إجمالي المقاطع', 'Totaal clips', 'Total clips', 'Tổng số đoạn ghi');
+  String get shuffleOn => _s('Shuffle on', 'شفل آن', 'تشغيل عشوائي', 'Shuffle aan', 'Lecture aléatoire activée', 'Bật phát ngẫu nhiên');
+  String get shuffleOff => _s('Shuffle off', 'شفل آف', 'إيقاف العشوائي', 'Shuffle uit', 'Lecture aléatoire désactivée', 'Tắt phát ngẫu nhiên');
+  String get scheduledBadge => _s('Scheduled', 'شیڈول شدہ', 'مجدول', 'Gepland', 'Planifié', 'Đã lên lịch');
+  String get playAll => _s('Play all', 'سب چلائیں', 'تشغيل الكل', 'Alles afspelen', 'Tout lire', 'Phát tất cả');
+  String get scheduledActiveNow => _s('Scheduled · Active now', 'شیڈول · ابھی فعال', 'مجدول · نشط الآن', 'Gepland · Nu actief', 'Planifié · Actif maintenant', 'Đã lên lịch · Đang chạy');
+  String get scheduledPlayback => _s('Scheduled playback', 'شیڈول پلے بیک', 'تشغيل مجدول', 'Geplande weergave', 'Lecture planifiée', 'Phát theo lịch');
+  String get noClipsInPlaylist => _s('No clips in this playlist', 'اس پلے لسٹ میں کوئی کلپ نہیں', 'لا مقاطع في هذه القائمة', 'Geen clips in deze lijst', 'Aucun clip dans cette playlist', 'Không có đoạn ghi trong danh sách này');
   String get recordOrImportClips =>
-      _s('Record or import clips, then add them here.', 'کلپ ریکارڈ یا درآمد کریں، پھر یہاں شامل کریں۔', 'سجّل أو استورد مقاطع ثم أضفها هنا.', 'Neem op of importeer clips en voeg ze hier toe.', 'Enregistrez ou importez des clips, puis ajoutez-les ici.');
-  String get browseClips => _s('Browse clips', 'کلپس براؤز کریں', 'تصفح المقاطع', 'Clips bladeren', 'Parcourir les clips');
+      _s('Record or import clips, then add them here.', 'کلپ ریکارڈ یا درآمد کریں، پھر یہاں شامل کریں۔', 'سجّل أو استورد مقاطع ثم أضفها هنا.', 'Neem op of importeer clips en voeg ze hier toe.', 'Enregistrez ou importez des clips, puis ajoutez-les ici.', 'Ghi âm hoặc nhập đoạn ghi, rồi thêm vào đây.');
+  String get browseClips => _s('Browse clips', 'کلپس براؤز کریں', 'تصفح المقاطع', 'Clips bladeren', 'Parcourir les clips', 'Duyệt đoạn ghi');
+  String get selectClipsForPlaylist => _s(
+        'Select clips to add to this playlist',
+        'اس پلے لسٹ میں شامل کرنے کے لیے کلپس منتخب کریں',
+        'اختر المقاطع لإضافتها إلى هذه القائمة',
+        'Selecteer clips voor deze afspeellijst',
+        'Sélectionnez les clips à ajouter à cette playlist',
+        'Chọn đoạn ghi để thêm vào danh sách phát này',
+      );
+  String get added => _s('Added', 'شامل', 'مضاف', 'Toegevoegd', 'Ajouté', 'Đã thêm');
+  String get done => _s('Done', 'مکمل', 'تم', 'Klaar', 'Terminé', 'Xong');
+  String get recordOrImportFirst => _s(
+        'Record or import a clip first, then add it to your playlist.',
+        'پہلے کلپ ریکارڈ یا درآمد کریں، پھر پلے لسٹ میں شامل کریں۔',
+        'سجّل أو استورد مقطعاً أولاً، ثم أضفه إلى قائمتك.',
+        'Neem eerst een clip op of importeer er een.',
+        'Enregistrez ou importez un clip, puis ajoutez-le à votre playlist.',
+        'Hãy ghi âm hoặc nhập một đoạn ghi trước, rồi thêm vào danh sách phát.',
+      );
+  String clipsAddedToPlaylist(int count, String playlist) => _s(
+        '$count clip${count == 1 ? '' : 's'} added to $playlist',
+        '$count کلپ $playlist میں شامل',
+        'تمت إضافة $count مقطع إلى $playlist',
+        '$count clip${count == 1 ? '' : 's'} toegevoegd aan $playlist',
+        '$count clip${count == 1 ? '' : 's'} ajouté${count == 1 ? '' : 's'} à $playlist',
+        'Đã thêm $count đoạn ghi vào $playlist',
+      );
+  String addClipsCount(int count) => _s(
+        'Add $count clip${count == 1 ? '' : 's'}',
+        '$count کلپ شامل کریں',
+        'إضافة $count مقطع',
+        '$count clip${count == 1 ? '' : 's'} toevoegen',
+        'Ajouter $count clip${count == 1 ? '' : 's'}',
+        'Thêm $count đoạn ghi',
+      );
+  String get scheduleSavedTurnActive => _s(
+        'Schedule saved. Turn the app Active on Home to start whispers.',
+        'شیڈول محفوظ۔ سرگوشیاں شروع کرنے کے لیے ہوم پر ایپ فعال کریں۔',
+        'تم حفظ الجدول. فعّل التطبيق من الرئيسية لبدء الهمس.',
+        'Schema opgeslagen. Zet de app op Actief op Home.',
+        'Planning enregistrée. Activez l\'app sur l\'accueil pour démarrer.',
+        'Đã lưu lịch. Bật ứng dụng ở Trang chủ để bắt đầu phát.',
+      );
 
   String clipCountLabel(int count) => _s(
         '$count clip${count == 1 ? '' : 's'}',
         '$count کلپ',
-        '$count مقط${count == 1 ? '' : 'ع'}',
+        '$count مقطع',
         '$count clip${count == 1 ? '' : 's'}',
         '$count clip${count == 1 ? '' : 's'}',
+        '$count đoạn ghi',
       );
 
   String clipsInOrder(int count) => _s(
         '$count clip${count == 1 ? '' : 's'} in order',
         '$count کلپ ترتیب سے',
-        '$count مقط${count == 1 ? '' : 'ع'} بالترتيب',
+        '$count مقطع بالترتيب',
         '$count clip${count == 1 ? '' : 's'} op volgorde',
         '$count clip${count == 1 ? '' : 's'} dans l\'ordre',
+        '$count đoạn ghi theo thứ tự',
       );
 
   String collectionsSummary(int collections, int clips) => _s(
@@ -250,6 +307,7 @@ class AppLocalizations {
         '$collections مجموعات · $clips مقاطع',
         '$collections collecties · $clips clips',
         '$collections collections · $clips clips',
+        '$collections bộ sưu tập · $clips đoạn ghi',
       );
 
   String scheduleStartsEvery(String time, String interval) => _s(
@@ -258,32 +316,35 @@ class AppLocalizations {
         'يبدأ $time · كل $interval',
         'Start $time · elke $interval',
         'Démarre $time · toutes les $interval',
+        'Bắt đầu $time · mỗi $interval',
       );
 
   // ── Clips ───────────────────────────────────────────────────────────────────
-  String get clipLibrary => _s('Clip Library', 'کلپ لائبریری', 'مكتبة المقاطع', 'Clipbibliotheek', 'Bibliothèque de clips');
-  String get record => _s('Record', 'ریکارڈ', 'تسجيل', 'Opnemen', 'Enregistrer');
-  String get import => _s('Import', 'درآمد', 'استيراد', 'Importeren', 'Importer');
-  String get all => _s('All', 'سب', 'الكل', 'Alles', 'Tout');
-  String get recorded => _s('Recorded', 'ریکارڈ شدہ', 'مسجل', 'Opgenomen', 'Enregistré');
-  String get imported => _s('Imported', 'درآمد شدہ', 'مستورد', 'Geïmporteerd', 'Importé');
-  String get noClipsYet => _s('No clips yet', 'ابھی کوئی کلپ نہیں', 'لا مقاطع بعد', 'Nog geen clips', 'Aucun clip');
+  String get clipLibrary => _s('Clip Library', 'کلپ لائبریری', 'مكتبة المقاطع', 'Clipbibliotheek', 'Bibliothèque de clips', 'Thư viện đoạn ghi');
+  String get record => _s('Record', 'ریکارڈ', 'تسجيل', 'Opnemen', 'Enregistrer', 'Ghi âm');
+  String get import => _s('Import', 'درآمد', 'استيراد', 'Importeren', 'Importer', 'Nhập');
+  String get all => _s('All', 'سب', 'الكل', 'Alles', 'Tout', 'Tất cả');
+  String get recorded => _s('Recorded', 'ریکارڈ شدہ', 'مسجل', 'Opgenomen', 'Enregistré', 'Đã ghi');
+  String get imported => _s('Imported', 'درآمد شدہ', 'مستورد', 'Geïmporteerd', 'Importé', 'Đã nhập');
+  String get noClipsYet => _s('No clips yet', 'ابھی کوئی کلپ نہیں', 'لا مقاطع بعد', 'Nog geen clips', 'Aucun clip', 'Chưa có đoạn ghi');
   String get noClipsEmptyHint => _s(
         'Record a whisper or import an audio file to get started.',
-        'شروع کرنے کے لیے whisper ریکارڈ کریں یا آڈیو درآمد کریں۔',
+        'شروع کرنے کے لیے سرگوشی ریکارڈ کریں یا آڈیو درآمد کریں۔',
         'سجّل همسة أو استورد ملفاً صوتياً للبدء.',
         'Neem een whisper op of importeer een audiobestand om te beginnen.',
         'Enregistrez un murmure ou importez un fichier audio pour commencer.',
+        'Ghi một lời thì thầm hoặc nhập tệp âm thanh để bắt đầu.',
       );
-  String get noRecordedClips => _s('No recorded clips', 'کوئی ریکارڈ شدہ کلپ نہیں', 'لا مقاطع مسجلة', 'Geen opgenomen clips', 'Aucun clip enregistré');
-  String get noImportedClips => _s('No imported clips', 'کوئی درآمد شدہ کلپ نہیں', 'لا مقاطع مستوردة', 'Geen geïmporteerde clips', 'Aucun clip importé');
+  String get noRecordedClips => _s('No recorded clips', 'کوئی ریکارڈ شدہ کلپ نہیں', 'لا مقاطع مسجلة', 'Geen opgenomen clips', 'Aucun clip enregistré', 'Không có đoạn ghi nào');
+  String get noImportedClips => _s('No imported clips', 'کوئی درآمد شدہ کلپ نہیں', 'لا مقاطع مستوردة', 'Geen geïmporteerde clips', 'Aucun clip importé', 'Không có đoạn ghi đã nhập');
 
   String clipsSummary(int count, String duration) => _s(
         '$count clip${count == 1 ? '' : 's'} · $duration total',
-        '$count کلپ · $duration کل',
-        '$count مقط${count == 1 ? '' : 'ع'} · $duration إجمالي',
+        '$count کلپ · کل $duration',
+        '$count مقطع · $duration إجمالي',
         '$count clip${count == 1 ? '' : 's'} · $duration totaal',
         '$count clip${count == 1 ? '' : 's'} · $duration au total',
+        '$count đoạn ghi · tổng $duration',
       );
 
   String filterLabel(String name, int count) => '$name · $count';
@@ -294,51 +355,53 @@ class AppLocalizations {
         '$count عنصر',
         '$count item${count == 1 ? '' : 's'}',
         '$count élément${count == 1 ? '' : 's'}',
+        '$count mục',
       );
 
   // ── Schedule overview ───────────────────────────────────────────────────────
-  String get schedules => _s('Schedules', 'شیڈول', 'الجداول', 'Schema\'s', 'Plannings');
-  String get noSchedulesYet => _s('No whispers scheduled yet', 'ابھی کوئی whisper شیڈول نہیں', 'لا همسات مجدولة بعد', 'Nog geen whispers gepland', 'Aucun murmure planifié');
-  String get planYourWhispers => _s('Plan your whispers', 'اپنی whispers پلان کریں', 'خطط لهمساتك', 'Plan je whispers', 'Planifiez vos murmures');
-  String get alarms => _s('Alarms', 'الارم', 'تنبيهات', 'Alarmen', 'Alarmes');
-  String get next => _s('Next', 'اگلا', 'التالي', 'Volgende', 'Suivant');
-  String get customizeSchedule => _s('Customize schedule', 'شیڈول حسبِ منشا', 'تخصيص الجدول', 'Schema aanpassen', 'Personnaliser la planning');
+  String get schedules => _s('Schedules', 'شیڈول', 'الجداول', 'Schema\'s', 'Plannings', 'Lịch');
+  String get noSchedulesYet => _s('No whispers scheduled yet', 'ابھی کوئی سرگوشی شیڈول نہیں', 'لا همسات مجدولة بعد', 'Nog geen whispers gepland', 'Aucun murmure planifié', 'Chưa có lời thì thầm nào được lên lịch');
+  String get planYourWhispers => _s('Plan your whispers', 'اپنی سرگوشیاں پلان کریں', 'خطط لهمساتك', 'Plan je whispers', 'Planifiez vos murmures', 'Lên kế hoạch cho lời thì thầm');
+  String get alarms => _s('Alarms', 'الارم', 'تنبيهات', 'Alarmen', 'Alarmes', 'Báo thức');
+  String get next => _s('Next', 'اگلا', 'التالي', 'Volgende', 'Suivant', 'Tiếp theo');
+  String get customizeSchedule => _s('Customize schedule', 'شیڈول حسبِ منشا', 'تخصيص الجدول', 'Schema aanpassen', 'Personnaliser le planning', 'Tùy chỉnh lịch');
   String get customizeScheduleSubtitle =>
-      _s('Times, intervals, days & alarms', 'اوقات، وقفے، دن اور الارم', 'الأوقات والفواصل والأيام والتنبيهات', 'Tijden, intervallen, dagen & alarmen', 'Horaires, intervalles, jours et alarmes');
-  String get alarmOn => _s('Alarm on', 'الارم آن', 'تنبيه مفعّل', 'Alarm aan', 'Alarme activée');
-  String get shuffle => _s('Shuffle', 'شفل', 'عشوائي', 'Shuffle', 'Aléatoire');
-  String get nextWhisperIn => _s('Next whisper in ', 'اگلی whisper ', 'الهمسة التالية خلال ', 'Volgende whisper over ', 'Prochain murmure dans ');
+      _s('Times, intervals, days & alarms', 'اوقات، وقفے، دن اور الارم', 'الأوقات والفواصل والأيام والتنبيهات', 'Tijden, intervallen, dagen & alarmen', 'Horaires, intervalles, jours et alarmes', 'Giờ, khoảng cách, ngày & báo thức');
+  String get alarmOn => _s('Alarm on', 'الارم آن', 'تنبيه مفعّل', 'Alarm aan', 'Alarme activée', 'Bật báo thức');
+  String get shuffle => _s('Shuffle', 'شفل', 'عشوائي', 'Shuffle', 'Aléatoire', 'Ngẫu nhiên');
+  String get nextWhisperIn => _s('Next whisper in ', 'اگلی سرگوشی ', 'الهمسة التالية خلال ', 'Volgende whisper over ', 'Prochain murmure dans ', 'Lời thì thầm tiếp theo sau ');
 
   // ── Schedule builder ────────────────────────────────────────────────────────
-  String get customize => _s('Customize', 'حسبِ منشا', 'تخصيص', 'Aanpassen', 'Personnaliser');
+  String get customize => _s('Customize', 'حسبِ منشا', 'تخصيص', 'Aanpassen', 'Personnaliser', 'Tùy chỉnh');
   String get setWhenWhispersPlay => _s(
         'Set when whispers play and how often',
-        'طے کریں whispers کب اور کتنی بار چلیں',
+        'طے کریں سرگوشیاں کب اور کتنی بار چلیں',
         'حدد متى تعمل الهمسات ومدى تكرارها',
         'Stel in wanneer whispers spelen en hoe vaak',
         'Définissez quand et à quelle fréquence les murmures jouent',
+        'Đặt thời điểm và tần suất phát lời thì thầm',
       );
-  String get timeWindow => _s('Time window', 'وقت کی مدت', 'نافذة الوقت', 'Tijdvenster', 'Fenêtre horaire');
-  String get startTime => _s('Start time', 'شروع کا وقت', 'وقت البدء', 'Starttijd', 'Heure de début');
-  String get endTime => _s('End time', 'اختتام کا وقت', 'وقت الانتهاء', 'Eindtijd', 'Heure de fin');
-  String get noEnd => _s('No end', 'بغیر اختتام', 'بدون نهاية', 'Geen einde', 'Sans fin');
-  String get repeatDays => _s('Repeat days', 'دہرانے کے دن', 'أيام التكرار', 'Herhalingsdagen', 'Jours de répétition');
-  String get everyDay => _s('Every day', 'ہر روز', 'كل يوم', 'Elke dag', 'Chaque jour');
-  String get weekdays => _s('Weekdays', 'ہفتے کے دن', 'أيام الأسبوع', 'Weekdagen', 'Jours ouvrables');
-  String get weekends => _s('Weekends', 'ویک اینڈ', 'عطلة نهاية الأسبوع', 'Weekenden', 'Week-ends');
+  String get timeWindow => _s('Time window', 'وقت کی مدت', 'نافذة الوقت', 'Tijdvenster', 'Fenêtre horaire', 'Khung giờ');
+  String get startTime => _s('Start time', 'شروع کا وقت', 'وقت البدء', 'Starttijd', 'Heure de début', 'Giờ bắt đầu');
+  String get endTime => _s('End time', 'اختتام کا وقت', 'وقت الانتهاء', 'Eindtijd', 'Heure de fin', 'Giờ kết thúc');
+  String get noEnd => _s('No end', 'بغیر اختتام', 'بدون نهاية', 'Geen einde', 'Sans fin', 'Không kết thúc');
+  String get repeatDays => _s('Repeat days', 'دہرانے کے دن', 'أيام التكرار', 'Herhalingsdagen', 'Jours de répétition', 'Ngày lặp lại');
+  String get everyDay => _s('Every day', 'ہر روز', 'كل يوم', 'Elke dag', 'Chaque jour', 'Mỗi ngày');
+  String get weekdays => _s('Weekdays', 'ہفتے کے دن', 'أيام الأسبوع', 'Weekdagen', 'Jours ouvrables', 'Ngày trong tuần');
+  String get weekends => _s('Weekends', 'ویک اینڈ', 'عطلة نهاية الأسبوع', 'Weekenden', 'Week-ends', 'Cuối tuần');
   String get intervalBetweenWhispers =>
-      _s('Interval between whispers', 'whispers کے درمیان وقفہ', 'الفاصل بين الهمسات', 'Interval tussen whispers', 'Intervalle entre les murmures');
-  String get playbackAndAlarms => _s('Playback & alarms', 'پلے بیک اور الارم', 'التشغيل والتنبيهات', 'Weergave & alarmen', 'Lecture et alarmes');
-  String get shuffleClips => _s('Shuffle clips', 'کلپس شفل', 'تشغيل عشوائي للمقاطع', 'Clips shufflen', 'Lecture aléatoire des clips');
+      _s('Interval between whispers', 'سرگوشیوں کے درمیان وقفہ', 'الفاصل بين الهمسات', 'Interval tussen whispers', 'Intervalle entre les murmures', 'Khoảng cách giữa các lời thì thầm');
+  String get playbackAndAlarms => _s('Playback & alarms', 'پلے بیک اور الارم', 'التشغيل والتنبيهات', 'Weergave & alarmen', 'Lecture et alarmes', 'Phát & báo thức');
+  String get shuffleClips => _s('Shuffle clips', 'کلپس شفل', 'تشغيل عشوائي للمقاطع', 'Clips shufflen', 'Lecture aléatoire des clips', 'Phát ngẫu nhiên đoạn ghi');
   String get shuffleClipsSubtitle =>
-      _s('Random order within playlist', 'پلے لسٹ میں بے ترتیب', 'ترتيب عشوائي داخل القائمة', 'Willekeurige volgorde in lijst', 'Ordre aléatoire dans la playlist');
-  String get alarmNotification => _s('Alarm notification', 'الارم اطلاع', 'إشعار التنبيه', 'Alarmmelding', 'Notification d\'alarme');
+      _s('Random order within playlist', 'پلے لسٹ میں بے ترتیب', 'ترتيب عشوائي داخل القائمة', 'Willekeurige volgorde in lijst', 'Ordre aléatoire dans la playlist', 'Thứ tự ngẫu nhiên trong danh sách');
+  String get alarmNotification => _s('Alarm notification', 'الارم اطلاع', 'إشعار التنبيه', 'Alarmmelding', 'Notification d\'alarme', 'Thông báo báo thức');
   String get alarmNotificationSubtitle =>
-      _s('Notify when each whisper is due', 'ہر whisper کی وقت پر اطلاع', 'أبلغ عند موعد كل همسة', 'Melden wanneer elke whisper klaar is', 'Notifier quand chaque murmure est dû');
-  String get saveSchedule => _s('Save Schedule', 'شیڈول محفوظ', 'حفظ الجدول', 'Schema opslaan', 'Enregistrer la planning');
-  String get scheduleSaved => _s('Schedule saved', 'شیڈول محفوظ', 'تم حفظ الجدول', 'Schema opgeslagen', 'Planning enregistrée');
-  String get scheduleSavedWithAlarm => _s('Schedule saved with alarm', 'الارم کے ساتھ شیڈول محفوظ', 'تم الحفظ مع التنبيه', 'Schema opgeslagen met alarm', 'Planning enregistrée avec alarme');
-  String get scheduleConflict => _s('Schedule conflict', 'شیڈول تنازع', 'تعارض في الجدول', 'Schemaconflict', 'Conflit de planning');
+      _s('Notify when each whisper is due', 'ہر سرگوشی کے وقت پر اطلاع', 'أبلغ عند موعد كل همسة', 'Melden wanneer elke whisper klaar is', 'Notifier quand chaque murmure est dû', 'Báo khi đến giờ mỗi lời thì thầm');
+  String get saveSchedule => _s('Save Schedule', 'شیڈول محفوظ کریں', 'حفظ الجدول', 'Schema opslaan', 'Enregistrer le planning', 'Lưu lịch');
+  String get scheduleSaved => _s('Schedule saved', 'شیڈول محفوظ', 'تم حفظ الجدول', 'Schema opgeslagen', 'Planning enregistrée', 'Đã lưu lịch');
+  String get scheduleSavedWithAlarm => _s('Schedule saved with alarm', 'الارم کے ساتھ شیڈول محفوظ', 'تم الحفظ مع التنبيه', 'Schema opgeslagen met alarm', 'Planning enregistrée avec alarme', 'Đã lưu lịch kèm báo thức');
+  String get scheduleConflict => _s('Schedule conflict', 'شیڈول تنازع', 'تعارض في الجدول', 'Schemaconflict', 'Conflit de planning', 'Lịch bị trùng');
 
   String scheduleConflictMessage(String name) => _s(
         'This overlaps with "$name". Adjust the start time or interval.',
@@ -346,232 +409,244 @@ class AppLocalizations {
         'يتداخل مع "$name". عدّل وقت البدء أو الفاصل.',
         'Dit overlapt met "$name". Pas starttijd of interval aan.',
         'Chevauche "$name". Ajustez l\'heure de début ou l\'intervalle.',
+        'Trùng với "$name". Hãy chỉnh giờ bắt đầu hoặc khoảng cách.',
       );
 
   // ── Playback ────────────────────────────────────────────────────────────────
-  String get nowPlaying => _s('Now playing', 'اب چل رہا', 'يعمل الآن', 'Nu aan het spelen', 'En lecture');
-  String get minimizePlayer => _s('Minimize player', 'پلیئر چھوٹا کریں', 'تصغير المشغّل', 'Speler minimaliseren', 'Réduire le lecteur');
-  String get stopPlayback => _s('Stop playback', 'پلے بیک بند', 'إيقاف التشغيل', 'Weergave stoppen', 'Arrêter la lecture');
-  String get toggleShuffle => _s('Toggle shuffle', 'شفل تبدیل', 'تبديل العشوائي', 'Shuffle wisselen', 'Basculer aléatoire');
+  String get nowPlaying => _s('Now playing', 'اب چل رہا', 'يعمل الآن', 'Nu aan het spelen', 'En lecture', 'Đang phát');
+  String get minimizePlayer => _s('Minimize player', 'پلیئر چھوٹا کریں', 'تصغير المشغّل', 'Speler minimaliseren', 'Réduire le lecteur', 'Thu nhỏ trình phát');
+  String get stopPlayback => _s('Stop playback', 'پلے بیک بند کریں', 'إيقاف التشغيل', 'Weergave stoppen', 'Arrêter la lecture', 'Dừng phát');
+  String get toggleShuffle => _s('Toggle shuffle', 'شفل تبدیل کریں', 'تبديل العشوائي', 'Shuffle wisselen', 'Basculer aléatoire', 'Bật/tắt phát ngẫu nhiên');
 
   // ── Auth ────────────────────────────────────────────────────────────────────
-  String get welcomeBack => _s('Welcome back', 'خوش آمدید', 'مرحباً بعودتك', 'Welkom terug', 'Bon retour');
+  String get welcomeBack => _s('Welcome back', 'خوش آمدید', 'مرحباً بعودتك', 'Welkom terug', 'Bon retour', 'Chào mừng trở lại');
   String get signInPageSubtitle => _s(
         'Sign in to sync your whispers across every device.',
-        'ہر ڈیوائس پر whispers مطابقت کے لیے سائن ان کریں۔',
+        'ہر ڈیوائس پر سرگوشیاں مطابقت کے لیے سائن ان کریں۔',
         'سجّل الدخول لمزامنة همساتك على كل جهاز.',
         'Log in om whispers op elk apparaat te synchroniseren.',
         'Connectez-vous pour synchroniser vos murmures sur tous les appareils.',
+        'Đăng nhập để đồng bộ lời thì thầm trên mọi thiết bị.',
       );
-  String get secure => _s('Secure', 'محفوظ', 'آمن', 'Veilig', 'Sécurisé');
-  String get cloudSync => _s('Cloud sync', 'کلاؤڈ مطابقت', 'مزامنة سحابية', 'Cloudsync', 'Sync cloud');
-  String get private => _s('Private', 'نجی', 'خاص', 'Privé', 'Privé');
-  String get emailAddress => _s('Email address', 'ای میل', 'البريد الإلكتروني', 'E-mailadres', 'Adresse e-mail');
-  String get emailHint => _s('you@example.com', 'you@example.com', 'you@example.com', 'you@example.com', 'you@example.com');
-  String get password => _s('Password', 'پاس ورڈ', 'كلمة المرور', 'Wachtwoord', 'Mot de passe');
-  String get passwordHint => _s('Your password', 'آپ کا پاس ورڈ', 'كلمة مرورك', 'Je wachtwoord', 'Votre mot de passe');
-  String get forgotPassword => _s('Forgot password?', 'پاس ورڈ بھول گئے؟', 'نسيت كلمة المرور؟', 'Wachtwoord vergeten?', 'Mot de passe oublié ?');
-  String get signInButton => _s('Sign In', 'سائن ان', 'تسجيل الدخول', 'Inloggen', 'Se connecter');
-  String get dontHaveAccount => _s("Don't have an account? ", 'اکاؤنٹ نہیں؟ ', 'ليس لديك حساب؟ ', 'Geen account? ', 'Pas de compte ? ');
-  String get signUpFree => _s('Sign up free', 'مفت سائن اپ', 'سجّل مجاناً', 'Gratis registreren', 'Inscrivez-vous gratuitement');
-  String get createAccountTitle => _s('Create account', 'اکاؤنٹ بنائیں', 'إنشاء حساب', 'Account maken', 'Créer un compte');
+  String get secure => _s('Secure', 'محفوظ', 'آمن', 'Veilig', 'Sécurisé', 'An toàn');
+  String get cloudSync => _s('Cloud sync', 'کلاؤڈ مطابقت', 'مزامنة سحابية', 'Cloudsync', 'Sync cloud', 'Đồng bộ đám mây');
+  String get private => _s('Private', 'نجی', 'خاص', 'Privé', 'Privé', 'Riêng tư');
+  String get emailAddress => _s('Email address', 'ای میل', 'البريد الإلكتروني', 'E-mailadres', 'Adresse e-mail', 'Địa chỉ email');
+  String get emailHint => _s('you@example.com', 'you@example.com', 'you@example.com', 'you@example.com', 'you@example.com', 'you@example.com');
+  String get password => _s('Password', 'پاس ورڈ', 'كلمة المرور', 'Wachtwoord', 'Mot de passe', 'Mật khẩu');
+  String get passwordHint => _s('Your password', 'آپ کا پاس ورڈ', 'كلمة مرورك', 'Je wachtwoord', 'Votre mot de passe', 'Mật khẩu của bạn');
+  String get forgotPassword => _s('Forgot password?', 'پاس ورڈ بھول گئے؟', 'نسيت كلمة المرور؟', 'Wachtwoord vergeten?', 'Mot de passe oublié ?', 'Quên mật khẩu?');
+  String get signInButton => _s('Sign In', 'سائن ان', 'تسجيل الدخول', 'Inloggen', 'Se connecter', 'Đăng nhập');
+  String get dontHaveAccount => _s("Don't have an account? ", 'اکاؤنٹ نہیں؟ ', 'ليس لديك حساب؟ ', 'Geen account? ', 'Pas de compte ? ', 'Chưa có tài khoản? ');
+  String get signUpFree => _s('Sign up free', 'مفت سائن اپ', 'سجّل مجاناً', 'Gratis registreren', 'Inscrivez-vous gratuitement', 'Đăng ký miễn phí');
+  String get createAccountTitle => _s('Create account', 'اکاؤنٹ بنائیں', 'إنشاء حساب', 'Account maken', 'Créer un compte', 'Tạo tài khoản');
   String get createAccountSubtitle => _s(
         'Record whispers, build playlists, and schedule playback.',
-        'whispers ریکارڈ کریں، پلے لسٹ بنائیں، شیڈول کریں۔',
+        'سرگوشیاں ریکارڈ کریں، پلے لسٹ بنائیں، شیڈول کریں۔',
         'سجّل همسات، أنشئ قوائم، وجدول التشغيل.',
         'Neem whispers op, maak afspeellijsten en plan weergave.',
         'Enregistrez des murmures, créez des playlists et planifiez.',
+        'Ghi lời thì thầm, tạo danh sách phát và lên lịch.',
       );
-  String get syncClips => _s('Sync clips', 'کلپس مطابقت', 'مزامنة المقاطع', 'Clips synchroniseren', 'Synchroniser clips');
-  String get schedulesLabel => _s('Schedules', 'شیڈول', 'الجداول', 'Schema\'s', 'Plannings');
-  String get cloudBackup => _s('Cloud backup', 'کلاؤڈ بیک اپ', 'نسخ سحابي', 'Cloudback-up', 'Sauvegarde cloud');
-  String get fullName => _s('Full name', 'پورا نام', 'الاسم الكامل', 'Volledige naam', 'Nom complet');
-  String get fullNameHint => _s('Maria Khan', 'Maria Khan', 'Maria Khan', 'Maria Khan', 'Maria Khan');
-  String get passwordHintSignup => _s('At least 8 characters', 'کم از کم 8 حروف', '8 أحرف على الأقل', 'Minimaal 8 tekens', 'Au moins 8 caractères');
-  String get createAccountButton => _s('Create Account', 'اکاؤنٹ بنائیں', 'إنشاء حساب', 'Account maken', 'Créer un compte');
+  String get syncClips => _s('Sync clips', 'کلپس مطابقت', 'مزامنة المقاطع', 'Clips synchroniseren', 'Synchroniser clips', 'Đồng bộ đoạn ghi');
+  String get schedulesLabel => _s('Schedules', 'شیڈول', 'الجداول', 'Schema\'s', 'Plannings', 'Lịch');
+  String get cloudBackup => _s('Cloud backup', 'کلاؤڈ بیک اپ', 'نسخ سحابي', 'Cloudback-up', 'Sauvegarde cloud', 'Sao lưu đám mây');
+  String get fullName => _s('Full name', 'پورا نام', 'الاسم الكامل', 'Volledige naam', 'Nom complet', 'Họ và tên');
+  String get fullNameHint => _s('Maria Khan', 'Maria Khan', 'Maria Khan', 'Maria Khan', 'Maria Khan', 'Maria Khan');
+  String get passwordHintSignup => _s('At least 8 characters', 'کم از کم 8 حروف', '8 أحرف على الأقل', 'Minimaal 8 tekens', 'Au moins 8 caractères', 'Ít nhất 8 ký tự');
+  String get createAccountButton => _s('Create Account', 'اکاؤنٹ بنائیں', 'إنشاء حساب', 'Account maken', 'Créer un compte', 'Tạo tài khoản');
   String get acceptTermsError =>
-      _s('Please accept the terms to continue', 'جاری رکھنے کے لیے شرائط قبول کریں', 'اقبل الشروط للمتابعة', 'Accepteer de voorwaarden om door te gaan', 'Acceptez les conditions pour continuer');
-  String get alreadyHaveAccount => _s('Already have an account? ', 'پہلے سے اکاؤنٹ؟ ', 'لديك حساب؟ ', 'Al een account? ', 'Déjà un compte ? ');
-  String get continueWithoutAccount => _s('Continue without account →', 'اکاؤنٹ کے بغیر جاری رکھیں →', 'المتابعة بدون حساب →', 'Doorgaan zonder account →', 'Continuer sans compte →');
-  String get signUp => _s('Sign up', 'سائن اپ', 'التسجيل', 'Registreren', 'S\'inscrire');
-  String get orContinueWith => _s('or continue with', 'یا جاری رکھیں', 'أو تابع مع', 'of ga verder met', 'ou continuer avec');
-  String get google => _s('Google', 'Google', 'Google', 'Google', 'Google');
-  String get apple => _s('Apple', 'Apple', 'Apple', 'Apple', 'Apple');
-  String get termsPrefix => _s('I agree to the ', 'میں متفق ہوں ', 'أوافق على ', 'Ik ga akkoord met de ', 'J\'accepte les ');
-  String get termsOfService => _s('Terms of Service', 'سروس کی شرائط', 'شروط الخدمة', 'Servicevoorwaarden', 'Conditions d\'utilisation');
-  String get and => _s(' and ', ' اور ', ' و ', ' en ', ' et ');
-  String get privacyPolicy => _s('Privacy Policy', 'رازداری کی پالیسی', 'سياسة الخصوصية', 'Privacybeleid', 'Politique de confidentialité');
+      _s('Please accept the terms to continue', 'جاری رکھنے کے لیے شرائط قبول کریں', 'اقبل الشروط للمتابعة', 'Accepteer de voorwaarden om door te gaan', 'Acceptez les conditions pour continuer', 'Vui lòng chấp nhận điều khoản để tiếp tục');
+  String get alreadyHaveAccount => _s('Already have an account? ', 'پہلے سے اکاؤنٹ؟ ', 'لديك حساب؟ ', 'Al een account? ', 'Déjà un compte ? ', 'Đã có tài khoản? ');
+  String get continueWithoutAccount => _s('Continue without account →', 'اکاؤنٹ کے بغیر جاری رکھیں →', 'المتابعة بدون حساب →', 'Doorgaan zonder account →', 'Continuer sans compte →', 'Tiếp tục không cần tài khoản →');
+  String get signUp => _s('Sign up', 'سائن اپ', 'التسجيل', 'Registreren', 'S\'inscrire', 'Đăng ký');
+  String get orContinueWith => _s('or continue with', 'یا جاری رکھیں', 'أو تابع مع', 'of ga verder met', 'ou continuer avec', 'hoặc tiếp tục với');
+  String get google => _s('Google', 'Google', 'Google', 'Google', 'Google', 'Google');
+  String get apple => _s('Apple', 'Apple', 'Apple', 'Apple', 'Apple', 'Apple');
+  String get termsPrefix => _s('I agree to the ', 'میں متفق ہوں ', 'أوافق على ', 'Ik ga akkoord met de ', 'J\'accepte les ', 'Tôi đồng ý với ');
+  String get termsOfService => _s('Terms of Service', 'سروس کی شرائط', 'شروط الخدمة', 'Servicevoorwaarden', 'Conditions d\'utilisation', 'Điều khoản dịch vụ');
+  String get and => _s(' and ', ' اور ', ' و ', ' en ', ' et ', ' và ');
+  String get privacyPolicy => _s('Privacy Policy', 'رازداری کی پالیسی', 'سياسة الخصوصية', 'Privacybeleid', 'Politique de confidentialité', 'Chính sách bảo mật');
   String get passwordHintEmpty =>
-      _s('Use 8+ characters with letters and numbers.', '8+ حروف اور نمبر استعمال کریں۔', 'استخدم 8+ أحرف وأرقام.', 'Gebruik 8+ tekens met letters en cijfers.', 'Utilisez 8+ caractères avec lettres et chiffres.');
-  String get passwordWeak => _s('Weak — add more characters.', 'کمزور — مزید حروف شامل کریں۔', 'ضعيف — أضف المزيد.', 'Zwak — voeg meer tekens toe.', 'Faible — ajoutez des caractères.');
-  String get passwordFair => _s('Fair — add numbers or symbols.', 'ٹھیک — نمبر یا علامات شامل کریں۔', 'مقبول — أضف أرقاماً أو رموزاً.', 'Redelijk — voeg cijfers of symbolen toe.', 'Correct — ajoutez chiffres ou symboles.');
-  String get passwordGood => _s('Good password.', 'اچھا پاس ورڈ۔', 'كلمة مرور جيدة.', 'Goed wachtwoord.', 'Bon mot de passe.');
-  String get passwordStrong => _s('Strong password.', 'مضبوط پاس ورڈ۔', 'كلمة مرور قوية.', 'Sterk wachtwoord.', 'Mot de passe fort.');
+      _s('Use 8+ characters with letters and numbers.', '8+ حروف اور نمبر استعمال کریں۔', 'استخدم 8+ أحرف وأرقام.', 'Gebruik 8+ tekens met letters en cijfers.', 'Utilisez 8+ caractères avec lettres et chiffres.', 'Dùng từ 8 ký tự trở lên gồm chữ và số.');
+  String get passwordWeak => _s('Weak — add more characters.', 'کمزور — مزید حروف شامل کریں۔', 'ضعيف — أضف المزيد.', 'Zwak — voeg meer tekens toe.', 'Faible — ajoutez des caractères.', 'Yếu — thêm ký tự.');
+  String get passwordFair => _s('Fair — add numbers or symbols.', 'ٹھیک — نمبر یا علامات شامل کریں۔', 'مقبول — أضف أرقاماً أو رموزاً.', 'Redelijk — voeg cijfers of symbolen toe.', 'Correct — ajoutez chiffres ou symboles.', 'Khá — thêm số hoặc ký hiệu.');
+  String get passwordGood => _s('Good password.', 'اچھا پاس ورڈ۔', 'كلمة مرور جيدة.', 'Goed wachtwoord.', 'Bon mot de passe.', 'Mật khẩu tốt.');
+  String get passwordStrong => _s('Strong password.', 'مضبوط پاس ورڈ۔', 'كلمة مرور قوية.', 'Sterk wachtwoord.', 'Mot de passe fort.', 'Mật khẩu mạnh.');
 
   // ── Sleep ───────────────────────────────────────────────────────────────────
-  String get sleepModeTitle => _s('Sleep Mode', 'نیند موڈ', 'وضع النوم', 'Slaapmodus', 'Mode veille');
-  String get nightRoutine => _s('NIGHT ROUTINE', 'رات کا معمول', 'روتين الليل', 'NACHTROUTINE', 'ROUTINE NOCTURNE');
-  String get restPeacefully => _s('Rest peacefully', 'پرامن آرام', 'ارتح peacefully', 'Rust vredig', 'Reposez-vous paisiblement');
+  String get sleepModeTitle => _s('Sleep Mode', 'نیند موڈ', 'وضع النوم', 'Slaapmodus', 'Mode veille', 'Chế độ ngủ');
+  String get nightRoutine => _s('NIGHT ROUTINE', 'رات کا معمول', 'روتين الليل', 'NACHTROUTINE', 'ROUTINE NOCTURNE', 'THÓI QUEN BAN ĐÊM');
+  String get restPeacefully => _s('Rest peacefully', 'پرامن آرام کریں', 'استرح بسلام', 'Rust vredig', 'Reposez-vous paisiblement', 'Nghỉ ngơi yên bình');
   String get sleepHeroBody => _s(
         'All whispers pause during sleep. Your schedules resume automatically when sleep ends.',
-        'نیند کے دوران تمام whispers رک جاتی ہیں۔ نیند ختم ہونے پر شیڈول خود بحال ہو جاتے ہیں۔',
+        'نیند کے دوران تمام سرگوشیاں رک جاتی ہیں۔ نیند ختم ہونے پر شیڈول خود بحال ہو جاتے ہیں۔',
         'تتوقف جميع الهمسات أثناء النوم. تستأنف الجداول تلقائياً عند الانتهاء.',
         'Alle whispers pauzeren tijdens slaap. Schema\'s hervatten automatisch.',
         'Tous les murmures s\'arrêtent pendant le sommeil. Les plannings reprennent automatiquement.',
+        'Mọi lời thì thầm tạm dừng khi ngủ. Lịch tự động tiếp tục khi kết thúc giấc ngủ.',
       );
-  String get duration => _s('DURATION', 'مدت', 'المدة', 'DUUR', 'DURÉE');
-  String get startSleepMode => _s('Start Sleep Mode', 'نیند موڈ شروع', 'بدء وضع النوم', 'Slaapmodus starten', 'Démarrer mode veille');
+  String get duration => _s('DURATION', 'مدت', 'المدة', 'DUUR', 'DURÉE', 'THỜI LƯỢNG');
+  String get startSleepMode => _s('Start Sleep Mode', 'نیند موڈ شروع کریں', 'بدء وضع النوم', 'Slaapmodus starten', 'Démarrer mode veille', 'Bắt đầu chế độ ngủ');
   String get sleepTapHint =>
-      _s('Tap to pause all whispers until you wake', 'جاگنے تک whispers روکنے کے لیے دبائیں', 'اضغط لإيقاف الهمسات حتى الاستيقاظ', 'Tik om whispers te pauzeren tot je wakker wordt', 'Appuyez pour pauser les murmures jusqu\'au réveil');
-  String get sleepActive => _s('Sleep active', 'نیند فعال', 'النوم نشط', 'Slaap actief', 'Sommeil actif');
-  String get endNow => _s('End now', 'اب ختم', 'إنهاء الآن', 'Nu beëindigen', 'Terminer maintenant');
-  String get instantPause => _s('Instant pause', 'فوری وقفہ', 'إيقاف فوري', 'Direct pauzeren', 'Pause instantanée');
+      _s('Tap to pause all whispers until you wake', 'جاگنے تک سرگوشیاں روکنے کے لیے دبائیں', 'اضغط لإيقاف الهمسات حتى الاستيقاظ', 'Tik om whispers te pauzeren tot je wakker wordt', 'Appuyez pour pauser les murmures jusqu\'au réveil', 'Nhấn để tạm dừng mọi lời thì thầm cho đến khi thức dậy');
+  String get sleepActive => _s('Sleep active', 'نیند فعال', 'النوم نشط', 'Slaap actief', 'Sommeil actif', 'Chế độ ngủ đang bật');
+  String get endNow => _s('End now', 'ابھی ختم کریں', 'إنهاء الآن', 'Nu beëindigen', 'Terminer maintenant', 'Kết thúc ngay');
+  String get instantPause => _s('Instant pause', 'فوری وقفہ', 'إيقاف فوري', 'Direct pauzeren', 'Pause instantanée', 'Tạm dừng tức thì');
   String get instantPauseDesc =>
-      _s('Whispers stop the moment sleep begins', 'نیند شروع ہوتے ہی whispers رک جati ہیں', 'تتوقف الهمسات عند بدء النوم', 'Whispers stoppen zodra slaap begint', 'Les murmures s\'arrêtent dès le début du sommeil');
-  String get schedulesWait => _s('Schedules wait', 'شیڈول انتظار', 'الجداول تنتظر', 'Schema\'s wachten', 'Plannings en attente');
+      _s('Whispers stop the moment sleep begins', 'نیند شروع ہوتے ہی سرگوشیاں رک جاتی ہیں', 'تتوقف الهمسات عند بدء النوم', 'Whispers stoppen zodra slaap begint', 'Les murmures s\'arrêtent dès le début du sommeil', 'Lời thì thầm dừng ngay khi bắt đầu ngủ');
+  String get schedulesWait => _s('Schedules wait', 'شیڈول انتظار', 'الجداول تنتظر', 'Schema\'s wachten', 'Plannings en attente', 'Lịch chờ');
   String get schedulesWaitDesc =>
-      _s('Everything resumes when you wake', 'جاگنے پر سب بحال', 'يستأنف كل شيء عند الاستيقاظ', 'Alles hervat bij wakker worden', 'Tout reprend au réveil');
-  String get quietAlarms => _s('Quiet alarms', 'خاموش الارم', 'تنبيهات هادئة', 'Stille alarmen', 'Alarmes silencieuses');
+      _s('Everything resumes when you wake', 'جاگنے پر سب بحال', 'يستأنف كل شيء عند الاستيقاظ', 'Alles hervat bij wakker worden', 'Tout reprend au réveil', 'Mọi thứ tiếp tục khi bạn thức dậy');
+  String get quietAlarms => _s('Quiet alarms', 'خاموش الارم', 'تنبيهات هادئة', 'Stille alarmen', 'Alarmes silencieuses', 'Báo thức im lặng');
   String get quietAlarmsDesc =>
-      _s('No interruptions while you rest', 'آرام کے دوران کوئی رکاوٹ نہیں', 'لا مقاطعات أثناء الراحة', 'Geen onderbrekingen tijdens rust', 'Aucune interruption pendant le repos');
+      _s('No interruptions while you rest', 'آرام کے دوران کوئی رکاوٹ نہیں', 'لا مقاطعات أثناء الراحة', 'Geen onderbrekingen tijdens rust', 'Aucune interruption pendant le repos', 'Không bị gián đoạn khi nghỉ ngơi');
 
-  String sleepModeUntil(String time) => _s('Sleep mode until $time', 'نیند موڈ $time تک', 'وضع النوم حتى $time', 'Slaapmodus tot $time', 'Mode veille jusqu\'à $time');
-  String untilTime(String time) => _s('Until $time', '$time تک', 'حتى $time', 'Tot $time', 'Jusqu\'à $time');
+  String sleepModeUntil(String time) => _s('Sleep mode until $time', 'نیند موڈ $time تک', 'وضع النوم حتى $time', 'Slaapmodus tot $time', 'Mode veille jusqu\'à $time', 'Chế độ ngủ đến $time');
+  String untilTime(String time) => _s('Until $time', '$time تک', 'حتى $time', 'Tot $time', 'Jusqu\'à $time', 'Đến $time');
 
   // ── Prayer ──────────────────────────────────────────────────────────────────
-  String get prayerModeTitle => _s('Prayer Mode', 'نماز موڈ', 'وضع الصلاة', 'Gebedsmodus', 'Mode prière');
-  String get faithAndFocus => _s('FAITH & FOCUS', 'ایمان اور توجہ', 'الإيمان والتركيز', 'GELOOF & FOCUS', 'FOI ET CONCENTRATION');
-  String get pauseDuringPrayer => _s('Pause during prayer', 'نماز کے دوران وقفہ', 'إيقاف أثناء الصلاة', 'Pauzeren tijdens gebed', 'Pause pendant la prière');
+  String get prayerModeTitle => _s('Prayer Mode', 'نماز موڈ', 'وضع الصلاة', 'Gebedsmodus', 'Mode prière', 'Chế độ cầu nguyện');
+  String get faithAndFocus => _s('FAITH & FOCUS', 'ایمان اور توجہ', 'الإيمان والتركيز', 'GELOOF & FOCUS', 'FOI ET CONCENTRATION', 'ĐỨC TIN & TẬP TRUNG');
+  String get pauseDuringPrayer => _s('Pause during prayer', 'نماز کے دوران وقفہ', 'إيقاف أثناء الصلاة', 'Pauzeren tijdens gebed', 'Pause pendant la prière', 'Tạm dừng khi cầu nguyện');
   String get prayerHeroBody => _s(
         'Prayer times are calculated on your device using GPS. Coordinates never leave your phone.',
         'نماز کے اوقات GPS سے آپ کے فون پر حساب ہوتے ہیں۔ کوآرڈینیٹس فون سے باہر نہیں جاتے۔',
         'تُحسب أوقات الصلاة على جهازك بـ GPS. الإحداثيات لا تغادر هاتفك.',
         'Gebedstijden worden op je apparaat berekend met GPS. Coördinaten verlaten je telefoon nooit.',
         'Les heures de prière sont calculées sur votre appareil via GPS. Les coordonnées ne quittent jamais votre téléphone.',
+        'Giờ cầu nguyện được tính trên thiết bị bằng GPS. Tọa độ không bao giờ rời khỏi điện thoại.',
       );
-  String get onDevice => _s('On-device', 'ڈیوائس پر', 'على الجهاز', 'Op apparaat', 'Sur l\'appareil');
-  String get onDeviceDesc => _s('All calculations stay on-device', 'تمام حساب ڈیوائس پر', 'جميع الحسابات على الجهاز', 'Alle berekeningen op apparaat', 'Tous les calculs sur l\'appareil');
-  String get autoPause => _s('Auto pause', 'خودکار وقفہ', 'إيقاف تلقائي', 'Automatisch pauzeren', 'Pause automatique');
+  String get onDevice => _s('On-device', 'ڈیوائس پر', 'على الجهاز', 'Op apparaat', 'Sur l\'appareil', 'Trên thiết bị');
+  String get onDeviceDesc => _s('All calculations stay on-device', 'تمام حساب ڈیوائس پر', 'جميع الحسابات على الجهاز', 'Alle berekeningen op apparaat', 'Tous les calculs sur l\'appareil', 'Mọi tính toán đều ở trên thiết bị');
+  String get autoPause => _s('Auto pause', 'خودکار وقفہ', 'إيقاف تلقائي', 'Automatisch pauzeren', 'Pause automatique', 'Tự động tạm dừng');
   String get autoPauseDesc =>
-      _s('Whispers pause during each prayer', 'ہر نماز کے دوران whispers رکتی ہیں', 'تتوقف الهمسات أثناء كل صلاة', 'Whispers pauzeren tijdens elk gebed', 'Les murmures s\'arrêtent pendant chaque prière');
-  String get calculationMethod => _s('Calculation method', 'حساب کا طریقہ', 'طريقة الحساب', 'Berekeningsmethode', 'Méthode de calcul');
-  String get madhab => _s('Madhab', 'مذہب', 'المذهب', 'Madhab', 'Madhab');
-  String get enablePrayerMode => _s('Enable prayer mode', 'نماز موڈ فعال', 'تفعيل وضع الصلاة', 'Gebedsmodus inschakelen', 'Activer mode prière');
-  String get accurateTimes => _s('Accurate times', 'درست اوقات', 'أوقات دقيقة', 'Nauwkeurige tijden', 'Horaires précis');
+      _s('Whispers pause during each prayer', 'ہر نماز کے دوران سرگوشیاں رکتی ہیں', 'تتوقف الهمسات أثناء كل صلاة', 'Whispers pauzeren tijdens elk gebed', 'Les murmures s\'arrêtent pendant chaque prière', 'Lời thì thầm tạm dừng trong mỗi buổi cầu nguyện');
+  String get calculationMethod => _s('Calculation method', 'حساب کا طریقہ', 'طريقة الحساب', 'Berekeningsmethode', 'Méthode de calcul', 'Phương pháp tính');
+  String get madhab => _s('Madhab', 'مذہب', 'المذهب', 'Madhab', 'Madhab', 'Madhab');
+  String get enablePrayerMode => _s('Enable prayer mode', 'نماز موڈ فعال کریں', 'تفعيل وضع الصلاة', 'Gebedsmodus inschakelen', 'Activer mode prière', 'Bật chế độ cầu nguyện');
+  String get accurateTimes => _s('Accurate times', 'درست اوقات', 'أوقات دقيقة', 'Nauwkeurige tijden', 'Horaires précis', 'Giờ chính xác');
   String get accurateTimesDesc =>
-      _s('Based on your location', 'آپ کے مقام پر مبنی', 'بناءً على موقعك', 'Gebaseerd op je locatie', 'Basé sur votre position');
+      _s('Based on your location', 'آپ کے مقام پر مبنی', 'بناءً على موقعك', 'Gebaseerd op je locatie', 'Basé sur votre position', 'Dựa trên vị trí của bạn');
   String get autoPausePrayerDesc =>
-      _s('Whispers resume after prayer', 'نماز کے بعد whispers بحال', 'تستأنف الهمسات بعد الصلاة', 'Whispers hervatten na gebed', 'Les murmures reprennent après la prière');
-  String get asrMadhab => _s('Asr madhab', 'عصر مذہب', 'مذهب العصر', 'Asr-madhab', 'Madhab Asr');
-  String get useGpsLocation => _s('Use GPS location', 'GPS مقام استعمال', 'استخدام موقع GPS', 'GPS-locatie gebruiken', 'Utiliser la position GPS');
+      _s('Whispers resume after prayer', 'نماز کے بعد سرگوشیاں بحال', 'تستأنف الهمسات بعد الصلاة', 'Whispers hervatten na gebed', 'Les murmures reprennent après la prière', 'Lời thì thầm tiếp tục sau khi cầu nguyện');
+  String get asrMadhab => _s('Asr madhab', 'عصر مذہب', 'مذهب العصر', 'Asr-madhab', 'Madhab Asr', 'Madhab Asr');
+  String get useGpsLocation => _s('Use GPS location', 'GPS مقام استعمال کریں', 'استخدام موقع GPS', 'GPS-locatie gebruiken', 'Utiliser la position GPS', 'Dùng vị trí GPS');
   String get useGpsLocationDesc => _s(
         'Recommended for accurate prayer times',
         'درست نماز کے اوقات کے لیے تجویز',
         'موصى به لأوقات صلاة دقيقة',
         'Aanbevolen voor nauwkeurige gebedstijden',
         'Recommandé pour des heures de prière précises',
+        'Khuyến nghị để có giờ cầu nguyện chính xác',
       );
 
   // ── Battery ─────────────────────────────────────────────────────────────────
-  String get batteryTitle => _s('Battery', 'بیٹری', 'البطارية', 'Batterij', 'Batterie');
-  String get batteryHeroTitle => _s('Keep WhisperBack running', 'WhisperBack چلتا رکھیں', 'أبق WhisperBack يعمل', 'Houd WhisperBack actief', 'Gardez WhisperBack actif');
+  String get batteryTitle => _s('Battery', 'بیٹری', 'البطارية', 'Batterij', 'Batterie', 'Pin');
+  String get batteryHeroTitle => _s('Keep WhisperBack running', 'WhisperBack چلتا رکھیں', 'أبق WhisperBack يعمل', 'Houd WhisperBack actief', 'Gardez WhisperBack actif', 'Giữ WhisperBack luôn chạy');
   String get batteryHeroBody => _s(
         'Battery savers can delay whispers and miss schedules. Disable optimization for reliable playback.',
-        'بیٹری سیور whispers اور شیڈول میں تاخیر کر سکتے ہیں۔ قابلِ اعتماد پلے بیک کے لیے optimization بند کریں۔',
+        'بیٹری سیور سرگوشیوں اور شیڈول میں تاخیر کر سکتے ہیں۔ قابلِ اعتماد پلے بیک کے لیے آپٹیمائزیشن بند کریں۔',
         'قد تؤخر موفرات البطارية الهمسات والجداول. عطّل التحسين لتشغيل موثوق.',
         'Batterijspaarders kunnen whispers vertragen. Schakel optimalisatie uit voor betrouwbare weergave.',
         'Les économiseurs de batterie peuvent retarder les murmures. Désactivez l\'optimisation pour une lecture fiable.',
+        'Trình tiết kiệm pin có thể làm trễ lời thì thầm. Tắt tối ưu hóa để phát ổn định.',
       );
-  String get whyItMatters => _s('WHY IT MATTERS', 'کیوں اہم', 'لماذا يهم', 'WAAROM HET UITMAAKT', 'POURQUOI C\'EST IMPORTANT');
-  String get oemGuides => _s('OEM guides', 'OEM گائیڈ', 'أدلة OEM', 'OEM-gidsen', 'Guides OEM');
-  String get samsungGuide => _s('Samsung / One UI', 'Samsung / One UI', 'Samsung / One UI', 'Samsung / One UI', 'Samsung / One UI');
-  String get xiaomiGuide => _s('Xiaomi / MIUI', 'Xiaomi / MIUI', 'Xiaomi / MIUI', 'Xiaomi / MIUI', 'Xiaomi / MIUI');
-  String get huaweiGuide => _s('Huawei / EMUI', 'Huawei / EMUI', 'Huawei / EMUI', 'Huawei / EMUI', 'Huawei / EMUI');
-  String get stockAndroidGuide => _s('Stock Android', 'Stock Android', 'Stock Android', 'Stock Android', 'Stock Android');
-  String get reliableSchedules => _s('RELIABLE SCHEDULES', 'قابلِ اعتماد شیڈول', 'جداول موثوقة', 'BETROUWBARE SCHEMA\'S', 'PLANNINGS FIABLES');
+  String get whyItMatters => _s('WHY IT MATTERS', 'کیوں اہم ہے', 'لماذا يهم', 'WAAROM HET UITMAAKT', 'POURQUOI C\'EST IMPORTANT', 'TẠI SAO QUAN TRỌNG');
+  String get oemGuides => _s('OEM guides', 'OEM گائیڈ', 'أدلة OEM', 'OEM-gidsen', 'Guides OEM', 'Hướng dẫn OEM');
+  String get samsungGuide => _s('Samsung / One UI', 'Samsung / One UI', 'Samsung / One UI', 'Samsung / One UI', 'Samsung / One UI', 'Samsung / One UI');
+  String get xiaomiGuide => _s('Xiaomi / MIUI', 'Xiaomi / MIUI', 'Xiaomi / MIUI', 'Xiaomi / MIUI', 'Xiaomi / MIUI', 'Xiaomi / MIUI');
+  String get huaweiGuide => _s('Huawei / EMUI', 'Huawei / EMUI', 'Huawei / EMUI', 'Huawei / EMUI', 'Huawei / EMUI', 'Huawei / EMUI');
+  String get stockAndroidGuide => _s('Stock Android', 'Stock Android', 'Stock Android', 'Stock Android', 'Stock Android', 'Stock Android');
+  String get reliableSchedules => _s('RELIABLE SCHEDULES', 'قابلِ اعتماد شیڈول', 'جداول موثوقة', 'BETROUWBARE SCHEMA\'S', 'PLANNINGS FIABLES', 'LỊCH ĐÁNG TIN CẬY');
   String get batteryWhitelistBody => _s(
         'Some phones limit background apps to save battery. Whitelisting WhisperBack helps scheduled whispers play on time.',
-        'کچھ فونز بیٹری بچانے کے لیے پس منظر ایپس محدود کرتے ہیں۔ WhisperBack کو whitelist کرنے سے شیڈول whispers وقت پر چلتی ہیں۔',
+        'کچھ فونز بیٹری بچانے کے لیے پس منظر ایپس محدود کرتے ہیں۔ WhisperBack کو whitelist کرنے سے شیڈول سرگوشیاں وقت پر چلتی ہیں۔',
         'بعض الهواتف تحد التطبيقات في الخلفية. إضافة WhisperBack للقائمة البيضاء يساعد الهمسات المجدولة.',
         'Sommige telefoons beperken achtergrondapps. WhisperBack whitelisten helpt geplande whispers op tijd.',
         'Certains téléphones limitent les apps en arrière-plan. Autoriser WhisperBack aide les murmures planifiés.',
+        'Một số điện thoại hạn chế ứng dụng nền để tiết kiệm pin. Đưa WhisperBack vào danh sách trắng giúp phát đúng giờ.',
       );
-  String get onTimePlayback => _s('On-time playback', 'وقت پر پلے بیک', 'تشغيل في الوقت', 'Weergave op tijd', 'Lecture à l\'heure');
+  String get onTimePlayback => _s('On-time playback', 'وقت پر پلے بیک', 'تشغيل في الوقت', 'Weergave op tijd', 'Lecture à l\'heure', 'Phát đúng giờ');
   String get onTimePlaybackDesc =>
-      _s('Schedules fire when they should', 'شیڈول وقت پر چلتے ہیں', 'تعمل الجداول في وقتها', 'Schema\'s starten wanneer nodig', 'Les plannings se déclenchent à l\'heure');
-  String get reliableAlarms => _s('Reliable alarms', 'قابلِ اعتماد الارم', 'تنبيهات موثوقة', 'Betrouwbare alarmen', 'Alarmes fiables');
+      _s('Schedules fire when they should', 'شیڈول وقت پر چلتے ہیں', 'تعمل الجداول في وقتها', 'Schema\'s starten wanneer nodig', 'Les plannings se déclenchent à l\'heure', 'Lịch chạy đúng thời điểm');
+  String get reliableAlarms => _s('Reliable alarms', 'قابلِ اعتماد الارم', 'تنبيهات موثوقة', 'Betrouwbare alarmen', 'Alarmes fiables', 'Báo thức đáng tin cậy');
   String get reliableAlarmsDesc =>
-      _s('Notifications are not delayed', 'اطلاعات میں تاخیر نہیں', 'الإشعارات لا تتأخر', 'Meldingen worden niet vertraagd', 'Les notifications ne sont pas retardées');
-  String get noDataCollection => _s('No data collection', 'ڈیٹا جمع نہیں', 'لا جمع للبيانات', 'Geen gegevensverzameling', 'Pas de collecte de données');
+      _s('Notifications are not delayed', 'اطلاعات میں تاخیر نہیں', 'الإشعارات لا تتأخر', 'Meldingen worden niet vertraagd', 'Les notifications ne sont pas retardées', 'Thông báo không bị trễ');
+  String get noDataCollection => _s('No data collection', 'ڈیٹا جمع نہیں', 'لا جمع للبيانات', 'Geen gegevensverzameling', 'Pas de collecte de données', 'Không thu thập dữ liệu');
   String get noDataCollectionDesc => _s(
         'Only system battery settings change',
         'صرف سسٹم بیٹری ترتیبات بدلتی ہیں',
-        'يتغير فقط إعدادات بطارية النظام',
+        'تتغير فقط إعدادات بطارية النظام',
         'Alleen systeem-batterijinstellingen wijzigen',
         'Seuls les paramètres batterie système changent',
+        'Chỉ thay đổi cài đặt pin của hệ thống',
       );
-  String get byPhoneBrand => _s('BY PHONE BRAND', 'فون برانڈ کے لحاظ', 'حسب العلامة', 'PER MERK', 'PAR MARQUE');
+  String get byPhoneBrand => _s('BY PHONE BRAND', 'فون برانڈ کے لحاظ', 'حسب العلامة', 'PER MERK', 'PAR MARQUE', 'THEO HÃNG ĐIỆN THOẠI');
   String get openSystemSettings =>
-      _s('Open system settings', 'سسٹم ترتیبات کھولیں', 'فتح إعدادات النظام', 'Systeeminstellingen openen', 'Ouvrir les réglages système');
+      _s('Open system settings', 'سسٹم ترتیبات کھولیں', 'فتح إعدادات النظام', 'Systeeminstellingen openen', 'Ouvrir les réglages système', 'Mở cài đặt hệ thống');
   String get openSystemSettingsSnack => _s(
         'Open system Settings → Apps → WhisperBack → Battery',
         'Settings → Apps → WhisperBack → Battery کھولیں',
         'افتح الإعدادات → التطبيقات → WhisperBack → البطارية',
         'Open Instellingen → Apps → WhisperBack → Batterij',
         'Ouvrez Réglages → Apps → WhisperBack → Batterie',
+        'Mở Cài đặt → Ứng dụng → WhisperBack → Pin',
       );
 
   // ── Record / Import / New playlist ──────────────────────────────────────────
-  String get recordTitle => _s('Record', 'ریکارڈ', 'تسجيل', 'Opnemen', 'Enregistrer');
-  String get captureAWhisper => _s('CAPTURE A WHISPER', 'WHISPER ریکارڈ', 'التقاط همسة', 'WHISPER OPnemen', 'CAPTURER UN MURMURE');
-  String get recordNewClip => _s('Record a new clip', 'نئی کلپ ریکارڈ', 'تسجيل مقطع جديد', 'Nieuwe clip opnemen', 'Enregistrer un nouveau clip');
-  String get newRecording => _s('New recording', 'نئی ریکارڈنگ', 'تسجيل جديد', 'Nieuwe opname', 'Nouvel enregistrement');
-  String get startRecording => _s('Start Recording', 'ریکارڈنگ شروع', 'بدء التسجيل', 'Opname starten', 'Commencer l\'enregistrement');
-  String get stopAndSave => _s('Stop & Save', 'روکیں اور محفوظ', 'إيقاف وحفظ', 'Stoppen & opslaan', 'Arrêter et enregistrer');
+  String get recordTitle => _s('Record', 'ریکارڈ', 'تسجيل', 'Opnemen', 'Enregistrer', 'Ghi âm');
+  String get captureAWhisper => _s('CAPTURE A WHISPER', 'سرگوشی ریکارڈ کریں', 'التقاط همسة', 'WHISPER OPNEMEN', 'CAPTURER UN MURMURE', 'GHI MỘT LỜI THÌ THẦM');
+  String get recordNewClip => _s('Record a new clip', 'نئی کلپ ریکارڈ کریں', 'تسجيل مقطع جديد', 'Nieuwe clip opnemen', 'Enregistrer un nouveau clip', 'Ghi đoạn ghi mới');
+  String get newRecording => _s('New recording', 'نئی ریکارڈنگ', 'تسجيل جديد', 'Nieuwe opname', 'Nouvel enregistrement', 'Bản ghi mới');
+  String get startRecording => _s('Start Recording', 'ریکارڈنگ شروع کریں', 'بدء التسجيل', 'Opname starten', 'Commencer l\'enregistrement', 'Bắt đầu ghi âm');
+  String get stopAndSave => _s('Stop & Save', 'روکیں اور محفوظ کریں', 'إيقاف وحفظ', 'Stoppen & opslaan', 'Arrêter et enregistrer', 'Dừng & lưu');
   String get micPermissionRequired =>
-      _s('Microphone permission required', 'مائیک کی اجازت درکار', 'إذن الميكروفون مطلوب', 'Microfoontoestemming vereist', 'Autorisation micro requise');
+      _s('Microphone permission required', 'مائیک کی اجازت درکار', 'إذن الميكروفون مطلوب', 'Microfoontoestemming vereist', 'Autorisation micro requise', 'Cần quyền micrô');
   String get micPermissionSnack =>
-      _s('Microphone permission is required to record', 'ریکارڈ کے لیے مائیک کی اجازت ضروری', 'إذن الميكروفون مطلوب للتسجيل', 'Microfoontoestemming is vereist om op te nemen', 'L\'autorisation micro est requise pour enregistrer');
-  String get recording => _s('Recording…', 'ریکارڈنگ…', 'جاري التسجيل…', 'Opnemen…', 'Enregistrement…');
-  String get clipTitle => _s('Clip title', 'کلپ کا عنوان', 'عنوان المقطع', 'Cliptitel', 'Titre du clip');
-  String get recordingCancelled => _s('Recording cancelled', 'ریکارڈنگ منسوخ', 'تم إلغاء التسجيل', 'Opname geannuleerd', 'Enregistrement annulé');
-  String savedClip(String title) => _s('Saved $title', '$title محفوظ', 'تم حفظ $title', '$title opgeslagen', '$title enregistré');
+      _s('Microphone permission is required to record', 'ریکارڈ کے لیے مائیک کی اجازت ضروری', 'إذن الميكروفون مطلوب للتسجيل', 'Microfoontoestemming is vereist om op te nemen', 'L\'autorisation micro est requise pour enregistrer', 'Cần quyền micrô để ghi âm');
+  String get recording => _s('Recording…', 'ریکارڈنگ…', 'جاري التسجيل…', 'Opnemen…', 'Enregistrement…', 'Đang ghi âm…');
+  String get clipTitle => _s('Clip title', 'کلپ کا عنوان', 'عنوان المقطع', 'Cliptitel', 'Titre du clip', 'Tiêu đề đoạn ghi');
+  String get recordingCancelled => _s('Recording cancelled', 'ریکارڈنگ منسوخ', 'تم إلغاء التسجيل', 'Opname geannuleerd', 'Enregistrement annulé', 'Đã hủy ghi âm');
+  String savedClip(String title) => _s('Saved $title', '$title محفوظ', 'تم حفظ $title', '$title opgeslagen', '$title enregistré', 'Đã lưu $title');
 
-  String get importTitle => _s('Import', 'درآمد', 'استيراد', 'Importeren', 'Importer');
-  String get addAudio => _s('ADD AUDIO', 'آڈیو شامل', 'إضافة صوت', 'AUDIO TOEVOEGEN', 'AJOUTER AUDIO');
-  String get importFromDevice => _s('Import from device', 'ڈیوائس سے درآمد', 'استيراد من الجهاز', 'Importeren van apparaat', 'Importer depuis l\'appareil');
-  String get chooseAudioFile => _s('Choose audio file', 'آڈیو فائل منتخب', 'اختر ملفاً صوتياً', 'Kies audiobestand', 'Choisir un fichier audio');
+  String get importTitle => _s('Import', 'درآمد', 'استيراد', 'Importeren', 'Importer', 'Nhập');
+  String get addAudio => _s('ADD AUDIO', 'آڈیو شامل کریں', 'إضافة صوت', 'AUDIO TOEVOEGEN', 'AJOUTER AUDIO', 'THÊM ÂM THANH');
+  String get importFromDevice => _s('Import from device', 'ڈیوائس سے درآمد', 'استيراد من الجهاز', 'Importeren van apparaat', 'Importer depuis l\'appareil', 'Nhập từ thiết bị');
+  String get chooseAudioFile => _s('Choose audio file', 'آڈیو فائل منتخب کریں', 'اختر ملفاً صوتياً', 'Kies audiobestand', 'Choisir un fichier audio', 'Chọn tệp âm thanh');
   String get tapToBrowseAudio =>
-      _s('Tap to browse MP3 or M4A on your device', 'MP3 یا M4A براؤز کرنے کے لیے دبائیں', 'اضغط لتصفح MP3 أو M4A', 'Tik om MP3 of M4A te bladeren', 'Appuyez pour parcourir MP3 ou M4A');
-  String get audioFile => _s('Audio file', 'آڈیو فائل', 'ملف صوتي', 'Audiobestand', 'Fichier audio');
-  String get importing => _s('Importing…', 'درآمد…', 'جاري الاستيراد…', 'Importeren…', 'Importation…');
-  String get copyingFile => _s('Copying file into WhisperBack…', 'WhisperBack میں فائل کاپی…', 'نسخ الملف إلى WhisperBack…', 'Bestand kopiëren naar WhisperBack…', 'Copie du fichier dans WhisperBack…');
-  String importedClip(String title) => _s('Imported $title', '$title درآمد', 'تم استيراد $title', '$title geïmporteerd', '$title importé');
+      _s('Tap to browse MP3 or M4A on your device', 'اپنے ڈیوائس پر MP3 یا M4A براؤز کرنے کے لیے دبائیں', 'اضغط لتصفح MP3 أو M4A', 'Tik om MP3 of M4A te bladeren', 'Appuyez pour parcourir MP3 ou M4A', 'Nhấn để duyệt MP3 hoặc M4A trên thiết bị');
+  String get audioFile => _s('Audio file', 'آڈیو فائل', 'ملف صوتي', 'Audiobestand', 'Fichier audio', 'Tệp âm thanh');
+  String get importing => _s('Importing…', 'درآمد ہو رہی ہے…', 'جاري الاستيراد…', 'Importeren…', 'Importation…', 'Đang nhập…');
+  String get copyingFile => _s('Copying file into WhisperBack…', 'WhisperBack میں فائل کاپی ہو رہی ہے…', 'نسخ الملف إلى WhisperBack…', 'Bestand kopiëren naar WhisperBack…', 'Copie du fichier dans WhisperBack…', 'Đang sao chép tệp vào WhisperBack…');
+  String importedClip(String title) => _s('Imported $title', '$title درآمد', 'تم استيراد $title', '$title geïmporteerd', '$title importé', 'Đã nhập $title');
 
-  String get buildCollection => _s('BUILD A COLLECTION', 'مجموعہ بنائیں', 'بناء مجموعة', 'COLLECTIE BOUWEN', 'CRÉER UNE COLLECTION');
-  String get createAPlaylist => _s('Create a playlist', 'پلے لسٹ بنائیں', 'إنشاء قائمة تشغيل', 'Afspeellijst maken', 'Créer une playlist');
-  String get quickIdeas => _s('QUICK IDEAS', 'فوری آئیڈیاز', 'أفكار سريعة', 'SNELLE IDEEËN', 'IDÉES RAPIDES');
-  String get creating => _s('Creating…', 'بن رہا…', 'جاري الإنشاء…', 'Maken…', 'Création…');
-  String get playlistName => _s('Playlist name', 'پلے لسٹ کا نام', 'اسم القائمة', 'Naam afspeellijst', 'Nom de la playlist');
-  String get playlistNameHint => _s('e.g. Morning Whispers', 'مثلاً Morning Whispers', 'مثلاً Morning Whispers', 'bijv. Morning Whispers', 'ex. Morning Whispers');
+  String get buildCollection => _s('BUILD A COLLECTION', 'مجموعہ بنائیں', 'بناء مجموعة', 'COLLECTIE BOUWEN', 'CRÉER UNE COLLECTION', 'TẠO BỘ SƯU TẬP');
+  String get createAPlaylist => _s('Create a playlist', 'پلے لسٹ بنائیں', 'إنشاء قائمة تشغيل', 'Afspeellijst maken', 'Créer une playlist', 'Tạo danh sách phát');
+  String get quickIdeas => _s('QUICK IDEAS', 'فوری آئیڈیاز', 'أفكار سريعة', 'SNELLE IDEEËN', 'IDÉES RAPIDES', 'Ý TƯỞNG NHANH');
+  String get creating => _s('Creating…', 'بن رہا ہے…', 'جاري الإنشاء…', 'Maken…', 'Création…', 'Đang tạo…');
+  String get playlistName => _s('Playlist name', 'پلے لسٹ کا نام', 'اسم القائمة', 'Naam afspeellijst', 'Nom de la playlist', 'Tên danh sách phát');
+  String get playlistNameHint => _s('e.g. Morning Whispers', 'مثلاً Morning Whispers', 'مثلاً Morning Whispers', 'bijv. Morning Whispers', 'ex. Morning Whispers', 'ví dụ: Morning Whispers');
   String get afterCreatingHint => _s(
         'After creating, add clips from your library and set a schedule when you\'re ready.',
-        'بنانے کے بعد لائبریری سے کلپس شامل کریں اور شیڈول سیٹ کریں۔',
+        'بنانے کے بعد لائبریری سے کلپس شامل کریں اور تیار ہونے پر شیڈول سیٹ کریں۔',
         'بعد الإنشاء، أضف مقاطع من مكتبتك وحدد جدولاً.',
         'Voeg daarna clips toe uit je bibliotheek en stel een schema in.',
-        'Ensuite, ajoutez des clips et définissez une planning.',
+        'Ensuite, ajoutez des clips et définissez un planning.',
+        'Sau khi tạo, thêm đoạn ghi từ thư viện và lên lịch khi bạn sẵn sàng.',
       );
-  String get enterPlaylistName => _s('Enter a playlist name', 'پلے لسٹ کا نام درج کریں', 'أدخل اسم القائمة', 'Voer een naam in', 'Entrez un nom de playlist');
-  String createdPlaylist(String name) => _s('Created $name', '$name بنائی', 'تم إنشاء $name', '$name gemaakt', '$name créée');
-  String get ideaMorningWhispers => _s('Morning Whispers', 'Morning Whispers', 'Morning Whispers', 'Morning Whispers', 'Morning Whispers');
-  String get ideaWorkFocus => _s('Work Focus', 'Work Focus', 'Work Focus', 'Work Focus', 'Work Focus');
-  String get ideaEveningCalm => _s('Evening Calm', 'Evening Calm', 'Evening Calm', 'Evening Calm', 'Evening Calm');
+  String get enterPlaylistName => _s('Enter a playlist name', 'پلے لسٹ کا نام درج کریں', 'أدخل اسم القائمة', 'Voer een naam in', 'Entrez un nom de playlist', 'Nhập tên danh sách phát');
+  String createdPlaylist(String name) => _s('Created $name', '$name بنائی', 'تم إنشاء $name', '$name gemaakt', '$name créée', 'Đã tạo $name');
+  String get ideaMorningWhispers => _s('Morning Whispers', 'Morning Whispers', 'Morning Whispers', 'Morning Whispers', 'Morning Whispers', 'Morning Whispers');
+  String get ideaWorkFocus => _s('Work Focus', 'Work Focus', 'Work Focus', 'Work Focus', 'Work Focus', 'Work Focus');
+  String get ideaEveningCalm => _s('Evening Calm', 'Evening Calm', 'Evening Calm', 'Evening Calm', 'Evening Calm', 'Evening Calm');
   String get createPlaylistDescription => _s(
         'Group your whispers into a collection. Add clips and schedules after you create it.',
-        'اپنی whispers مجموعے میں شامل کریں۔ بنانے کے بعد کلپس اور شیڈول شامل کریں۔',
+        'اپنی سرگوشیاں مجموعے میں شامل کریں۔ بنانے کے بعد کلپس اور شیڈول شامل کریں۔',
         'اجمع همساتك في مجموعة. أضف المقاطع والجداول بعد الإنشاء.',
         'Groepeer whispers in een collectie. Voeg clips en schema\'s toe na het maken.',
         'Regroupez vos murmures. Ajoutez clips et plannings après la création.',
+        'Nhóm các lời thì thầm vào một bộ sưu tập. Thêm đoạn ghi và lịch sau khi tạo.',
       );
   String get recordSpeakClearlyHint => _s(
         'Speak clearly into your microphone. Clips are saved locally on your device.',
@@ -579,13 +654,15 @@ class AppLocalizations {
         'تحدث بوضوح في الميكروفون. تُحفظ المقاطع محلياً على جهازك.',
         'Spreek duidelijk in je microfoon. Clips worden lokaal opgeslagen.',
         'Parlez clairement dans le micro. Les clips sont enregistrés localement.',
+        'Hãy nói rõ vào micrô. Đoạn ghi được lưu cục bộ trên thiết bị của bạn.',
       );
   String get importBody => _s(
         'Import MP3 or M4A files from your device. Files are copied into the app for safe offline playback.',
-        'MP3 یا M4A فائلیں درآمد کریں۔ فائلیں آف لائن پلے بیک کے لیے ایپ میں کاپی ہوتی ہیں۔',
+        'اپنے ڈیوائس سے MP3 یا M4A فائلیں درآمد کریں۔ فائلیں آف لائن پلے بیک کے لیے ایپ میں کاپی ہوتی ہیں۔',
         'استورد ملفات MP3 أو M4A. تُنسخ الملفات إلى التطبيق للتشغيل دون اتصال.',
         'Importeer MP3- of M4A-bestanden. Bestanden worden gekopieerd voor offline weergave.',
         'Importez des fichiers MP3 ou M4A. Les fichiers sont copiés pour une lecture hors ligne.',
+        'Nhập tệp MP3 hoặc M4A từ thiết bị. Tệp được sao chép vào ứng dụng để phát ngoại tuyến an toàn.',
       );
   String get importedClipsStayOnDevice => _s(
         'Imported clips stay on your device. Original files are not modified.',
@@ -593,13 +670,14 @@ class AppLocalizations {
         'تبقى المقاطع المستوردة على جهازك. الملفات الأصلية لا تُعدّل.',
         'Geïmporteerde clips blijven op je apparaat. Originele bestanden worden niet gewijzigd.',
         'Les clips importés restent sur votre appareil. Les fichiers originaux ne sont pas modifiés.',
+        'Đoạn ghi đã nhập vẫn ở trên thiết bị. Tệp gốc không bị thay đổi.',
       );
 
   // ── Duration / schedule helpers ─────────────────────────────────────────────
-  String get zeroSec => _s('0 sec', '0 سیکنڈ', '0 ث', '0 sec', '0 s');
-  String durationSec(int sec) => _s('$sec sec', '$sec سیکنڈ', '$sec ث', '$sec sec', '$sec s');
-  String durationMin(int min) => _s('$min min', '$min منٹ', '$min د', '$min min', '$min min');
-  String durationMinSec(int min, int sec) => _s('$min min $sec sec', '$min منٹ $sec سیکنڈ', '$min د $sec ث', '$min min $sec sec', '$min min $sec s');
+  String get zeroSec => _s('0 sec', '0 سیکنڈ', '0 ثانية', '0 sec', '0 s', '0 giây');
+  String durationSec(int sec) => _s('$sec sec', '$sec سیکنڈ', '$sec ثانية', '$sec sec', '$sec s', '$sec giây');
+  String durationMin(int min) => _s('$min min', '$min منٹ', '$min دقيقة', '$min min', '$min min', '$min phút');
+  String durationMinSec(int min, int sec) => _s('$min min $sec sec', '$min منٹ $sec سیکنڈ', '$min دقيقة $sec ثانية', '$min min $sec sec', '$min min $sec s', '$min phút $sec giây');
 
   String intervalLabel(int minutes) {
     if (minutes >= 60 && minutes % 60 == 0) {
@@ -609,18 +687,20 @@ class AppLocalizations {
     return durationMin(minutes);
   }
 
-  String get oneHour => _s('1 hour', '1 گھنٹہ', 'ساعة واحدة', '1 uur', '1 heure');
-  String hoursCount(int hours) => _s('$hours hours', '$hours گھنٹے', '$hours ساعات', '$hours uur', '$hours heures');
+  String get oneHour => _s('1 hour', '1 گھنٹہ', 'ساعة واحدة', '1 uur', '1 heure', '1 giờ');
+  String hoursCount(int hours) => _s('$hours hours', '$hours گھنٹے', '$hours ساعات', '$hours uur', '$hours heures', '$hours giờ');
 
   List<String> get weekdayShortLabels => _lang == 'ar'
       ? const ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح']
       : _lang == 'ur'
-          ? const ['پ', 'م', 'ب', 'ج', 'ج', 'ہ', 'ات']
+          ? const ['پ', 'م', 'ب', 'ج', 'ج', 'ہ', 'ا']
           : _lang == 'nl'
               ? const ['M', 'D', 'W', 'D', 'V', 'Z', 'Z']
               : _lang == 'fr'
                   ? const ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-                  : const ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                  : _lang == 'vi'
+                      ? const ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
+                      : const ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   String daysLabelFromMask(int daysMask) {
     if (daysMask == 127) return everyDay;
@@ -631,7 +711,7 @@ class AppLocalizations {
     for (var i = 0; i < 7; i++) {
       if ((daysMask & (1 << i)) != 0) parts.add(labels[i]);
     }
-    return parts.join(_s(' · ', ' · ', ' · ', ' · ', ' · '));
+    return parts.join(' · ');
   }
 }
 

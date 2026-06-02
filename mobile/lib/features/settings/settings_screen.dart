@@ -177,9 +177,10 @@ class SettingsScreen extends ConsumerWidget {
     AppLanguage current,
   ) async {
     final l10n = context.l10n;
+    final theme = whisperTheme(context);
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.card,
+      backgroundColor: theme.isDark ? AppColors.card : AppColors.lightCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -189,9 +190,14 @@ class SettingsScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _SheetHandle(theme: theme),
             Text(
               l10n.chooseLanguage,
-              style: GoogleFonts.fraunces(fontSize: 20, fontWeight: FontWeight.w700),
+              style: GoogleFonts.fraunces(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: theme.foreground,
+              ),
             ),
             const SizedBox(height: 16),
             ...AppLanguage.values.map(
@@ -201,13 +207,16 @@ class SettingsScreen extends ConsumerWidget {
                   style: GoogleFonts.dmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
+                    color: theme.foreground,
                   ),
                 ),
                 subtitle: Text(
                   lang.nativeScript,
                   style: _languageNativeStyle(ctx, lang),
                 ),
-                trailing: lang == current ? const Icon(AppIcons.check) : null,
+                trailing: lang == current
+                    ? const Icon(AppIcons.checkCircle, color: AppColors.neon)
+                    : null,
                 onTap: () async {
                   await ref.read(localeProvider.notifier).setLanguage(lang);
                   if (ctx.mounted) Navigator.pop(ctx);
@@ -222,9 +231,10 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _pickInterval(BuildContext context, WidgetRef ref, int current) async {
     final l10n = context.l10n;
+    final theme = whisperTheme(context);
     final picked = await showModalBottomSheet<int>(
       context: context,
-      backgroundColor: AppColors.card,
+      backgroundColor: theme.isDark ? AppColors.card : AppColors.lightCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -234,15 +244,25 @@ class SettingsScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _SheetHandle(theme: theme),
             Text(
               l10n.defaultInterval,
-              style: GoogleFonts.fraunces(fontSize: 20, fontWeight: FontWeight.w700),
+              style: GoogleFonts.fraunces(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: theme.foreground,
+              ),
             ),
             const SizedBox(height: 16),
             ...([15, 30, 45, 60, 90].map(
               (m) => ListTile(
-                title: Text(l10n.minutesCount(m)),
-                trailing: m == current ? const Icon(AppIcons.check) : null,
+                title: Text(
+                  l10n.minutesCount(m),
+                  style: TextStyle(color: theme.foreground),
+                ),
+                trailing: m == current
+                    ? const Icon(AppIcons.checkCircle, color: AppColors.neon)
+                    : null,
                 onTap: () {
                   ref.read(defaultIntervalProvider.notifier).set(m);
                   Navigator.pop(ctx, m);
@@ -265,6 +285,27 @@ class SettingsScreen extends ConsumerWidget {
       default:
         return GoogleFonts.dmSans(fontSize: 14, color: muted);
     }
+  }
+}
+
+class _SheetHandle extends StatelessWidget {
+  const _SheetHandle({required this.theme});
+
+  final WhisperThemeExtension theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 40,
+        height: 4,
+        margin: const EdgeInsets.only(bottom: 18),
+        decoration: BoxDecoration(
+          color: theme.muted.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
   }
 }
 
