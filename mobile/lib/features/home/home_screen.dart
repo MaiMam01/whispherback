@@ -100,7 +100,7 @@ class HomeScreen extends ConsumerWidget {
                       greetingPeriod: greetingPeriod,
                     ),
                     if (useSpacers)
-                      const Spacer(flex: 2)
+                      const Spacer(flex: 3)
                     else
                       SizedBox(height: r.isFlipCover ? 16 : 24),
                     Center(
@@ -137,7 +137,7 @@ class HomeScreen extends ConsumerWidget {
                       _NextWhisperCard(theme: theme),
                     ],
                     if (useSpacers)
-                      const Spacer(flex: 3)
+                      const Spacer(flex: 2)
                     else
                       const SizedBox(height: 20),
                     if (snapshot.state == AppPlaybackState.sleepPaused)

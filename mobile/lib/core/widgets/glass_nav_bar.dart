@@ -105,10 +105,13 @@ class GlassNavBar extends StatelessWidget {
                       return Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          AnimatedPositioned(
+                          // `start` (not `left`) so the highlight mirrors with
+                          // the items under RTL locales (Arabic/Urdu) and stays
+                          // aligned to the correct destination.
+                          AnimatedPositionedDirectional(
                             duration: const Duration(milliseconds: 340),
                             curve: const Cubic(0.34, 1.28, 0.64, 1),
-                            left: selectedIndex * itemWidth,
+                            start: selectedIndex * itemWidth,
                             top: 0,
                             bottom: 0,
                             width: itemWidth,

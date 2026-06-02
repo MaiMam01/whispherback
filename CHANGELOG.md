@@ -16,6 +16,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Version numbers 
 - Interactive drifting particle background (home + premium screens)
 
 ### Fixed
+- RTL (Arabic/Urdu): bottom-nav highlight now mirrors with the items so taps
+  hit the correct tab (Home no longer opened Settings)
+- Language picker is now scrollable with a capped height and safe-area padding
+  (all six languages, including Vietnamese, are always reachable — no overflow)
+- Home power button sits lower / more vertically balanced on tall screens
 - Recorded/imported clips now play when tapped (play button was a no-op)
 - Schedule builder and other sub-pages open full-screen above the nav bar
   (Save button is no longer hidden behind the bottom bar)

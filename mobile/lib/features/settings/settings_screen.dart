@@ -186,51 +186,83 @@ class SettingsScreen extends ConsumerWidget {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: theme.isDark ? AppColors.card : AppColors.lightCard,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _SheetHandle(theme: theme),
-            Text(
-              l10n.chooseLanguage,
-              style: GoogleFonts.fraunces(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: theme.foreground,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...AppLanguage.values.map(
-              (lang) => ListTile(
-                title: Text(
-                  lang.label,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: theme.foreground,
-                  ),
+      builder: (ctx) {
+        // Cap height so the list scrolls instead of overflowing on short
+        // screens, and always leave room for every language (incl. Vietnamese).
+        final maxHeight = MediaQuery.sizeOf(ctx).height * 0.7;
+        final bottomInset = MediaQuery.viewPaddingOf(ctx).bottom;
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _SheetHandle(theme: theme),
+                    Text(
+                      l10n.chooseLanguage,
+                      style: GoogleFonts.fraunces(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: theme.foreground,
+                      ),
+                    ),
+                  ],
                 ),
-                subtitle: Text(
-                  lang.nativeScript,
-                  style: _languageNativeStyle(ctx, lang),
-                ),
-                trailing: lang == current
-                    ? const Icon(AppIcons.checkCircle, color: AppColors.neon)
-                    : null,
-                onTap: () async {
-                  await ref.read(localeProvider.notifier).setLanguage(lang);
-                  if (ctx.mounted) Navigator.pop(ctx);
-                },
               ),
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.fromLTRB(12, 4, 12, bottomInset + 16),
+                  children: [
+                    for (final lang in AppLanguage.values)
+                      ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        selected: lang == current,
+                        selectedTileColor:
+                            AppColors.neon.withValues(alpha: 0.10),
+                        title: Text(
+                          lang.label,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: theme.foreground,
+                          ),
+                        ),
+                        subtitle: Text(
+                          lang.nativeScript,
+                          style: _languageNativeStyle(ctx, lang),
+                        ),
+                        trailing: lang == current
+                            ? const Icon(AppIcons.checkCircle,
+                                color: AppColors.neon)
+                            : null,
+                        onTap: () async {
+                          await ref
+                              .read(localeProvider.notifier)
+                              .setLanguage(lang);
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
