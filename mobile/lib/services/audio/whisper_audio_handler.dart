@@ -127,6 +127,7 @@ class WhisperAudioHandler extends BaseAudioHandler {
     String? subtitle,
   }) async {
     _playingClip = true;
+    await _player.stop();
     mediaItem.add(
       MediaItem(
         id: path,

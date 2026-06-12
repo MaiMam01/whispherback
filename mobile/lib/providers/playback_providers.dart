@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/playback/playback_state.dart';
 import '../services/audio/audio_services.dart';
 import '../services/audio/whisper_audio_handler.dart';
+import '../services/notifications/notification_sync.dart';
 import '../services/playback/playback_coordinator.dart';
 import '../services/prayer/prayer_service.dart';
 import 'repository_providers.dart';
@@ -34,6 +35,12 @@ final playbackCoordinatorProvider = Provider<PlaybackCoordinator>((ref) {
     prayerService: ref.watch(prayerServiceProvider),
     playbackService: ref.watch(audioPlaybackServiceProvider),
   );
+  coordinator.refreshScheduleNotifications = () async {
+    await syncWhisperNotifications(
+      appState: ref.read(appStateRepositoryProvider),
+      schedules: ref.read(scheduleRepositoryProvider),
+    );
+  };
   ref.onDispose(coordinator.dispose);
   coordinator.initialize();
   return coordinator;

@@ -2,11 +2,13 @@ import '../../data/repositories/app_state_repository.dart';
 import '../../data/repositories/schedule_repository.dart';
 import '../audio/whisper_audio_handler.dart';
 import '../scheduler/schedule_fire_helper.dart';
+import '../scheduler/schedule_last_fired_store.dart';
 import 'notification_service.dart';
 
 /// Reconciles system notifications with the current app state:
 /// shows/hides the persistent "active" notification and re-arms scheduled
-/// alarms. Call after toggling Active and after any schedule change.
+/// alarms. Call after toggling Active, after any schedule change, and after
+/// each scheduled fire so "next up" stays accurate.
 Future<void> syncWhisperNotifications({
   required AppStateRepository appState,
   required ScheduleRepository schedules,
@@ -16,19 +18,30 @@ Future<void> syncWhisperNotifications({
 
   final active = await appState.isActive();
   final all = await schedules.getAll();
-  final armed = all.where((s) => s.enabled).length;
+  final enabled = all.where((s) => s.enabled).toList();
+  final armed = enabled.length;
+  final now = DateTime.now();
+  final lastFired = ScheduleLastFiredStore.instance;
+
+  final upcoming = ScheduleFireHelper.upcomingEvents(
+    enabled,
+    now,
+    lastFiredFor: lastFired.get,
+    limit: 4,
+  );
 
   String? nextUpcoming;
-  final next = ScheduleFireHelper.nextUpcoming(
-    all.where((s) => s.enabled).toList(),
-    DateTime.now(),
-  );
-  if (next != null) {
-    final name = next.schedule.playlistName.isEmpty
-        ? 'WhisperBack'
-        : next.schedule.playlistName;
-    final time = _formatTime(next.when);
-    nextUpcoming = 'Next: “$name” at $time';
+  String? upcomingSummary;
+  if (upcoming.isNotEmpty) {
+    nextUpcoming =
+        'Next: “${upcoming.first.playlistName}” at ${_formatTime(upcoming.first.when)}';
+    if (upcoming.length > 1) {
+      final lines = upcoming
+          .take(4)
+          .map((e) => '• ${_formatTime(e.when)} — ${e.playlistName}')
+          .join('\n');
+      upcomingSummary = lines;
+    }
   }
 
   if (active) {
@@ -43,6 +56,7 @@ Future<void> syncWhisperNotifications({
     await service.showActiveOngoing(
       scheduleCount: armed,
       nextUpcoming: nextUpcoming,
+      upcomingSummary: upcomingSummary,
     );
   } else {
     await service.cancelActiveOngoing();
@@ -57,3 +71,10 @@ String _formatTime(DateTime when) {
   final hour12 = h % 12 == 0 ? 12 : h % 12;
   return '$hour12:$m $period';
 }
+
+/// Refresh notifications after playback events (scheduled clip finished, etc.).
+Future<void> refreshWhisperNotifications({
+  required AppStateRepository appState,
+  required ScheduleRepository schedules,
+}) =>
+    syncWhisperNotifications(appState: appState, schedules: schedules);

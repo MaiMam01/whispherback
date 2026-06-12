@@ -2,129 +2,182 @@ import '../../domain/entities/playback_schedule.dart';
 
 /// Computes when schedules should fire and when the next whisper is due.
 abstract final class ScheduleFireHelper {
+  /// Max lateness after a grid slot before we skip to the next interval.
+  static const maxLateness = Duration(seconds: 90);
+
   /// Whether [now] falls inside today's start/end window for [schedule].
   static bool isInWindow(PlaybackSchedule schedule, DateTime now) {
     if (!schedule.enabled) return false;
     if (!schedule.runsOnWeekday(now.weekday)) return false;
 
-    final startToday = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      schedule.startTime.hour,
-      schedule.startTime.minute,
-    );
+    final startToday = _startOnDay(schedule, now);
     if (now.isBefore(startToday)) return false;
 
-    if (schedule.endTime != null) {
-      final endToday = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        schedule.endTime!.hour,
-        schedule.endTime!.minute,
-      );
-      if (now.isAfter(endToday)) return false;
-    }
+    final endToday = _endOnDay(schedule, now);
+    if (endToday != null && now.isAfter(endToday)) return false;
     return true;
   }
 
-  /// Start of the current interval slot (aligned to start + k×interval).
-  static DateTime? currentSlot(PlaybackSchedule schedule, DateTime now) {
-    if (!isInWindow(schedule, now)) return null;
-
-    final startToday = DateTime(
-      now.year,
-      now.month,
-      now.day,
+  static DateTime _startOnDay(PlaybackSchedule schedule, DateTime day) {
+    return DateTime(
+      day.year,
+      day.month,
+      day.day,
       schedule.startTime.hour,
       schedule.startTime.minute,
     );
-    final elapsedMin = now.difference(startToday).inMinutes;
-    if (elapsedMin < 0) return null;
+  }
 
-    final slotIndex = elapsedMin ~/ schedule.intervalMinutes;
-    return startToday.add(
-      Duration(minutes: slotIndex * schedule.intervalMinutes),
+  static DateTime? _endOnDay(PlaybackSchedule schedule, DateTime day) {
+    if (schedule.endTime == null) return null;
+    return DateTime(
+      day.year,
+      day.month,
+      day.day,
+      schedule.endTime!.hour,
+      schedule.endTime!.minute,
     );
   }
 
-  /// True when a whisper should fire now (grid-aligned, respects [lastFired]).
-  static bool shouldFireNow(
+  /// Next grid slot after [lastFired], or [startToday] if never fired today.
+  static DateTime? nextSlotAfter(
     PlaybackSchedule schedule,
-    DateTime now,
+    DateTime now, {
     DateTime? lastFired,
-  ) {
-    final slot = currentSlot(schedule, now);
-    if (slot == null) return false;
-    if (now.isBefore(slot)) return false;
-
-    // Already handled this slot.
-    if (lastFired != null && !lastFired.isBefore(slot)) return false;
-
-    // Grace window: engine polls every 10s — allow catching the slot for ~12 min
-    // so a slow poll doesn't skip an entire interval.
-    if (now.difference(slot).inMinutes > schedule.intervalMinutes + 2) {
-      return false;
-    }
-    return true;
-  }
-
-  /// Next fire time for one schedule (today or a future weekday).
-  static DateTime? nextFireTime(PlaybackSchedule schedule, DateTime now) {
+  }) {
     if (!schedule.enabled) return null;
 
     for (var dayOffset = 0; dayOffset < 14; dayOffset++) {
       final day = now.add(Duration(days: dayOffset));
       if (!schedule.runsOnWeekday(day.weekday)) continue;
 
-      final startToday = DateTime(
-        day.year,
-        day.month,
-        day.day,
-        schedule.startTime.hour,
-        schedule.startTime.minute,
-      );
+      final start = _startOnDay(schedule, day);
+      final end = _endOnDay(schedule, day);
 
-      DateTime? endToday;
-      if (schedule.endTime != null) {
-        endToday = DateTime(
-          day.year,
-          day.month,
-          day.day,
-          schedule.endTime!.hour,
-          schedule.endTime!.minute,
+      var slot = start;
+      if (lastFired != null) {
+        final lastDay = DateTime(
+          lastFired.year,
+          lastFired.month,
+          lastFired.day,
         );
+        final onSameDay = lastDay.year == day.year &&
+            lastDay.month == day.month &&
+            lastDay.day == day.day;
+        if (onSameDay && !lastFired.isBefore(start)) {
+          slot = lastFired.add(Duration(minutes: schedule.intervalMinutes));
+        }
       }
 
-      var slot = startToday;
       while (true) {
-        if (endToday != null && slot.isAfter(endToday)) break;
-        if (slot.isAfter(now) || slot.isAtSameMomentAs(now)) {
+        if (end != null && slot.isAfter(end)) break;
+        if (dayOffset == 0 && slot.isBefore(now)) {
+          // Skip slots we missed by too much — jump to next grid line.
+          if (now.difference(slot) > maxLateness) {
+            slot = slot.add(Duration(minutes: schedule.intervalMinutes));
+            continue;
+          }
+        }
+        if (dayOffset > 0 || !slot.isBefore(now)) {
           return slot;
         }
+        if (now.difference(slot) <= maxLateness) return slot;
         slot = slot.add(Duration(minutes: schedule.intervalMinutes));
-        if (endToday == null && slot.day != day.day) break;
       }
     }
     return null;
   }
 
+  /// Grid slot that should fire now, or null if nothing is due.
+  static DateTime? slotToFire(
+    PlaybackSchedule schedule,
+    DateTime now,
+    DateTime? lastFired,
+  ) {
+    if (!isInWindow(schedule, now)) return null;
+
+    final slot = nextSlotAfter(schedule, now, lastFired: lastFired);
+    if (slot == null) return null;
+    if (now.isBefore(slot)) return null;
+
+    final end = _endOnDay(schedule, now);
+    if (end != null && slot.isAfter(end)) return null;
+
+    if (now.difference(slot) > maxLateness) return null;
+
+    if (lastFired != null && !slot.isAfter(lastFired)) return null;
+
+    return slot;
+  }
+
+  static bool shouldFireNow(
+    PlaybackSchedule schedule,
+    DateTime now,
+    DateTime? lastFired,
+  ) =>
+      slotToFire(schedule, now, lastFired) != null;
+
+  /// Alias kept for callers that used [currentSlot].
+  static DateTime? currentSlot(
+    PlaybackSchedule schedule,
+    DateTime now,
+  ) =>
+      slotToFire(schedule, now, null);
+
+  /// Next fire time for one schedule (respects [lastFired]).
+  static DateTime? nextFireTime(
+    PlaybackSchedule schedule,
+    DateTime now, {
+    DateTime? lastFired,
+  }) =>
+      nextSlotAfter(schedule, now, lastFired: lastFired);
+
   /// Earliest upcoming fire across all schedules.
   static ({DateTime when, PlaybackSchedule schedule})? nextUpcoming(
     List<PlaybackSchedule> schedules,
-    DateTime now,
-  ) {
+    DateTime now, {
+    DateTime? Function(String scheduleId)? lastFiredFor,
+  }) {
     ({DateTime when, PlaybackSchedule schedule})? best;
     for (final s in schedules) {
       if (!s.enabled) continue;
-      final when = nextFireTime(s, now);
+      final last = lastFiredFor?.call(s.id);
+      final when = nextFireTime(s, now, lastFired: last);
       if (when == null) continue;
       if (best == null || when.isBefore(best.when)) {
         best = (when: when, schedule: s);
       }
     }
     return best;
+  }
+
+  /// Upcoming grid fires across all schedules (sorted, de-duplicated by time).
+  static List<({DateTime when, String playlistName})> upcomingEvents(
+    List<PlaybackSchedule> schedules,
+    DateTime now, {
+    DateTime? Function(String scheduleId)? lastFiredFor,
+    int limit = 4,
+  }) {
+    final events = <({DateTime when, String playlistName})>[];
+    for (final s in schedules) {
+      if (!s.enabled) continue;
+      final last = lastFiredFor?.call(s.id);
+      var slot = nextFireTime(s, now, lastFired: last);
+      var hops = 0;
+      while (slot != null && hops < limit * 2) {
+        events.add((
+          when: slot,
+          playlistName: s.playlistName.isEmpty ? 'WhisperBack' : s.playlistName,
+        ));
+        slot = slot.add(Duration(minutes: s.intervalMinutes));
+        final end = _endOnDay(s, slot);
+        if (end != null && slot.isAfter(end)) break;
+        hops++;
+      }
+    }
+    events.sort((a, b) => a.when.compareTo(b.when));
+    if (events.length <= limit) return events;
+    return events.sublist(0, limit);
   }
 
   /// All weekly alarm slots (hour/minute) for notification scheduling.

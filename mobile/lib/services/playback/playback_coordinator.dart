@@ -39,6 +39,9 @@ class PlaybackCoordinator {
   Timer? _modeCheckTimer;
   String? _pendingScheduledPlaylistId;
 
+  /// Called after a scheduled whisper finishes so notifications show the next slot.
+  Future<void> Function()? refreshScheduleNotifications;
+
   /// Replays the current snapshot to every new listener so the UI never misses
   /// the restored "active" state on a cold start (broadcast streams otherwise
   /// drop events emitted before a listener attaches).
@@ -91,22 +94,17 @@ class PlaybackCoordinator {
   }
 
   Future<void> _onClipCompleted() async {
-    // Scheduled whispers: one clip per interval — never auto-chain.
     if (_snapshot.state == AppPlaybackState.scheduledPlaying) {
-      _emit(_snapshot.copyWith(isPlaying: false));
-      await _audio.stop();
-      await _drainPendingScheduled();
+      await _finishScheduledClip();
       return;
     }
 
     if (_snapshot.playlistId == null) {
-      _emit(_snapshot.copyWith(isPlaying: false));
-      await _audio.stop();
+      await _finishManualPreview();
       await _drainPendingScheduled();
       return;
     }
 
-    // Manual playlist: play next clip in sequence.
     final clips = await _playlists.getClips(_snapshot.playlistId!);
     if (clips.length <= 1) {
       await stop();
@@ -116,6 +114,28 @@ class PlaybackCoordinator {
     await playPlaylist(_snapshot.playlistId!);
   }
 
+  Future<void> _finishScheduledClip() async {
+    final active = await _appState.isActive();
+    _emit(PlaybackSnapshot(
+      state: active ? AppPlaybackState.activeIdle : AppPlaybackState.inactive,
+      isPlaying: false,
+      modalVisible: false,
+    ));
+    await _audio.stop();
+    await refreshScheduleNotifications?.call();
+    await _drainPendingScheduled();
+  }
+
+  Future<void> _finishManualPreview() async {
+    final active = await _appState.isActive();
+    _emit(PlaybackSnapshot(
+      state: active ? AppPlaybackState.activeIdle : AppPlaybackState.inactive,
+      isPlaying: false,
+      modalVisible: false,
+    ));
+    await _audio.stop();
+  }
+
   Future<void> _drainPendingScheduled() async {
     final next = _pendingScheduledPlaylistId;
     if (next == null) return;
@@ -123,14 +143,26 @@ class PlaybackCoordinator {
     await requestScheduledPlay(next);
   }
 
-  /// Called by [ScheduleEngine]. Queues if another clip is already playing.
+  /// Called by [ScheduleEngine]. Scheduled whispers take priority over manual
+  /// preview/playlist playback — current audio is stopped first.
   Future<void> requestScheduledPlay(String playlistId) async {
-    if (_snapshot.isPlaying ||
-        _snapshot.state == AppPlaybackState.manualPlaying) {
-      _pendingScheduledPlaylistId = playlistId;
+    await _interruptForSchedule();
+    await playPlaylist(playlistId, fromSchedule: true);
+  }
+
+  Future<void> _interruptForSchedule() async {
+    if (!_snapshot.isPlaying &&
+        _snapshot.state != AppPlaybackState.manualPlaying &&
+        _snapshot.state != AppPlaybackState.scheduledPlaying) {
       return;
     }
-    await playPlaylist(playlistId, fromSchedule: true);
+    await _audio.stop();
+    final active = await _appState.isActive();
+    _emit(PlaybackSnapshot(
+      state: active ? AppPlaybackState.activeIdle : AppPlaybackState.inactive,
+      isPlaying: false,
+      modalVisible: false,
+    ));
   }
 
   Future<void> toggleActive() async {
@@ -156,13 +188,6 @@ class PlaybackCoordinator {
 
   Future<void> playPlaylist(String playlistId,
       {bool fromSchedule = false}) async {
-    if (fromSchedule &&
-        (_snapshot.isPlaying ||
-            _snapshot.state == AppPlaybackState.manualPlaying)) {
-      _pendingScheduledPlaylistId = playlistId;
-      return;
-    }
-
     if (!fromSchedule && !await _canPlay()) return;
     if (fromSchedule && !await _appState.isActive()) return;
 
@@ -213,6 +238,10 @@ class PlaybackCoordinator {
   /// so we don't block the user behind a GPS prayer-time lookup here.
   Future<void> playClip(AudioClip clip) async {
     if (!_isPlayablePath(clip.filePath)) return;
+
+    if (_snapshot.isPlaying) {
+      await _audio.stop();
+    }
 
     // Optimistic: show the now-playing sheet instantly for snappy feedback.
     // playlistId is null so completion stops cleanly.

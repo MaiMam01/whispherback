@@ -97,14 +97,15 @@ class NotificationService {
   Future<void> showActiveOngoing({
     int scheduleCount = 0,
     String? nextUpcoming,
+    String? upcomingSummary,
   }) async {
     await init();
-    final body = nextUpcoming != null
-        ? nextUpcoming
-        : scheduleCount > 0
+    final body = upcomingSummary ??
+        nextUpcoming ??
+        (scheduleCount > 0
             ? '$scheduleCount schedule(s) armed · whispers will play automatically'
-            : 'Listening for your scheduled whispers';
-    const details = NotificationDetails(
+            : 'Listening for your scheduled whispers');
+    final details = NotificationDetails(
       android: AndroidNotificationDetails(
         _statusChannelId,
         'Active status',
@@ -114,7 +115,14 @@ class NotificationService {
         ongoing: true,
         autoCancel: false,
         showWhen: false,
-        onlyAlertOnce: true,
+        onlyAlertOnce: false,
+        styleInformation: upcomingSummary != null
+            ? BigTextStyleInformation(
+                upcomingSummary,
+                contentTitle: 'WhisperBack is active',
+                summaryText: nextUpcoming,
+              )
+            : null,
         category: AndroidNotificationCategory.status,
       ),
     );
