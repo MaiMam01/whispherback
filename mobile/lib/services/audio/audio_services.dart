@@ -147,10 +147,26 @@ class AudioPlaybackService {
 
   Future<void> pause() => _handler.pause();
   Future<void> resume() => _handler.play();
+
+  /// Stops the current clip (internal). Resumes the silent keep-alive if the
+  /// foreground session is still active.
   Future<void> stop() async {
-    await _handler.stop();
+    await _handler.stopClip();
     _currentPath = null;
   }
+
+  /// Starts the always-on foreground session (master toggle ON).
+  Future<void> enterForeground({String title = 'WhisperBack active'}) =>
+      _handler.enterForeground(title: title);
+
+  /// Tears down the foreground session (master toggle OFF).
+  Future<void> exitForeground() async {
+    await _handler.exitForeground();
+    _currentPath = null;
+  }
+
+  /// Wire the media-notification Stop button to a callback (e.g. toggle OFF).
+  set onStopRequested(void Function()? cb) => _handler.onStopRequested = cb;
 
   bool get isPlaying => _handler.player.playing;
   String? get currentPath => _currentPath;

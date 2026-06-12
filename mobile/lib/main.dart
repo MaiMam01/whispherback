@@ -24,7 +24,10 @@ Future<void> main() async {
       config: const AudioServiceConfig(
         androidNotificationChannelId: 'com.whisperback.playback',
         androidNotificationChannelName: 'WhisperBack playback',
-        androidNotificationOngoing: false,
+        // Ongoing notification while Active. We hold the service open by
+        // continuously playing a silent loop (never pausing), so the engine
+        // stays alive between intervals and the OS keeps the process around.
+        androidNotificationOngoing: true,
         androidStopForegroundOnPause: true,
         notificationColor: Color(0xFF2E8BFF),
       ),

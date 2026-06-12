@@ -14,6 +14,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/playback_providers.dart';
 import '../../core/widgets/depth_surface.dart';
 import '../../providers/repository_providers.dart';
+import '../../services/notifications/background_permissions.dart';
 import '../../services/notifications/notification_sync.dart';
 import '../widgets/active_toggle.dart';
 import 'widgets/home_ambience.dart';
@@ -116,12 +117,18 @@ class HomeScreen extends ConsumerWidget {
                                 await ref
                                     .read(playbackCoordinatorProvider)
                                     .toggleActive();
+                                final appState =
+                                    ref.read(appStateRepositoryProvider);
+                                final nowActive = await appState.isActive();
                                 await syncWhisperNotifications(
-                                  appState:
-                                      ref.read(appStateRepositoryProvider),
+                                  appState: appState,
                                   schedules:
                                       ref.read(scheduleRepositoryProvider),
                                 );
+                                // First time going Active, ask to ignore
+                                // battery optimization so background scheduling
+                                // survives OEM killers.
+                                if (nowActive) await requestBatteryExemption();
                               },
                             ),
                             const SizedBox(height: 10),

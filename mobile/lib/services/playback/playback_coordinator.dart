@@ -56,13 +56,23 @@ class PlaybackCoordinator {
 
   Future<void> initialize() async {
     final active = await _appState.isActive();
+    // Tapping Stop on the media notification turns the whole session OFF.
+    _audio.onStopRequested = () => unawaited(_deactivateFromNotification());
     _emit(
       _snapshot.copyWith(
         state: active ? AppPlaybackState.activeIdle : AppPlaybackState.inactive,
       ),
     );
+    // Restore the foreground keep-alive after a cold start if Active.
+    if (active) await _audio.enterForeground();
     _playerSub = _audio.playerStateStream.listen(_onPlayerState);
     startModeMonitoring();
+  }
+
+  Future<void> _deactivateFromNotification() async {
+    await _appState.setActive(false);
+    await _audio.exitForeground();
+    _emit(const PlaybackSnapshot(state: AppPlaybackState.inactive));
   }
 
   void _onPlayerState(PlayerState state) {
@@ -88,10 +98,11 @@ class PlaybackCoordinator {
     final active = await _appState.isActive();
     if (active) {
       await _appState.setActive(false);
-      await _audio.stop();
+      await _audio.exitForeground();
       _emit(const PlaybackSnapshot(state: AppPlaybackState.inactive));
     } else {
       await _appState.setActive(true);
+      await _audio.enterForeground();
       await refreshModeState();
     }
   }

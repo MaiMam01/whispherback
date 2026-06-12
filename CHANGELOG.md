@@ -23,6 +23,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Version numbers 
 - Language selection moved to a full-screen page so every language (incl.
   Vietnamese) is always visible and scrollable
 
+### Added (always-on background)
+- While the master toggle is ON, an **always-on foreground service** is held
+  open by a silent keep-alive loop, so the scheduling engine stays alive
+  between intervals even when the app is backgrounded or swiped away.
+- **Battery-optimization exemption** prompt on first activation to survive
+  aggressive OEM battery killers (Xiaomi/Samsung/Oppo, etc.).
+- The media notification's **Stop** turns the whole session OFF (power-off),
+  matching the home toggle; restored automatically after a cold start.
+
 ### Added (background audio)
 - Background playback via an Android **foreground service** (audio_service +
   just_audio): audio keeps playing when the app is backgrounded, with a
