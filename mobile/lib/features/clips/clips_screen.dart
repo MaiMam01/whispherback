@@ -11,6 +11,7 @@ import '../../domain/entities/audio_clip.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/duration_format.dart';
 import '../../providers/playback_providers.dart';
+import '../../providers/repository_providers.dart';
 import 'widgets/clip_library_tile.dart';
 
 enum _ClipFilter { all, recorded, imported }
@@ -33,6 +34,36 @@ class _ClipsScreenState extends ConsumerState<ClipsScreen> {
       _ClipFilter.imported =>
         clips.where((c) => c.source == ClipSource.imported).toList(),
     };
+  }
+
+  Future<void> _deleteClip(AudioClip clip) async {
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteClip),
+        content: Text(l10n.deleteClipConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await ref.read(clipRepositoryProvider).delete(clip.id);
+    ref.invalidate(clipsProvider);
+    ref.invalidate(playlistsProvider);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.clipDeleted)),
+      );
+    }
   }
 
   @override
@@ -102,6 +133,7 @@ class _ClipsScreenState extends ConsumerState<ClipsScreen> {
                   onImport: () => context.push('/clips/import'),
                   onPlayClip: (clip) =>
                       ref.read(playbackCoordinatorProvider).playClip(clip),
+                  onDeleteClip: _deleteClip,
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -124,6 +156,7 @@ class _ClipsBody extends StatelessWidget {
     required this.onRecord,
     required this.onImport,
     required this.onPlayClip,
+    required this.onDeleteClip,
   });
 
   final List<AudioClip> clips;
@@ -134,6 +167,7 @@ class _ClipsBody extends StatelessWidget {
   final VoidCallback onRecord;
   final VoidCallback onImport;
   final void Function(AudioClip clip) onPlayClip;
+  final Future<void> Function(AudioClip clip) onDeleteClip;
 
   int get _recordedCount =>
       clips.where((c) => c.source == ClipSource.recorded).length;
@@ -236,6 +270,7 @@ class _ClipsBody extends StatelessWidget {
               itemBuilder: (context, i) => ClipLibraryTile(
                 clip: filtered[i],
                 onPlay: () => onPlayClip(filtered[i]),
+                onDelete: () => onDeleteClip(filtered[i]),
               ),
             ),
           ),

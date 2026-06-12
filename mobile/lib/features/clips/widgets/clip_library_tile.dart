@@ -7,16 +7,19 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/prominent_play_button.dart';
 import '../../../core/widgets/whisper_card.dart';
 import '../../../domain/entities/audio_clip.dart';
+import '../../../l10n/app_localizations.dart';
 
 class ClipLibraryTile extends StatelessWidget {
   const ClipLibraryTile({
     super.key,
     required this.clip,
     required this.onPlay,
+    this.onDelete,
   });
 
   final AudioClip clip;
   final VoidCallback onPlay;
+  final VoidCallback? onDelete;
 
   static String relativeDate(DateTime date) {
     final now = DateTime.now();
@@ -32,6 +35,7 @@ class ClipLibraryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = whisperTheme(context);
+    final l10n = context.l10n;
     final isRecorded = clip.source == ClipSource.recorded;
 
     return Material(
@@ -142,6 +146,14 @@ class ClipLibraryTile extends StatelessWidget {
                       ),
                     ),
                     ProminentPlayButton(onTap: onPlay, size: 40, iconSize: 18),
+                    if (onDelete != null) ...[
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(AppIcons.trash, color: AppColors.error, size: 20),
+                        tooltip: l10n.deleteClip,
+                        onPressed: onDelete,
+                      ),
+                    ],
                   ],
                 ),
               ],

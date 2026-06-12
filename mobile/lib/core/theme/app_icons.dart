@@ -69,4 +69,6 @@ abstract final class AppIcons {
   static const moreVertical = LucideIcons.ellipsis_vertical;
   static const trash = LucideIcons.trash_2;
   static const edit = LucideIcons.pencil;
+  static const gripVertical = LucideIcons.grip_vertical;
+  static const removeFromList = LucideIcons.list_minus;
 }

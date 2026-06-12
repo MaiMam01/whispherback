@@ -5,6 +5,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/prominent_play_button.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/entities/audio_clip.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/widgets/whisper_card.dart';
 
 class PlaylistClipTile extends StatelessWidget {
@@ -13,15 +14,20 @@ class PlaylistClipTile extends StatelessWidget {
     required this.clip,
     required this.index,
     required this.onPlay,
+    this.onRemove,
+    this.dragHandle,
   });
 
   final AudioClip clip;
   final int index;
   final VoidCallback onPlay;
+  final VoidCallback? onRemove;
+  final Widget? dragHandle;
 
   @override
   Widget build(BuildContext context) {
     final theme = whisperTheme(context);
+    final l10n = context.l10n;
     final isRecorded = clip.source == ClipSource.recorded;
 
     return Material(
@@ -39,6 +45,10 @@ class PlaylistClipTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
+                if (dragHandle != null) ...[
+                  dragHandle!,
+                  const SizedBox(width: 4),
+                ],
                 SizedBox(
                   width: 28,
                   child: Text(
@@ -104,6 +114,12 @@ class PlaylistClipTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 ProminentPlayButton(onTap: onPlay),
+                if (onRemove != null)
+                  IconButton(
+                    icon: Icon(AppIcons.removeFromList, color: theme.muted, size: 22),
+                    tooltip: l10n.removeFromPlaylist,
+                    onPressed: onRemove,
+                  ),
               ],
             ),
           ),

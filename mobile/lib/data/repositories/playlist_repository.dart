@@ -157,6 +157,27 @@ class PlaylistRepository {
     );
   }
 
+  /// Persists a new play order for clips in a playlist.
+  Future<void> reorderClips(String playlistId, List<String> clipIds) async {
+    final db = await _db.database;
+    final batch = db.batch();
+    for (var i = 0; i < clipIds.length; i++) {
+      batch.update(
+        'playlist_clips',
+        {'sort_order': i},
+        where: 'playlist_id = ? AND clip_id = ?',
+        whereArgs: [playlistId, clipIds[i]],
+      );
+    }
+    await batch.commit(noResult: true);
+    await db.update(
+      'playlists',
+      {'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [playlistId],
+    );
+  }
+
   Future<bool> delete(String id) async {
     final db = await _db.database;
     final schedule = await db.query(

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:uuid/uuid.dart';
 
 import '../../domain/entities/audio_clip.dart';
@@ -47,9 +49,16 @@ class ClipRepository {
   }
 
   Future<void> delete(String id) async {
+    final clip = await getById(id);
     final db = await _db.database;
     await db.delete('playlist_clips', where: 'clip_id = ?', whereArgs: [id]);
     await db.delete('clips', where: 'id = ?', whereArgs: [id]);
+    if (clip != null) {
+      try {
+        final file = File(clip.filePath);
+        if (await file.exists()) await file.delete();
+      } catch (_) {}
+    }
   }
 
   AudioClip _fromRow(Map<String, Object?> row) {

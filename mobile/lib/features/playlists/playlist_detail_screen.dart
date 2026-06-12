@@ -151,6 +151,23 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
         .removeClip(widget.playlistId, clip.id);
     ref.invalidate(playlistsProvider);
     await _load();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.clipRemovedFromPlaylist)),
+      );
+    }
+  }
+
+  Future<void> _reorderClips(int oldIndex, int newIndex) async {
+    if (newIndex > oldIndex) newIndex -= 1;
+    setState(() {
+      final item = _clips.removeAt(oldIndex);
+      _clips.insert(newIndex, item);
+    });
+    await ref.read(playlistRepositoryProvider).reorderClips(
+          widget.playlistId,
+          _clips.map((c) => c.id).toList(),
+        );
   }
 
   void _showAddClips() {
@@ -308,6 +325,11 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                           color: theme.muted,
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.dragToReorder,
+                        style: TextStyle(fontSize: 12, color: theme.muted),
+                      ),
                       const SizedBox(height: 12),
                     ],
                   ),
@@ -325,50 +347,52 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                       20, 0, 20, context.shellScrollPadding.bottom),
-                  sliver: SliverList.separated(
+                  sliver: SliverReorderableList(
                     itemCount: _clips.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    onReorder: _reorderClips,
                     itemBuilder: (context, i) {
                       final clip = _clips[i];
-                      return Dismissible(
+                      return ReorderableDelayedDragStartListener(
                         key: ValueKey(clip.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(14),
+                        index: i,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            bottom: i < _clips.length - 1 ? 10 : 0,
                           ),
-                          child: const Icon(AppIcons.trash, color: Colors.white),
-                        ),
-                        confirmDismiss: (_) async {
-                          return await showDialog<bool>(
+                          child: PlaylistClipTile(
+                            clip: clip,
+                            index: i,
+                            dragHandle: Icon(
+                              AppIcons.gripVertical,
+                              color: theme.muted,
+                              size: 20,
+                            ),
+                            onPlay: () => ref
+                                .read(playbackCoordinatorProvider)
+                                .playClip(clip),
+                            onRemove: () async {
+                              final ok = await showDialog<bool>(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
                                   title: Text(l10n.removeFromPlaylist),
-                                  content: Text(clip.title),
+                                  content: Text(l10n.removeFromPlaylistConfirm),
                                   actions: [
                                     TextButton(
-                                      onPressed: () => Navigator.pop(ctx, false),
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
                                       child: Text(l10n.cancel),
                                     ),
                                     FilledButton(
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: Text(l10n.removeFromPlaylist),
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, true),
+                                      child: Text(l10n.remove),
                                     ),
                                   ],
                                 ),
-                              ) ??
-                              false;
-                        },
-                        onDismissed: (_) => _removeClip(clip),
-                        child: PlaylistClipTile(
-                          clip: clip,
-                          index: i,
-                          onPlay: () => ref
-                              .read(playbackCoordinatorProvider)
-                              .playClip(clip),
+                              );
+                              if (ok == true) await _removeClip(clip);
+                            },
+                          ),
                         ),
                       );
                     },

@@ -40,6 +40,10 @@ Future<void> syncWhisperNotifications({
       subtitle: subtitle,
       scheduleCount: armed,
     );
+    await service.showActiveOngoing(
+      scheduleCount: armed,
+      nextUpcoming: nextUpcoming,
+    );
   } else {
     await service.cancelActiveOngoing();
   }

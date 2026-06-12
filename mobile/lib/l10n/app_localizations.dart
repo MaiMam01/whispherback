@@ -452,6 +452,48 @@ class AppLocalizations {
       'Chọn đoạn ghi để thêm');
   String get delete => _s(
       'Delete', 'حذف', 'حذف', 'Verwijderen', 'Supprimer', 'Xóa');
+  String get deleteClip => _s(
+      'Delete clip',
+      'کلپ حذف کریں',
+      'حذف المقطع',
+      'Clip verwijderen',
+      'Supprimer le clip',
+      'Xóa đoạn ghi');
+  String get deleteClipConfirm => _s(
+      'Delete this clip permanently? It will be removed from all playlists.',
+      'یہ کلپ مستقل حذف ہو گی؟ تمام پلے لسٹس سے ہٹ جائے گی۔',
+      'حذف هذا المقطع نهائياً؟ سيُزال من جميع القوائم.',
+      'Deze clip permanent verwijderen? Verwijderd uit alle afspeellijsten.',
+      'Supprimer ce clip définitivement ? Retiré de toutes les playlists.',
+      'Xóa vĩnh viễn đoạn ghi này? Sẽ bị gỡ khỏi mọi danh sách phát.');
+  String get clipDeleted => _s(
+      'Clip deleted',
+      'کلپ حذف ہو گئی',
+      'تم حذف المقطع',
+      'Clip verwijderd',
+      'Clip supprimé',
+      'Đã xóa đoạn ghi');
+  String get removeFromPlaylistConfirm => _s(
+      'Remove from this playlist? The clip stays in your library.',
+      'اس پلے لسٹ سے ہٹائیں؟ کلپ آپ کی لائبریری میں رہے گی۔',
+      'إزالة من هذه القائمة؟ يبقى المقطع في مكتبتك.',
+      'Uit deze afspeellijst verwijderen? De clip blijft in je bibliotheek.',
+      'Retirer de cette playlist ? Le clip reste dans votre bibliothèque.',
+      'Gỡ khỏi danh sách phát này? Đoạn ghi vẫn còn trong thư viện.');
+  String get clipRemovedFromPlaylist => _s(
+      'Clip removed from playlist',
+      'کلپ پلے لسٹ سے ہٹا دی گئی',
+      'تمت إزالة المقطع من القائمة',
+      'Clip uit afspeellijst verwijderd',
+      'Clip retiré de la playlist',
+      'Đã gỡ đoạn ghi khỏi danh sách phát');
+  String get dragToReorder => _s(
+      'Hold and drag to reorder',
+      'ترتیب بدلنے کے لیے دبائیں اور گھسیٹیں',
+      'اضغط واسحب لإعادة الترتيب',
+      'Houd ingedrukt en sleep om te sorteren',
+      'Maintenez et glissez pour réorganiser',
+      'Giữ và kéo để sắp xếp lại');
   String get rename => _s(
       'Rename', 'نام بدلیں', 'إعادة تسمية', 'Hernoemen', 'Renommer', 'Đổi tên');
   String get totalClips => _s('Total clips', 'کل کلپس', 'إجمالي المقاطع',

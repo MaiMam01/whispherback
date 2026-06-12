@@ -83,9 +83,15 @@ class WhisperAudioHandler extends BaseAudioHandler {
   }) async {
     _sessionSubtitle = subtitle;
     _scheduleCount = scheduleCount;
-    if (_keepAlive && !_playingClip) {
+    if (_playingClip) return;
+    if (_keepAlive) {
       mediaItem.add(_activeMediaItem());
       _broadcastState(null);
+    } else {
+      await enterForeground(
+        subtitle: subtitle,
+        scheduleCount: scheduleCount,
+      );
     }
   }
 
@@ -250,8 +256,9 @@ class WhisperAudioHandler extends BaseAudioHandler {
   }
 
   void _broadcastState(PlaybackEvent? event) {
-    final silentKeepAlive = _keepAlive && _player.volume == 0 && !_playingClip;
     final playing = _player.playing;
+    // Report playing while Active so the foreground media notification stays up.
+    final reportPlaying = _keepAlive || playing;
     final controls = <MediaControl>[
       if (_playingClip) playing ? MediaControl.pause : MediaControl.play,
       if (_playingClip)
@@ -288,7 +295,7 @@ class WhisperAudioHandler extends BaseAudioHandler {
           ProcessingState.ready: AudioProcessingState.ready,
           ProcessingState.completed: AudioProcessingState.completed,
         }[_player.processingState]!,
-        playing: silentKeepAlive ? false : playing,
+        playing: reportPlaying,
         updatePosition: _player.position,
         bufferedPosition: _player.bufferedPosition,
         speed: _player.speed,

@@ -32,7 +32,7 @@ Future<void> main() async {
               'Playback controls, schedules, and session status',
           androidNotificationOngoing: true,
           androidStopForegroundOnPause: true,
-          androidNotificationIcon: 'mipmap/ic_launcher',
+          androidNotificationIcon: 'drawable/ic_notification',
           notificationColor: Color(0xFF2E8BFF),
         ),
       ).timeout(const Duration(seconds: 8));
