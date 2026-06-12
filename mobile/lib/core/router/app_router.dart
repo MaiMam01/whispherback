@@ -16,6 +16,7 @@ import '../../features/device/battery_settings_screen.dart';
 import '../../features/prayer/prayer_settings_screen.dart';
 import '../../features/schedule/schedule_builder_screen.dart';
 import '../../features/schedule/scheduled_overview_screen.dart';
+import '../../features/settings/language_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/sleep/sleep_mode_screen.dart';
 import '../../features/splash/splash_screen.dart';
@@ -125,6 +126,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/battery',
         parentNavigatorKey: _rootKey,
         builder: (context, state) => const BatterySettingsScreen(),
+      ),
+      GoRoute(
+        path: '/language',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const LanguageScreen(),
       ),
     ],
   );

@@ -31,19 +31,35 @@ class PlaybackModal extends ConsumerWidget {
     final audio = ref.read(audioPlaybackServiceProvider);
     final l10n = context.l10n;
 
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          0,
-          0,
-          0,
-          ShellMetrics.playbackModalBottomInset(context),
+    return Stack(
+      children: [
+        // Tap-outside scrim to dismiss.
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: coordinator.dismissModal,
+            child: ColoredBox(color: Colors.black.withValues(alpha: 0.28)),
+          ),
         ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        Align(
+          alignment: Alignment.bottomCenter,
+          // Swipe the sheet down to dismiss.
+          child: GestureDetector(
+            onVerticalDragEnd: (d) {
+              if ((d.primaryVelocity ?? 0) > 250) coordinator.dismissModal();
+            },
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                0,
+                0,
+                0,
+                ShellMetrics.playbackModalBottomInset(context),
+              ),
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(28)),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: DecoratedBox(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -314,10 +330,13 @@ class PlaybackModal extends ConsumerWidget {
                   ),
                 ],
               ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 

@@ -12,6 +12,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Version numbers 
 - APK build scripts and GitHub Actions workflow
 - Installation and APK testing documentation
 
+### Fixed (stability pass)
+- Power toggle no longer reverts to OFF on reopen — the snapshot stream now
+  replays the restored state and the active flag write is upsert-safe
+- Now-playing sheet dismisses by tapping outside (scrim) or swiping down,
+  not only via the chevron
+- Manual clip play is instant: the sheet appears immediately and we no longer
+  block playback on a GPS prayer-time lookup (that caused multi-second delay)
+- Prayer lookups use last-known GPS + a 5s timeout so they never stall
+- Language selection moved to a full-screen page so every language (incl.
+  Vietnamese) is always visible and scrollable
+
 ### Added (background / notifications)
 - Scheduled **alarm notifications** that fire even when the app is closed or
   killed (Android via exact alarms; iOS time-sensitive). Re-armed on reboot.

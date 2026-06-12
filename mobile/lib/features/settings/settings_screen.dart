@@ -65,7 +65,7 @@ class SettingsScreen extends ConsumerWidget {
                     icon: AppIcons.language,
                     title: l10n.language,
                     subtitle: currentLanguage.label,
-                    onTap: () => _pickLanguage(context, ref, currentLanguage),
+                    onTap: () => context.push('/language'),
                   ),
                   Divider(height: 1, color: theme.glassBorder),
                   _SettingsToggleRow(
@@ -176,99 +176,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _pickLanguage(
-    BuildContext context,
-    WidgetRef ref,
-    AppLanguage current,
-  ) async {
-    final l10n = context.l10n;
-    final theme = whisperTheme(context);
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: theme.isDark ? AppColors.card : AppColors.lightCard,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        // Compact, capped-height sheet: all six languages fit without
-        // scrolling on virtually every phone, and it still scrolls as a
-        // fallback on very short screens — Vietnamese is never hidden.
-        final maxHeight = MediaQuery.sizeOf(ctx).height * 0.85;
-        final bottomInset = MediaQuery.viewPaddingOf(ctx).bottom;
-        return ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxHeight),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _SheetHandle(theme: theme),
-                    Text(
-                      l10n.chooseLanguage,
-                      style: GoogleFonts.fraunces(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: theme.foreground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.fromLTRB(12, 4, 12, bottomInset + 12),
-                  children: [
-                    for (final lang in AppLanguage.values)
-                      ListTile(
-                        dense: true,
-                        visualDensity: VisualDensity.compact,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        selected: lang == current,
-                        selectedTileColor:
-                            AppColors.neon.withValues(alpha: 0.10),
-                        title: Text(
-                          lang.label,
-                          style: GoogleFonts.dmSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: theme.foreground,
-                          ),
-                        ),
-                        subtitle: Text(
-                          lang.nativeScript,
-                          style: _languageNativeStyle(ctx, lang),
-                        ),
-                        trailing: lang == current
-                            ? const Icon(AppIcons.checkCircle,
-                                color: AppColors.neon, size: 20)
-                            : null,
-                        onTap: () async {
-                          await ref
-                              .read(localeProvider.notifier)
-                              .setLanguage(lang);
-                          if (ctx.mounted) Navigator.pop(ctx);
-                        },
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _pickInterval(
       BuildContext context, WidgetRef ref, int current) async {
     final l10n = context.l10n;
@@ -315,18 +222,6 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
     if (picked != null) ref.read(defaultIntervalProvider.notifier).set(picked);
-  }
-
-  static TextStyle _languageNativeStyle(
-      BuildContext context, AppLanguage lang) {
-    final muted = whisperTheme(context).muted;
-    switch (lang) {
-      case AppLanguage.arabic:
-      case AppLanguage.urdu:
-        return GoogleFonts.notoSansArabic(fontSize: 14, color: muted);
-      default:
-        return GoogleFonts.dmSans(fontSize: 14, color: muted);
-    }
   }
 }
 

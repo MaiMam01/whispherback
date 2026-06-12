@@ -8,6 +8,9 @@ class PrayerService {
 
   final PrayerRepository _repository;
 
+  /// Last resolved GPS coordinates, reused when a fresh fix isn't available.
+  Coordinates? _cachedCoords;
+
   Future<PrayerWindow?> getCurrentPrayerWindow() async {
     final settings = await _repository.getSettings();
     Coordinates? coords;
@@ -21,11 +24,25 @@ class PrayerService {
           permission == LocationPermission.deniedForever) {
         return null;
       }
+      // Prefer an instant last-known fix; only fall back to a fresh fix with a
+      // short timeout so prayer checks never stall playback for seconds.
       try {
-        final pos = await Geolocator.getCurrentPosition();
-        coords = Coordinates(pos.latitude, pos.longitude);
+        final last = await Geolocator.getLastKnownPosition();
+        if (last != null) {
+          coords = Coordinates(last.latitude, last.longitude);
+          _cachedCoords = coords;
+        } else {
+          final pos = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              timeLimit: Duration(seconds: 5),
+            ),
+          );
+          coords = Coordinates(pos.latitude, pos.longitude);
+          _cachedCoords = coords;
+        }
       } catch (_) {
-        return null;
+        // Use the last cached fix, or a sensible default (Karachi).
+        coords = _cachedCoords ?? Coordinates(31.5204, 74.3587);
       }
     } else {
       coords = Coordinates(31.5204, 74.3587);

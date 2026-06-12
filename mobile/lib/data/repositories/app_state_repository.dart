@@ -1,3 +1,5 @@
+import 'package:sqflite/sqflite.dart';
+
 import '../database/database_helper.dart';
 
 class AppStateRepository {
@@ -19,7 +21,17 @@ class AppStateRepository {
     return (rows.first['global_shuffle_enabled'] as int) == 1;
   }
 
+  Future<void> _ensureRow() async {
+    final db = await _db.database;
+    await db.insert(
+      'app_state',
+      {'id': 1, 'is_active': 0, 'global_shuffle_enabled': 0},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
   Future<void> setActive(bool active) async {
+    await _ensureRow();
     final db = await _db.database;
     await db.update(
       'app_state',
@@ -29,6 +41,7 @@ class AppStateRepository {
   }
 
   Future<void> setGlobalShuffle(bool enabled) async {
+    await _ensureRow();
     final db = await _db.database;
     await db.update(
       'app_state',

@@ -38,7 +38,14 @@ class PlaybackCoordinator {
   StreamSubscription<PlayerState>? _playerSub;
   Timer? _modeCheckTimer;
 
-  Stream<PlaybackSnapshot> get snapshotStream => _snapshotController.stream;
+  /// Replays the current snapshot to every new listener so the UI never misses
+  /// the restored "active" state on a cold start (broadcast streams otherwise
+  /// drop events emitted before a listener attaches).
+  Stream<PlaybackSnapshot> get snapshotStream async* {
+    yield _snapshot;
+    yield* _snapshotController.stream;
+  }
+
   PlaybackSnapshot get snapshot => _snapshot;
 
   void startModeMonitoring() {
@@ -123,36 +130,14 @@ class PlaybackCoordinator {
     );
   }
 
-  /// Plays a single clip on demand (library preview). Unlike scheduled or
-  /// playlist playback this does not require the master toggle to be Active,
-  /// but it still respects Sleep and Prayer quiet windows.
+  /// Plays a single clip on demand (library preview). A manual tap plays
+  /// immediately — Sleep/Prayer quiet windows only gate *automatic* playback,
+  /// so we don't block the user behind a GPS prayer-time lookup here.
   Future<void> playClip(AudioClip clip) async {
     if (!_isPlayablePath(clip.filePath)) return;
 
-    final sleep = await _sleep.getActive();
-    if (_sleep.isSleepActive(sleep)) {
-      _emit(_snapshot.copyWith(
-        state: AppPlaybackState.sleepPaused,
-        isPlaying: false,
-      ));
-      return;
-    }
-    final prayer = await _prayer.getCurrentPrayerWindow();
-    if (prayer != null) {
-      _emit(_snapshot.copyWith(
-        state: AppPlaybackState.prayerPaused,
-        isPlaying: false,
-      ));
-      return;
-    }
-
-    try {
-      await _audio.playFile(clip.filePath);
-    } catch (_) {
-      return;
-    }
-
-    // Fresh snapshot so playlistId is null → completion stops cleanly.
+    // Optimistic: show the now-playing sheet instantly for snappy feedback.
+    // playlistId is null so completion stops cleanly.
     _emit(PlaybackSnapshot(
       state: AppPlaybackState.manualPlaying,
       playlistName: clip.title,
@@ -160,6 +145,12 @@ class PlaybackCoordinator {
       isPlaying: true,
       modalVisible: true,
     ));
+
+    try {
+      await _audio.playFile(clip.filePath);
+    } catch (_) {
+      await stop();
+    }
   }
 
   bool _isPlayablePath(String path) {
