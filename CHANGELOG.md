@@ -23,6 +23,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Version numbers 
 - Language selection moved to a full-screen page so every language (incl.
   Vietnamese) is always visible and scrollable
 
+### Added (background audio)
+- Background playback via an Android **foreground service** (audio_service +
+  just_audio): audio keeps playing when the app is backgrounded, with a
+  **media notification + lock-screen controls** showing the clip title.
+- iOS background audio mode enabled; manifest declares the media service and
+  media-button receiver.
+
 ### Added (background / notifications)
 - Scheduled **alarm notifications** that fire even when the app is closed or
   killed (Android via exact alarms; iOS time-sensitive). Re-armed on reboot.

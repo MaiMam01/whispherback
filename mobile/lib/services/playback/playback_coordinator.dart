@@ -110,7 +110,7 @@ class PlaybackCoordinator {
     if (!_isPlayablePath(clip.filePath)) return;
 
     try {
-      await _audio.playFile(clip.filePath);
+      await _audio.playFile(clip.filePath, title: clip.title);
     } catch (_) {
       return;
     }
@@ -147,7 +147,7 @@ class PlaybackCoordinator {
     ));
 
     try {
-      await _audio.playFile(clip.filePath);
+      await _audio.playFile(clip.filePath, title: clip.title);
     } catch (_) {
       await stop();
     }

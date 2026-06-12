@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../domain/entities/audio_clip.dart';
 import '../../data/repositories/clip_repository.dart';
+import 'whisper_audio_handler.dart';
 
 class AudioRecordingService {
   AudioRecordingService(this._clipRepository);
@@ -124,35 +125,36 @@ class AudioImportService {
   }
 }
 
+/// Thin facade over [WhisperAudioHandler] so the rest of the app is unaware of
+/// audio_service. All main playback flows through the handler → foreground
+/// service → background playback + media notification.
 class AudioPlaybackService {
-  AudioPlaybackService();
+  AudioPlaybackService(this._handler);
 
-  final _player = AudioPlayer();
+  final WhisperAudioHandler _handler;
   String? _currentPath;
 
-  AudioPlayer get player => _player;
+  AudioPlayer get player => _handler.player;
 
-  Stream<Duration?> get positionStream => _player.positionStream;
-  Stream<Duration?> get durationStream => _player.durationStream;
-  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+  Stream<Duration?> get positionStream => _handler.player.positionStream;
+  Stream<Duration?> get durationStream => _handler.player.durationStream;
+  Stream<PlayerState> get playerStateStream => _handler.player.playerStateStream;
 
-  Future<void> playFile(String path) async {
+  Future<void> playFile(String path, {String title = 'WhisperBack'}) async {
     _currentPath = path;
-    await _player.setFilePath(path);
-    await _player.play();
+    await _handler.playFile(path, title: title);
   }
 
-  Future<void> pause() => _player.pause();
-  Future<void> resume() => _player.play();
+  Future<void> pause() => _handler.pause();
+  Future<void> resume() => _handler.play();
   Future<void> stop() async {
-    await _player.stop();
+    await _handler.stop();
     _currentPath = null;
   }
 
-  bool get isPlaying => _player.playing;
+  bool get isPlaying => _handler.player.playing;
   String? get currentPath => _currentPath;
 
-  void dispose() {
-    _player.dispose();
-  }
+  /// The handler lives for the whole app lifecycle; nothing to dispose here.
+  void dispose() {}
 }

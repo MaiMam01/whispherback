@@ -2,14 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/playback/playback_state.dart';
 import '../services/audio/audio_services.dart';
+import '../services/audio/whisper_audio_handler.dart';
 import '../services/playback/playback_coordinator.dart';
 import '../services/prayer/prayer_service.dart';
 import 'repository_providers.dart';
 
 final audioPlaybackServiceProvider = Provider<AudioPlaybackService>((ref) {
-  final service = AudioPlaybackService();
-  ref.onDispose(service.dispose);
-  return service;
+  // Backed by the app-wide audio_service handler (foreground service).
+  return AudioPlaybackService(whisperAudioHandler);
 });
 
 final audioRecordingServiceProvider = Provider<AudioRecordingService>((ref) {
