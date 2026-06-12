@@ -18,20 +18,25 @@ Future<void> main() async {
   // Allow lazy font fetch with instant system fallback — never block launch.
   GoogleFonts.config.allowRuntimeFetching = true;
 
+  // Initialise the background audio service, but NEVER let it block or crash
+  // app launch: on failure/timeout we fall back to a plain handler so the UI
+  // always renders (no black screen).
   if (Platform.isAndroid || Platform.isIOS) {
-    whisperAudioHandler = await AudioService.init(
-      builder: WhisperAudioHandler.new,
-      config: const AudioServiceConfig(
-        androidNotificationChannelId: 'com.whisperback.playback',
-        androidNotificationChannelName: 'WhisperBack playback',
-        // Ongoing notification while Active. We hold the service open by
-        // continuously playing a silent loop (never pausing), so the engine
-        // stays alive between intervals and the OS keeps the process around.
-        androidNotificationOngoing: true,
-        androidStopForegroundOnPause: true,
-        notificationColor: Color(0xFF2E8BFF),
-      ),
-    );
+    try {
+      whisperAudioHandler = await AudioService.init(
+        builder: WhisperAudioHandler.new,
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'com.whisperback.playback',
+          androidNotificationChannelName: 'WhisperBack playback',
+          androidNotificationOngoing: true,
+          androidStopForegroundOnPause: true,
+          notificationColor: Color(0xFF2E8BFF),
+        ),
+      ).timeout(const Duration(seconds: 8));
+    } catch (e, st) {
+      debugPrint('AudioService.init failed, using plain handler: $e\n$st');
+      whisperAudioHandler = WhisperAudioHandler();
+    }
   } else {
     whisperAudioHandler = WhisperAudioHandler();
   }
