@@ -29,6 +29,23 @@ final Uri _albumArtUri = Uri.parse(
 /// the process alive for scheduling without touching the media notification.
 class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
   WhisperAudioHandler() {
+    playbackState.add(
+      PlaybackState(
+        controls: const [MediaControl.play],
+        systemActions: const {
+          MediaAction.seek,
+          MediaAction.stop,
+          MediaAction.play,
+          MediaAction.pause,
+        },
+        androidCompactActionIndices: const [0],
+        processingState: AudioProcessingState.idle,
+        playing: false,
+        updatePosition: Duration.zero,
+        bufferedPosition: Duration.zero,
+        speed: 1.0,
+      ),
+    );
     _player.playbackEventStream.listen(_broadcastState);
     _player.durationStream.listen(_onDurationReady);
   }
@@ -148,6 +165,7 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     );
     mediaItem.add(item);
     queue.add([item]);
+    _publishClipControls(playing: false, processing: ProcessingState.loading);
 
     await _player.setVolume(1);
     await _player.setSpeed(1);
@@ -322,15 +340,29 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
   /// Broadcasts state to the system notification + lock screen (official pattern).
   void _broadcastState(PlaybackEvent event) {
     if (!_playingClip) return;
+    _publishClipControls(
+      playing: _player.playing,
+      processing: _player.processingState,
+    );
+  }
 
-    final playing = _player.playing;
-    final processingState = _mapProcessingState(_player.processingState);
+  void _publishClipControls({
+    required bool playing,
+    required ProcessingState processing,
+  }) {
+    final loading = processing == ProcessingState.loading ||
+        processing == ProcessingState.buffering;
+    final completed = processing == ProcessingState.completed;
+    final reportPlaying = !completed && (playing || loading);
 
     playbackState.add(
       playbackState.value.copyWith(
         controls: [
           MediaControl.skipToPrevious,
-          if (playing) MediaControl.pause else MediaControl.play,
+          if (!completed && (playing || loading))
+            MediaControl.pause
+          else if (!completed)
+            MediaControl.play,
           MediaControl.stop,
           if (_playlistMode) MediaControl.skipToNext,
         ],
@@ -345,8 +377,12 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
         androidCompactActionIndices: _playlistMode
             ? const [0, 1, 3]
             : const [0, 1, 2],
-        processingState: processingState,
-        playing: playing,
+        processingState: completed
+            ? AudioProcessingState.completed
+            : (loading
+                ? AudioProcessingState.loading
+                : _mapProcessingState(processing)),
+        playing: reportPlaying,
         updatePosition: _player.position,
         bufferedPosition: _player.bufferedPosition,
         speed: _player.speed,
