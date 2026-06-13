@@ -29,12 +29,15 @@ Future<void> main() async {
           androidNotificationChannelId: 'com.whisperback.playback',
           androidNotificationChannelName: 'WhisperBack Playback',
           androidNotificationChannelDescription:
-              'Now playing, lock-screen controls, and active session',
+              'Now playing with lock-screen controls',
           androidNotificationOngoing: true,
           androidStopForegroundOnPause: false,
           androidNotificationIcon: 'drawable/ic_notification',
           androidNotificationClickStartsActivity: true,
+          androidShowNotificationBadge: true,
           notificationColor: const Color(0xFF2E8BFF),
+          artDownscaleWidth: 256,
+          artDownscaleHeight: 256,
         ),
       ).timeout(const Duration(seconds: 8));
       whisperAudioServiceBound = true;

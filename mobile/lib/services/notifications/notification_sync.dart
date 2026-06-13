@@ -5,12 +5,11 @@ import '../scheduler/schedule_fire_helper.dart';
 import '../scheduler/schedule_last_fired_store.dart';
 import 'notification_service.dart';
 
-/// Reconciles system notifications with the current app state.
+/// Reconciles notifications with app state.
 ///
-/// Uses a **dual notification** strategy that works reliably on Android:
-/// • [NotificationService.showActiveOngoing] — schedule / active status (always)
-/// • [WhisperAudioHandler] via audio_service — Spotify-style media controls
-///   while a clip is playing (when the service is bound)
+/// • **Idle + Active** → flutter status notification (schedule summary)
+/// • **Clip playing** → hide flutter status; [audio_service] owns the
+///   Spotify-style media notification (play/pause/stop + lock screen)
 Future<void> syncWhisperNotifications({
   required AppStateRepository appState,
   required ScheduleRepository schedules,
@@ -25,6 +24,7 @@ Future<void> syncWhisperNotifications({
   final now = DateTime.now();
   final lastFired = ScheduleLastFiredStore.instance;
   final handler = whisperAudioHandler;
+  final playingClip = handler.isPlayingClip;
 
   final upcoming = ScheduleFireHelper.upcomingEvents(
     enabled,
@@ -46,35 +46,30 @@ Future<void> syncWhisperNotifications({
     }
   }
 
-  if (active) {
+  if (active && !playingClip) {
     final subtitle = nextUpcoming ??
         (armed > 0
             ? '$armed schedule(s) armed · whispers will play automatically'
             : 'Listening for scheduled whispers');
-
     await handler.updateActiveSessionInfo(
       subtitle: subtitle,
       scheduleCount: armed,
     );
-
-    if (handler.isPlayingClip) {
-      final title = handler.currentClipTitle ?? 'Now playing';
+    await service.showActiveOngoing(
+      scheduleCount: armed,
+      nextUpcoming: nextUpcoming,
+      upcomingSummary: upcomingSummary,
+    );
+  } else if (playingClip) {
+    // Do not touch handler media session — playFile owns it.
+    // Hide the flutter status card so the media notification is unobstructed.
+    await service.cancelActiveOngoing();
+    if (!whisperAudioServiceBound) {
       await service.showNowPlaying(
-        title: title,
-        subtitle: subtitle,
-      );
-    } else {
-      await service.showActiveOngoing(
-        scheduleCount: armed,
-        nextUpcoming: nextUpcoming,
-        upcomingSummary: upcomingSummary,
+        title: handler.currentClipTitle ?? 'Now playing',
+        subtitle: active ? nextUpcoming : 'Library preview',
       );
     }
-  } else if (handler.isPlayingClip) {
-    await service.showNowPlaying(
-      title: handler.currentClipTitle ?? 'Now playing',
-      subtitle: 'Library preview',
-    );
   } else {
     await service.cancelActiveOngoing();
   }
