@@ -34,7 +34,10 @@ Future<void> main() async {
           androidStopForegroundOnPause: false,
           androidNotificationIcon: 'drawable/ic_notification',
           androidNotificationClickStartsActivity: true,
+          androidShowNotificationBadge: false,
           notificationColor: const Color(0xFF2E8BFF),
+          artDownscaleWidth: 512,
+          artDownscaleHeight: 512,
         ),
       ).timeout(const Duration(seconds: 8));
     } catch (e, st) {
