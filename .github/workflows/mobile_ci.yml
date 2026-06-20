@@ -38,5 +38,9 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Run integration smoke (optional on CI)
+        run: flutter test integration_test/app_test.dart
+        continue-on-error: true
+
       - name: Build APK (smoke)
         run: flutter build apk --debug --dart-define=FLAVOR=dev

@@ -21,14 +21,14 @@ class ClipLibraryTile extends StatelessWidget {
   final VoidCallback onPlay;
   final VoidCallback? onDelete;
 
-  static String relativeDate(DateTime date) {
+  static String relativeDate(DateTime date, AppLocalizations l10n) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final day = DateTime(date.year, date.month, date.day);
     final diff = today.difference(day).inDays;
-    if (diff == 0) return 'Today';
-    if (diff == 1) return 'Yesterday';
-    if (diff < 7) return '${diff}d ago';
+    if (diff == 0) return l10n.today;
+    if (diff == 1) return l10n.yesterday;
+    if (diff < 7) return l10n.daysAgo(diff);
     return DateFormat('MMM d').format(date);
   }
 
@@ -71,7 +71,7 @@ class ClipLibraryTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      relativeDate(clip.createdAt),
+                      relativeDate(clip.createdAt, l10n),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,

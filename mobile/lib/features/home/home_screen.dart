@@ -16,7 +16,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/playback_providers.dart';
 import '../../core/widgets/depth_surface.dart';
 import '../../providers/repository_providers.dart';
-import '../../services/notifications/background_permissions.dart';
+import '../../services/platform/permission_prompt.dart';
 import '../../services/notifications/notification_sync.dart';
 import '../widgets/active_toggle.dart';
 import 'widgets/home_ambience.dart';
@@ -122,6 +122,7 @@ class HomeScreen extends ConsumerWidget {
                                   await ref
                                       .read(playbackCoordinatorProvider)
                                       .toggleActive();
+                                  if (!context.mounted) return;
                                   final appState =
                                       ref.read(appStateRepositoryProvider);
                                   final nowActive = await appState.isActive();
@@ -130,8 +131,8 @@ class HomeScreen extends ConsumerWidget {
                                     schedules:
                                         ref.read(scheduleRepositoryProvider),
                                   );
-                                  if (nowActive) {
-                                    await requestBatteryExemption();
+                                  if (nowActive && context.mounted) {
+                                    await runSchedulingSetupWizard(context);
                                   }
                                 }());
                               },
@@ -145,6 +146,15 @@ class HomeScreen extends ConsumerWidget {
                     SizedBox(height: r.isFlipCover ? 6 : 8),
                     Center(
                         child: _StatusPill(isActive: isActive, theme: theme)),
+                    if (isActive) ...[
+                      const SizedBox(height: 10),
+                      Center(
+                        child: _SchedulingSetupChip(
+                          isActive: isActive,
+                          theme: theme,
+                        ),
+                      ),
+                    ],
                     SizedBox(height: r.isFlipCover ? 14 : 20),
                     _QuickStats(
                       theme: theme,
@@ -683,6 +693,88 @@ class _StatTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SchedulingSetupChip extends StatefulWidget {
+  const _SchedulingSetupChip({
+    required this.isActive,
+    required this.theme,
+  });
+
+  final bool isActive;
+  final WhisperThemeExtension theme;
+
+  @override
+  State<_SchedulingSetupChip> createState() => _SchedulingSetupChipState();
+}
+
+class _SchedulingSetupChipState extends State<_SchedulingSetupChip> {
+  bool? _ready;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_refresh());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SchedulingSetupChip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isActive != widget.isActive) {
+      unawaited(_refresh());
+    }
+  }
+
+  Future<void> _refresh() async {
+    if (!widget.isActive) {
+      if (mounted) setState(() => _ready = true);
+      return;
+    }
+    final ready = await isSchedulingFullyReady();
+    if (mounted) setState(() => _ready = ready);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_ready != false) return const SizedBox.shrink();
+
+    final l10n = context.l10n;
+    const color = AppColors.gold;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          await runSchedulingSetupWizard(context);
+          if (mounted) await _refresh();
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(AppIcons.settings, size: 18, color: color),
+              const SizedBox(width: 8),
+              Text(
+                l10n.schedulingFinishSetupAction,
+                style: TextStyle(
+                  color: widget.theme.foreground,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

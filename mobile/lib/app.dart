@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
+import 'l10n/runtime_copy.dart';
 import 'providers/repository_providers.dart';
 import 'providers/settings_provider.dart';
 import 'services/notifications/notification_service.dart';
 import 'services/notifications/notification_sync.dart';
+import 'services/platform/android_runtime_permissions.dart';
 import 'services/scheduler/schedule_engine.dart';
 import 'services/scheduler/schedule_engine_binding.dart';
 import 'services/scheduler/schedule_last_fired_store.dart';
@@ -43,16 +47,29 @@ class _WhisperBackAppState extends ConsumerState<WhisperBackApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ScheduleEngineBinding.instance.fireNow();
+      // Re-request permissions if the user changed them in Settings.
+      unawaited(_refreshPermissionsAndSync());
     }
+  }
+
+  Future<void> _refreshPermissionsAndSync() async {
+    await ensureAndroidSchedulingPermissions();
+    await syncWhisperNotifications(
+      appState: ref.read(appStateRepositoryProvider),
+      schedules: ref.read(scheduleRepositoryProvider),
+    );
   }
 
   Future<void> _initNotifications() async {
     await NotificationService.instance.init();
     await NotificationService.instance.requestPermissions();
+    await ensureAndroidSchedulingPermissions();
     await syncWhisperNotifications(
       appState: ref.read(appStateRepositoryProvider),
       schedules: ref.read(scheduleRepositoryProvider),
     );
+    // Cold start / alarm tap — run an immediate scheduling pass.
+    await ScheduleEngineBinding.instance.fireNow();
   }
 
   @override
@@ -78,6 +95,7 @@ class _WhisperBackAppState extends ConsumerState<WhisperBackApp>
       scrollBehavior:
           const MaterialScrollBehavior().copyWith(scrollbars: false),
       builder: (context, child) {
+        RuntimeCopy.bind(AppLocalizations.ofOrThrow(context));
         final mq = MediaQuery.of(context);
         return MediaQuery(
           data: mq.copyWith(

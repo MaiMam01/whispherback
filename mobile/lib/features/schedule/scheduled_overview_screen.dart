@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/theme/app_radii.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/async_error_view.dart';
 import '../../core/widgets/whisper_card.dart';
 import '../../domain/entities/playback_schedule.dart';
 import '../../l10n/app_localizations.dart';
@@ -64,7 +65,10 @@ class ScheduledOverviewScreen extends ConsumerWidget {
                 },
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('$e')),
+              error: (e, _) => AsyncErrorView(
+                error: e,
+                onRetry: () => ref.invalidate(schedulesProvider),
+              ),
             ),
           ),
         ),

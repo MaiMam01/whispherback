@@ -5,9 +5,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Pinned for CI clarity — keep in sync with Flutter stable (3.38+ uses API 36).
+// minSdk 24 = Android 7.0 (2016+). target/compile 36 = Android 16.
+private val compileSdkVersion = 36
+private val minSdkVersion = 24
+private val targetSdkVersion = 36
+
 android {
     namespace = "com.whisperback.whisperback"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -21,12 +27,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.whisperback.whisperback"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = minSdkVersion
+        targetSdk = targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -36,6 +39,13 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    // Required for Google Play / Android 15+ devices with 16 KB memory pages.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
         }
     }
 }

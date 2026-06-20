@@ -1,5 +1,6 @@
 import '../../data/database/database_helper.dart';
 import '../../data/database/seed_service.dart';
+import '../../services/audio/clip_path_guard.dart';
 import '../../services/scheduler/schedule_last_fired_store.dart';
 
 /// One-time startup work: SQLite warm-open + demo seed.
@@ -19,6 +20,7 @@ abstract final class AppBootstrap {
   static Future<void> _run() async {
     await DatabaseHelper.instance.database;
     await SeedService.seedIfEmpty();
+    await ClipPathGuard.ensureLoaded();
     await ScheduleLastFiredStore.ensureLoaded();
   }
 }

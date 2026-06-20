@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/entities/playlist.dart';
+import '../../core/widgets/async_error_view.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/playback_providers.dart';
 import 'widgets/playlist_card.dart';
@@ -60,7 +61,10 @@ class PlaylistsScreen extends ConsumerWidget {
                     ref.read(playbackCoordinatorProvider).playPlaylist(id),
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('$e')),
+              error: (e, _) => AsyncErrorView(
+                error: e,
+                onRetry: () => ref.invalidate(playlistsProvider),
+              ),
             ),
           ),
           floatingActionButton: playlistsAsync.maybeWhen(

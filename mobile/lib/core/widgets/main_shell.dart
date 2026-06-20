@@ -10,6 +10,7 @@ import '../layout/responsive.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_theme.dart';
 import 'adaptive_shell_nav.dart';
+import 'audio_service_warning_banner.dart';
 import 'glass_nav_bar.dart';
 
 class MainShell extends ConsumerStatefulWidget {
@@ -112,7 +113,13 @@ class _MainShellState extends ConsumerState<MainShell> {
                         minHeight: constraints.maxHeight,
                         maxHeight: constraints.maxHeight,
                       ),
-                      child: widget.child,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const AudioServiceWarningBanner(),
+                          Expanded(child: widget.child),
+                        ],
+                      ),
                     ),
                   ),
                 ),

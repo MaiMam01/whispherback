@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
+
+import '../../l10n/runtime_copy.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -58,11 +60,8 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     });
   }
 
-  /// All clip / playlist playback — drives lock-screen + notification controls.
+  /// Silent loop while Active + idle — drives the audio_service foreground service.
   final AudioPlayer _player = AudioPlayer();
-
-  /// Silent loop (volume 0) while Active + idle — scheduling keep-alive only.
-  final AudioPlayer _idlePlayer = AudioPlayer();
 
   AudioPlayer get player => _player;
 
@@ -86,8 +85,8 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
   bool get isPlayingClip => _playingClip;
   bool get occupiesMediaNotification =>
       _playingClip ||
-      _player.processingState != ProcessingState.idle ||
-      mediaItem.value != null;
+      (_keepAlive && mediaItem.value != null) ||
+      _player.processingState != ProcessingState.idle;
   String? get currentClipTitle => _clipTitle;
 
   Future<void> _ensureAudioSession() async {
@@ -106,21 +105,54 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   Future<void> _startIdleKeepAlive() async {
+    if (_playingClip) return;
     try {
+      await _ensureAudioSession();
+      final session = await AudioSession.instance;
+      await session.setActive(true);
+
       final path = await _ensureSilenceFile();
-      await _idlePlayer.stop();
-      await _idlePlayer.setVolume(0);
-      await _idlePlayer.setLoopMode(LoopMode.one);
-      await _idlePlayer.setAudioSource(AudioSource.file(path));
-      await _idlePlayer.play();
+      final copy = RuntimeCopy.l10n;
+      final item = MediaItem(
+        id: path,
+        title: copy.notificationActiveTitle,
+        album: 'WhisperBack',
+        artist: copy.notificationActiveBodyIdle,
+        artUri: _albumArtUri,
+        displayTitle: copy.notificationActiveTitle,
+        displaySubtitle: copy.notificationActiveBodyIdle,
+        extras: const {'mode': 'keep_alive'},
+      );
+      mediaItem.add(item);
+      queue.add([item]);
+
+      await _player.setVolume(0);
+      await _player.setLoopMode(LoopMode.one);
+      await _player.setSpeed(1);
+      await _player.setAudioSource(AudioSource.file(path), preload: true);
+
+      playbackState.add(
+        PlaybackState(
+          controls: const [_stopControl],
+          systemActions: const {MediaAction.stop},
+          androidCompactActionIndices: const [0],
+          processingState: AudioProcessingState.ready,
+          playing: true,
+          updatePosition: Duration.zero,
+          bufferedPosition: Duration.zero,
+          speed: 1.0,
+        ),
+      );
+
+      await _player.play();
     } catch (_) {
-      // Scheduling still works in foreground; keep-alive is best-effort.
+      // OS alarms still fire if keep-alive fails; scheduling is best-effort here.
     }
   }
 
   Future<void> updateActiveSessionInfo() async {
     if (_playingClip) return;
-    if (_keepAlive && !_idlePlayer.playing) {
+    if (_keepAlive && !_player.playing) {
       await _startIdleKeepAlive();
     }
   }
@@ -131,7 +163,6 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     _standalonePlayback = false;
     _playlistMode = false;
     _clipTitle = null;
-    await _idlePlayer.stop();
     await _player.stop();
     queue.add([]);
     await super.stop();
@@ -154,8 +185,6 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     _clipTitle = title;
     _playlistMode = playlistMode;
     if (!_keepAlive) _standalonePlayback = true;
-
-    await _idlePlayer.stop();
 
     final item = _clipMediaItem(
       path: path,
@@ -182,7 +211,7 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     String? subtitle,
     Duration? duration,
   }) {
-    final line = subtitle ?? 'Now playing';
+    final line = subtitle ?? RuntimeCopy.l10n.nowPlaying;
     return MediaItem(
       id: path,
       title: title,
@@ -377,8 +406,10 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     switch (name) {
       case 'stop_clip':
         onStopClipRequested?.call();
+        return;
       case 'power_off':
         onStopRequested?.call();
+        return;
     }
   }
 
@@ -470,6 +501,5 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
 
   void disposePlayer() {
     _player.dispose();
-    _idlePlayer.dispose();
   }
 }

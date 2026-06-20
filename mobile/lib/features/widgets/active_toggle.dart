@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/layout/responsive.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Blue-neon power control for the home screen.
 ///
@@ -99,18 +100,24 @@ class _ActiveToggleState extends State<ActiveToggle>
     final discSize = heroSize * 0.74;
     final iconSize = heroSize * 0.26;
 
-    return RepaintBoundary(
-      child: GestureDetector(
-        onTap: _handleTap,
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        child: SizedBox(
-          width: heroSize,
-          height: heroSize,
-          child: AnimatedBuilder(
-          animation: Listenable.merge([_power, _charge, _breathe]),
-          builder: (context, child) {
+    final l10n = context.l10n;
+
+    return Semantics(
+      button: true,
+      label: widget.isActive ? l10n.activeWhispersPlaying : l10n.tapPowerToBegin,
+      hint: l10n.active,
+      child: RepaintBoundary(
+        child: GestureDetector(
+          onTap: _handleTap,
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTapCancel: () => setState(() => _pressed = false),
+          child: SizedBox(
+            width: heroSize,
+            height: heroSize,
+            child: AnimatedBuilder(
+              animation: Listenable.merge([_power, _charge, _breathe]),
+              builder: (context, child) {
             final t = _ignite.value.clamp(0.0, 1.0);
             final on = _power.value;
             final breathe = widget.isActive
@@ -276,6 +283,7 @@ class _ActiveToggleState extends State<ActiveToggle>
               ],
             );
           },
+            ),
           ),
         ),
       ),

@@ -16,9 +16,11 @@ import '../../core/theme/app_radii.dart';
 
 import '../../core/theme/app_theme.dart';
 
+import '../../core/errors/user_facing_error.dart';
 import '../../l10n/app_localizations.dart';
 
 import '../../providers/playback_providers.dart';
+import '../../services/platform/permission_prompt.dart';
 
 class ImportScreen extends ConsumerStatefulWidget {
   const ImportScreen({super.key});
@@ -36,6 +38,13 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   Future<void> _pickAndImport() async {
     final l10n = context.l10n;
+
+    if (!await ensurePermissionWithUi(
+      context,
+      kind: AppPermissionKind.audioImport,
+    )) {
+      return;
+    }
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -73,9 +82,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(userFacingError(e, l10n))),
+        );
         setState(() => _importing = false);
       }
     }

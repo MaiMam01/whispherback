@@ -69,4 +69,39 @@ void main() {
     expect(events[1].when, DateTime(2026, 6, 12, 9, 15));
     expect(events[2].when, DateTime(2026, 6, 12, 9, 30));
   });
+
+  test('isInWindow supports overnight start/end windows', () {
+    final schedule = PlaybackSchedule(
+      id: 'overnight',
+      playlistId: 'p1',
+      playlistName: 'Night',
+      enabled: true,
+      alarmEnabled: false,
+      intervalMinutes: 30,
+      startTime: DateTime(2026, 1, 1, 22, 0),
+      endTime: DateTime(2026, 1, 1, 6, 0),
+      daysMask: 127,
+    );
+    expect(
+      ScheduleFireHelper.isInWindow(
+        schedule,
+        DateTime(2026, 6, 12, 23, 30),
+      ),
+      isTrue,
+    );
+    expect(
+      ScheduleFireHelper.isInWindow(
+        schedule,
+        DateTime(2026, 6, 13, 5, 0),
+      ),
+      isTrue,
+    );
+    expect(
+      ScheduleFireHelper.isInWindow(
+        schedule,
+        DateTime(2026, 6, 13, 10, 0),
+      ),
+      isFalse,
+    );
+  });
 }

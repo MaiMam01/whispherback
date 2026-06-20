@@ -259,12 +259,12 @@ class AppLocalizations {
       'Optimisation batterie',
       'Tối ưu hóa pin');
   String get batteryOptimizationSubtitle => _s(
-      'Keep schedules reliable',
-      'شیڈول قابلِ اعتماد رکھیں',
-      'اجعل الجداول موثوقة',
-      'Schema\'s betrouwbaar houden',
-      'Garder les plannings fiables',
-      'Giữ lịch hoạt động ổn định');
+      'Usually fixed with one Allow tap when you turn Active ON',
+      'عام طور پر Active آن کرتے وقت ایک Allow سے ٹھیک ہو جاتا ہے',
+      'يُصلح عادةً بضغطة سماح واحدة عند تفعيل الوضع النشط',
+      'Meestal opgelost met één Toestaan bij Active AAN',
+      'Se règle en général avec un Autoriser quand Actif est ON',
+      'Thường chỉ cần một lần Cho phép khi bật Active');
   String get versionFooter => _s(
       'WhisperBack v1.0.0 · Local MVP',
       'WhisperBack v1.0.0 · Local MVP',
@@ -830,6 +830,145 @@ class AppLocalizations {
   // ── Playback ────────────────────────────────────────────────────────────────
   String get nowPlaying => _s('Now playing', 'اب چل رہا', 'يعمل الآن',
       'Nu aan het spelen', 'En lecture', 'Đang phát');
+  String get scheduledWhisper => _s(
+      'Scheduled whisper',
+      'شیڈول سرگوشی',
+      'همسة مجدولة',
+      'Geplande whisper',
+      'Murmure planifié',
+      'Lời thì thầm theo lịch');
+  String get libraryPreview => _s(
+      'Library preview',
+      'لائبریری پیش نظارہ',
+      'معاينة المكتبة',
+      'Bibliotheekvoorbeeld',
+      'Aperçu bibliothèque',
+      'Xem thử thư viện');
+  String get tapToOpenApp => _s(
+      'Tap to open WhisperBack',
+      'WhisperBack کھولنے کے لیے ٹیپ کریں',
+      'اضغط لفتح WhisperBack',
+      'Tik om WhisperBack te openen',
+      'Appuyez pour ouvrir WhisperBack',
+      'Chạm để mở WhisperBack');
+  String get genericErrorTryAgain => _s(
+      'Something went wrong. Please try again.',
+      'کچھ غلط ہوا۔ دوبارہ کوشش کریں۔',
+      'حدث خطأ. يرجى المحاولة مرة أخرى.',
+      'Er ging iets mis. Probeer opnieuw.',
+      'Une erreur est survenue. Réessayez.',
+      'Đã xảy ra lỗi. Vui lòng thử lại.');
+  String get loadContentFailed => _s(
+      'Couldn\'t load content',
+      'مواد لوڈ نہیں ہو سکا',
+      'تعذّر تحميل المحتوى',
+      'Inhoud laden mislukt',
+      'Impossible de charger le contenu',
+      'Không tải được nội dung');
+  String get importFailed => _s(
+      'Import failed',
+      'درآمد ناکام',
+      'فشل الاستيراد',
+      'Importeren mislukt',
+      'Échec de l\'importation',
+      'Nhập thất bại');
+  String get importInvalidFormat => _s(
+      'Only MP3 and M4A audio files are supported.',
+      'صرف MP3 اور M4A فائلیں سپورٹ ہیں۔',
+      'يُدعم MP3 و M4A فقط.',
+      'Alleen MP3- en M4A-bestanden worden ondersteund.',
+      'Seuls les fichiers MP3 et M4A sont pris en charge.',
+      'Chỉ hỗ trợ tệp MP3 và M4A.');
+  String get recordingFailed => _s(
+      'Recording failed. Check storage space and try again.',
+      'ریکارڈنگ ناکام۔ اسٹوریج چیک کریں اور دوبارہ کوشش کریں۔',
+      'فشل التسجيل. تحقق من المساحة وحاول مرة أخرى.',
+      'Opnemen mislukt. Controleer opslag en probeer opnieuw.',
+      'Échec de l\'enregistrement. Vérifiez l\'espace et réessayez.',
+      'Ghi âm thất bại. Kiểm tra bộ nhớ và thử lại.');
+  String get retry =>
+      _s('Try again', 'دوبارہ کوشش', 'حاول مجدداً', 'Opnieuw', 'Réessayer', 'Thử lại');
+  String get today =>
+      _s('Today', 'آج', 'اليوم', 'Vandaag', 'Aujourd\'hui', 'Hôm nay');
+  String get yesterday =>
+      _s('Yesterday', 'کل', 'أمس', 'Gisteren', 'Hier', 'Hôm qua');
+  String daysAgo(int days) => _s(
+      '${days}d ago',
+      '$days دن پہلے',
+      'منذ $days ي',
+      '$days d geleden',
+      'Il y a $days j',
+      '$days ngày trước');
+  String get audioServiceUnavailableTitle => _s(
+      'Background audio unavailable',
+      'پس منظر آڈیو دستیاب نہیں',
+      'الصوت في الخلفية غير متاح',
+      'Achtergrondaudio niet beschikbaar',
+      'Audio arrière-plan indisponible',
+      'Không có audio nền');
+  String get audioServiceUnavailableBanner => _s(
+      'Restart the app for reliable schedules and lock-screen controls.',
+      'قابل اعتماد شیڈول کے لیے ایپ دوبارہ شروع کریں۔',
+      'أعد تشغيل التطبيق للجدولة الموثوقة.',
+      'Herstart de app voor betrouwbare planning.',
+      'Redémarrez l\'app pour une planification fiable.',
+      'Khởi động lại app để lên lịch ổn định.');
+  String get audioServiceUnavailableBody => _s(
+      'WhisperBack could not start its audio service. Close the app completely and open it again. Scheduled whispers need this to play reliably in the background.',
+      'WhisperBack آڈیو سروس شروع نہیں ہو سکی۔ ایپ بند کر کے دوبارہ کھولیں۔',
+      'تعذّر بدء خدمة الصوت. أغلق التطبيق تماماً وأعد فتحه.',
+      'Audioservice startte niet. Sluit de app volledig en open opnieuw.',
+      'Le service audio n\'a pas démarré. Fermez complètement l\'app et rouvrez.',
+      'Không khởi động được dịch vụ audio. Đóng hẳn app rồi mở lại.');
+  String get activeRequiresAudioService => _s(
+      'Turning Active on requires background audio. Restart the app and try again.',
+      'فعال کرنے کے لیے پس منظر آڈیو چاہیے۔ ایپ دوبارہ شروع کریں۔',
+      'تفعيل الوضع النشط يتطلب الصوت في الخلفية. أعد تشغيل التطبيق.',
+      'Actief vereist achtergrondaudio. Herstart de app.',
+      'Actif nécessite l\'audio arrière-plan. Redémarrez l\'app.',
+      'Bật Active cần audio nền. Khởi động lại app.');
+  String get notificationActiveTitle => _s(
+      'WhisperBack is active',
+      'WhisperBack فعال ہے',
+      'WhisperBack نشط',
+      'WhisperBack is actief',
+      'WhisperBack est actif',
+      'WhisperBack đang bật');
+  String notificationSchedulesArmed(int count) => _s(
+      '$count schedule(s) armed · whispers will play automatically',
+      '$count شیڈول تیار · سرگوشیاں خود چلیں گی',
+      '$count جدول(ات) جاهزة · ستُشغّل الهمسات تلقائياً',
+      '$count planning(en) actief · whispers spelen automatisch',
+      '$count planning(s) armée(s) · lecture automatique',
+      '$count lịch sẵn sàng · tự động phát');
+  String get notificationActiveBodyIdle => _s(
+      'Listening for your scheduled whispers',
+      'آپ کی شیڈول سرگوشیاں سن رہا ہے',
+      'بانتظار همساتك المجدولة',
+      'Luistert naar geplande whispers',
+      'En attente de vos murmures planifiés',
+      'Đang chờ lời thì thầm theo lịch');
+  String notificationScheduledReady(String name) => _s(
+      '"$name" is ready to play',
+      '"$name" چلنے کے لیے تیار',
+      '"$name" جاهز للتشغيل',
+      '"$name" is klaar om te spelen',
+      '"$name" est prêt à jouer',
+      '"$name" sẵn sàng phát');
+  String notificationNextUpcoming(String name, String time) => _s(
+      'Next: "$name" at $time',
+      'اگلا: "$name" $time پر',
+      'التالي: "$name" الساعة $time',
+      'Volgende: "$name" om $time',
+      'Suivant : "$name" à $time',
+      'Tiếp theo: "$name" lúc $time');
+  String get authComingSoon => _s(
+      'Cloud sign-in coming in a future update. The app works fully offline today.',
+      'کلاؤڈ سائن ان مستقبل میں۔ ایپ آج مکمل آف لائن کام کرتی ہے۔',
+      'تسجيل الدخول السحابي قادم لاحقاً. التطبيق يعمل دون اتصال اليوم.',
+      'Cloud-inloggen komt later. De app werkt nu volledig offline.',
+      'Connexion cloud bientôt. L\'app fonctionne hors ligne aujourd\'hui.',
+      'Đăng nhập đám mây sẽ có sau. App hoạt động offline đầy đủ.');
   String get minimizePlayer => _s(
       'Minimize player',
       'پلیئر چھوٹا کریں',
@@ -1291,6 +1430,214 @@ class AppLocalizations {
         'Ouvrez Réglages → Apps → WhisperBack → Batterie',
         'Mở Cài đặt → Ứng dụng → WhisperBack → Pin',
       );
+
+  // ── Permission prompts ──────────────────────────────────────────────────────
+  String get permissionNotNow =>
+      _s('Not now', 'ابھی نہیں', 'ليس الآن', 'Niet nu', 'Pas maintenant', 'Để sau');
+  String get permissionOpenSettings => _s(
+      'Open Settings',
+      'ترتیبات کھولیں',
+      'فتح الإعدادات',
+      'Instellingen openen',
+      'Ouvrir les réglages',
+      'Mở cài đặt');
+  String get permissionDeniedSnack => _s(
+      'Permission needed. Try again or open Settings to enable it.',
+      'اجازت درکار ہے۔ دوبارہ کوشش کریں یا ترتیبات سے فعال کریں۔',
+      'الإذن مطلوب. حاول مرة أخرى أو فعّله من الإعدادات.',
+      'Toestemming vereist. Probeer opnieuw of schakel het in via Instellingen.',
+      'Autorisation requise. Réessayez ou activez-la dans Réglages.',
+      'Cần quyền. Thử lại hoặc bật trong Cài đặt.');
+  String get permissionMicrophoneTitle => micPermissionRequired;
+  String get permissionMicrophoneBody => _s(
+      'WhisperBack needs microphone access to record whispers. Without it, recording cannot start.',
+      'سرگوشیاں ریکارڈ کرنے کے لیے WhisperBack کو مائیک کی اجازت چاہیے۔',
+      'WhisperBack يحتاج الميكروفون لتسجيل الهمسات.',
+      'WhisperBack heeft microfoontoegang nodig om whispers op te nemen.',
+      'WhisperBack a besoin du micro pour enregistrer des murmures.',
+      'WhisperBack cần micrô để ghi lời thì thầm.');
+  String get permissionMicrophoneSettingsPath => _s(
+      'Settings → Apps → WhisperBack → Permissions → Microphone → Allow',
+      'Settings → Apps → WhisperBack → Permissions → Microphone → Allow',
+      'الإعدادات → التطبيقات → WhisperBack → الأذونات → الميكروفون → السماح',
+      'Instellingen → Apps → WhisperBack → Machtigingen → Microfoon → Toestaan',
+      'Réglages → Apps → WhisperBack → Autorisations → Micro → Autoriser',
+      'Cài đặt → Ứng dụng → WhisperBack → Quyền → Micrô → Cho phép');
+  String get permissionLocationTitle => _s(
+      'Location permission required',
+      'مقام کی اجازت درکار',
+      'إذن الموقع مطلوب',
+      'Locatietoestemming vereist',
+      'Autorisation de localisation requise',
+      'Cần quyền vị trí');
+  String get permissionLocationBody => _s(
+      'GPS helps calculate accurate prayer times for your area. You can keep prayer mode off or disable GPS anytime.',
+      'GPS آپ کے علاقے کے درست نماز کے اوقات کے لیے مدد کرتا ہے۔',
+      'GPS يساعد في حساب أوقات الصلاة بدقة لمنطقتك.',
+      'GPS helpt nauwkeurige gebedstijden voor jouw regio te berekenen.',
+      'Le GPS aide à calculer les heures de prière pour votre zone.',
+      'GPS giúp tính giờ cầu nguyện chính xác cho khu vực của bạn.');
+  String get permissionLocationSettingsPath => _s(
+      'Settings → Apps → WhisperBack → Permissions → Location → Allow',
+      'Settings → Apps → WhisperBack → Permissions → Location → Allow',
+      'الإعدادات → التطبيقات → WhisperBack → الأذونات → الموقع → السماح',
+      'Instellingen → Apps → WhisperBack → Machtigingen → Locatie → Toestaan',
+      'Réglages → Apps → WhisperBack → Autorisations → Localisation → Autoriser',
+      'Cài đặt → Ứng dụng → WhisperBack → Quyền → Vị trí → Cho phép');
+  String get permissionLocationDeniedSnack => _s(
+      'Location access is needed for GPS prayer times.',
+      'GPS نماز کے اوقات کے لیے مقام کی اجازت ضروری ہے۔',
+      'الوصول إلى الموقع مطلوب لأوقات الصلاة عبر GPS.',
+      'Locatietoegang is nodig voor GPS-gebedstijden.',
+      'L\'accès à la localisation est requis pour les heures GPS.',
+      'Cần quyền vị trí cho giờ cầu nguyện GPS.');
+  String get permissionNotificationsTitle => _s(
+      'Notifications required',
+      'اطلاعات درکار',
+      'الإشعارات مطلوبة',
+      'Meldingen vereist',
+      'Notifications requises',
+      'Cần thông báo');
+  String get permissionNotificationsBody => _s(
+      'Scheduled whispers use notifications to play on time, even when the app is closed.',
+      'شیڈول سرگوشیاں وقت پر چلانے کے لیے اطلاعات استعمال کرتی ہیں۔',
+      'الهمسات المجدولة تستخدم الإشعارات للتشغيل في الوقت المحدد.',
+      'Geplande whispers gebruiken meldingen om op tijd af te spelen.',
+      'Les murmures planifiés utilisent les notifications pour jouer à l\'heure.',
+      'Lời thì thầm theo lịch dùng thông báo để phát đúng giờ.');
+  String get permissionNotificationsSettingsPath => _s(
+      'Settings → Apps → WhisperBack → Permissions → Notifications → Allow',
+      'Settings → Apps → WhisperBack → Permissions → Notifications → Allow',
+      'الإعدادات → التطبيقات → WhisperBack → الأذونات → الإشعارات → السماح',
+      'Instellingen → Apps → WhisperBack → Machtigingen → Meldingen → Toestaan',
+      'Réglages → Apps → WhisperBack → Autorisations → Notifications → Autoriser',
+      'Cài đặt → Ứng dụng → WhisperBack → Quyền → Thông báo → Cho phép');
+  String get permissionNotificationsDeniedSnack => _s(
+      'Allow notifications so scheduled whispers can play on time.',
+      'شیڈول سرگوشیاں چلانے کے لیے اطلاعات کی اجازت دیں۔',
+      'اسمح بالإشعارات لتشغيل الهمسات المجدولة في الوقت.',
+      'Sta meldingen toe zodat geplande whispers op tijd spelen.',
+      'Autorisez les notifications pour les murmures planifiés.',
+      'Cho phép thông báo để phát lời thì thầm đúng giờ.');
+  String get permissionNotificationsShort =>
+      _s('Notifications', 'اطلاعات', 'الإشعارات', 'Meldingen', 'Notifications', 'Thông báo');
+  String get permissionExactAlarmsTitle => _s(
+      'Alarms & reminders required',
+      'الارم اور یاددہانی درکار',
+      'المنبهات والتذكيرات مطلوبة',
+      'Alarmen vereist',
+      'Alarmes requises',
+      'Cần báo thức & nhắc nhở');
+  String get permissionExactAlarmsBody => _s(
+      'Android needs permission to schedule exact alarms so whispers fire at the right minute.',
+      'Android کو درست وقت پر سرگوشیاں چلانے کے لیے exact alarm کی اجازت چاہیے۔',
+      'Android يحتاج إذن المنبهات الدقيقة لتشغيل الهمسات في الوقت الصحيح.',
+      'Android heeft exacte alarmen nodig om whispers op het juiste moment te starten.',
+      'Android a besoin d\'alarmes exactes pour lancer les murmures à la bonne minute.',
+      'Android cần báo thức chính xác để phát đúng phút.');
+  String get permissionExactAlarmsSettingsPath => _s(
+      'Settings → Apps → WhisperBack → Alarms & reminders → Allow',
+      'Settings → Apps → WhisperBack → Alarms & reminders → Allow',
+      'الإعدادات → التطبيقات → WhisperBack → المنبهات والتذكيرات → السماح',
+      'Instellingen → Apps → WhisperBack → Alarmen & herinneringen → Toestaan',
+      'Réglages → Apps → WhisperBack → Alarmes et rappels → Autoriser',
+      'Cài đặt → Ứng dụng → WhisperBack → Báo thức & nhắc nhở → Cho phép');
+  String get permissionExactAlarmsDeniedSnack => _s(
+      'Allow alarms & reminders for reliable schedules.',
+      'قابل اعتماد شیڈول کے لیے alarms & reminders کی اجازت دیں۔',
+      'اسمح بالمنبهات والتذكيرات للجدولة الموثوقة.',
+      'Sta alarmen & herinneringen toe voor betrouwbare planning.',
+      'Autorisez alarmes et rappels pour une planification fiable.',
+      'Cho phép báo thức & nhắc nhở để lên lịch ổn định.');
+  String get permissionExactAlarmsShort => _s(
+      'Alarms & reminders',
+      'Alarms & reminders',
+      'المنبهات والتذكيرات',
+      'Alarmen & herinneringen',
+      'Alarmes et rappels',
+      'Báo thức & nhắc nhở');
+  String get permissionBatteryTitle => batteryOptimization;
+  String get permissionBatteryBody => batteryWhitelistBody;
+  String get permissionBatterySettingsPath => openSystemSettingsSnack;
+  String get permissionBatteryDeniedSnack => _s(
+      'Unrestricted battery helps whispers play when the phone is idle.',
+      'غیر محدود بیٹری فون بیکار ہونے پر بھی سرگوشیاں چلانے میں مدد کرتی ہے۔',
+      'البطارية غير المقيدة تساعد على تشغيل الهمسات عند خمول الهاتف.',
+      'Onbeperkte batterij helpt whispers af te spelen als de telefoon idle is.',
+      'Batterie non restreinte pour jouer les murmures quand le téléphone est inactif.',
+      'Pin không hạn chế giúp phát khi điện thoại nghỉ.');
+  String get permissionBatteryShort =>
+      _s('Battery (Unrestricted)', 'بیٹری (غیر محدود)', 'البطارية (غير مقيدة)', 'Batterij (onbeperkt)', 'Batterie (non restreinte)', 'Pin (không hạn chế)');
+  String get permissionAudioTitle => _s(
+      'Audio access required',
+      'آڈیو رسائی درکار',
+      'الوصول إلى الصوت مطلوب',
+      'Audiotoegang vereist',
+      'Accès audio requis',
+      'Cần quyền truy cập âm thanh');
+  String get permissionAudioBody => _s(
+      'WhisperBack needs permission to read audio files you choose from your device.',
+      'آپ کے فون سے آڈیو فائلیں درآمد کرنے کے لیے رسائی درکار ہے۔',
+      'WhisperBack يحتاج إذناً لقراءة ملفات الصوت التي تختارها.',
+      'WhisperBack heeft toegang nodig om gekozen audiobestanden te lezen.',
+      'WhisperBack a besoin d\'accéder aux fichiers audio choisis.',
+      'WhisperBack cần quyền đọc tệp âm thanh bạn chọn.');
+  String get permissionAudioSettingsPath => _s(
+      'Settings → Apps → WhisperBack → Permissions → Music and audio → Allow',
+      'Settings → Apps → WhisperBack → Permissions → Music and audio → Allow',
+      'الإعدادات → التطبيقات → WhisperBack → الأذونات → الموسيقى والصوت → السماح',
+      'Instellingen → Apps → WhisperBack → Machtigingen → Muziek en audio → Toestaan',
+      'Réglages → Apps → WhisperBack → Autorisations → Musique et audio → Autoriser',
+      'Cài đặt → Ứng dụng → WhisperBack → Quyền → Nhạc và âm thanh → Cho phép');
+  String get permissionAudioDeniedSnack => _s(
+      'Allow audio access to import MP3 or M4A files.',
+      'MP3 یا M4A درآمد کرنے کے لیے آڈیو رسائی دیں۔',
+      'اسمح بالوصول إلى الصوت لاستيراد MP3 أو M4A.',
+      'Sta audiotoegang toe om MP3- of M4A-bestanden te importeren.',
+      'Autorisez l\'accès audio pour importer des MP3 ou M4A.',
+      'Cho phép truy cập âm thanh để nhập MP3 hoặc M4A.');
+  String get schedulingPermissionsTitle => _s(
+      'Finish setup for scheduled whispers',
+      'شیڈول سرگوشیاں کے لیے سیٹ اپ مکمل کریں',
+      'أكمل الإعداد للهمسات المجدولة',
+      'Setup voltooien voor geplande whispers',
+      'Terminer la configuration des murmures planifiés',
+      'Hoàn tất thiết lập lời thì thầm theo lịch');
+  String schedulingPermissionsBody(String missingList) => _s(
+      'WhisperBack still needs:\n• $missingList\n\nEnable these in Settings so schedules work reliably.',
+      'WhisperBack کو ابھی درکار:\n• $missingList\n\nترتیبات میں فعال کریں تاکہ شیڈول درست کام کریں۔',
+      'WhisperBack ما زال يحتاج:\n• $missingList\n\nفعّلها من الإعدادات لتعمل الجداول بموثوقية.',
+      'WhisperBack heeft nog nodig:\n• $missingList\n\nSchakel dit in via Instellingen.',
+      'WhisperBack a encore besoin de:\n• $missingList\n\nActivez-les dans Réglages.',
+      'WhisperBack vẫn cần:\n• $missingList\n\nBật trong Cài đặt để lịch hoạt động ổn định.');
+  String get schedulingPermissionsSettingsPath => _s(
+      'Settings → Apps → WhisperBack → Permissions (and Battery → Unrestricted)',
+      'Settings → Apps → WhisperBack → Permissions (اور Battery → Unrestricted)',
+      'الإعدادات → التطبيقات → WhisperBack → الأذونات (والبطارية → غير مقيدة)',
+      'Instellingen → Apps → WhisperBack → Machtigingen (en Batterij → Onbeperkt)',
+      'Réglages → Apps → WhisperBack → Autorisations (et Batterie → Non restreinte)',
+      'Cài đặt → Ứng dụng → WhisperBack → Quyền (và Pin → Không hạn chế)');
+  String get schedulingSetupIntro => _s(
+      'Tap Allow on the next prompts so whispers run automatically in the background.',
+      'اگلے پرامپٹس پر Allow دبائیں تاکہ سرگوشیاں پس منظر میں خود چلیں۔',
+      'اضغط السماح في النوافذ التالية لتشغيل الهمسات تلقائياً.',
+      'Tik op Toestaan bij de volgende prompts voor automatische whispers.',
+      'Appuyez sur Autoriser aux prochaines invites pour une lecture auto.',
+      'Chạm Cho phép ở các hộp tiếp theo để phát tự động.');
+  String get schedulingSetupComplete => _s(
+      'Background setup complete — scheduled whispers are ready.',
+      'پس منظر سیٹ اپ مکمل — شیڈول سرگوشیاں تیار ہیں۔',
+      'اكتمل إعداد الخلفية — الهمسات المجدولة جاهزة.',
+      'Achtergrondsetup voltooid — geplande whispers zijn klaar.',
+      'Configuration arrière-plan terminée — murmures planifiés prêts.',
+      'Thiết lập nền xong — lời thì thầm theo lịch đã sẵn sàng.');
+  String get schedulingFinishSetupAction => _s(
+      'Finish setup',
+      'سیٹ اپ مکمل کریں',
+      'أكمل الإعداد',
+      'Setup voltooien',
+      'Terminer la configuration',
+      'Hoàn tất thiết lập');
 
   // ── Record / Import / New playlist ──────────────────────────────────────────
   String get recordTitle =>

@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../domain/entities/audio_clip.dart';
 import '../../data/repositories/clip_repository.dart';
+import 'clip_path_guard.dart';
 import 'whisper_audio_handler.dart';
 
 class AudioRecordingService {
@@ -97,6 +98,9 @@ class AudioImportService {
   final _uuid = const Uuid();
 
   Stream<double> importFile(String sourcePath, String title) async* {
+    if (!ClipPathGuard.isAllowedImportExtension(sourcePath)) {
+      throw ArgumentError('Only MP3 and M4A files are supported');
+    }
     yield 0.1;
     final dir = await getApplicationDocumentsDirectory();
     final clipsDir = Directory(p.join(dir.path, 'clips'));

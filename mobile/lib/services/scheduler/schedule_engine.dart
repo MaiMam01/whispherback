@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/app_state_repository.dart';
 import '../../data/repositories/schedule_repository.dart';
+import '../../domain/entities/playback_schedule.dart';
 import '../../domain/playback/playback_state.dart';
 import '../../providers/playback_providers.dart';
 import '../../providers/repository_providers.dart';
@@ -75,7 +76,11 @@ class ScheduleEngine {
         final slot = ScheduleFireHelper.slotToFire(schedule, now, last);
         if (slot == null) continue;
 
-        final played = await _coordinator.requestScheduledPlay(schedule.playlistId);
+        // Skip if another schedule already claimed this exact slot.
+        if (_slotTakenByOtherSchedule(all, schedule.id, slot, now)) continue;
+
+        final played =
+            await _coordinator.requestScheduledPlay(schedule.playlistId);
         if (!played) continue;
 
         await _lastFired.set(schedule.id, slot);
@@ -97,6 +102,28 @@ class ScheduleEngine {
       return null;
     }
     return last;
+  }
+
+  /// True when another enabled schedule already fired at [slot] today.
+  bool _slotTakenByOtherSchedule(
+    List<PlaybackSchedule> all,
+    String scheduleId,
+    DateTime slot,
+    DateTime now,
+  ) {
+    for (final other in all) {
+      if (other.id == scheduleId || !other.enabled) continue;
+      final last = _lastFiredForToday(other.id, now);
+      if (last == null) continue;
+      if (last.year == slot.year &&
+          last.month == slot.month &&
+          last.day == slot.day &&
+          last.hour == slot.hour &&
+          last.minute == slot.minute) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

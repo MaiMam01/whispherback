@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
@@ -154,11 +155,15 @@ class BatterySettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       FilledButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(l10n.openSystemSettingsSnack)),
-                          );
+                        onPressed: () async {
+                          await openAppSettings();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.openSystemSettingsSnack),
+                              ),
+                            );
+                          }
                         },
                         icon: const Icon(AppIcons.settings, size: 18),
                         label: Text(l10n.openSystemSettings),

@@ -7,10 +7,12 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/theme/app_radii.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/async_error_view.dart';
 import '../../l10n/app_localizations.dart';
 import '../../data/repositories/prayer_repository.dart';
 import '../../providers/playback_providers.dart';
 import '../../providers/repository_providers.dart';
+import '../../services/platform/permission_prompt.dart';
 
 class PrayerSettingsScreen extends ConsumerStatefulWidget {
   const PrayerSettingsScreen({super.key});
@@ -149,14 +151,23 @@ class _PrayerSettingsScreenState extends ConsumerState<PrayerSettingsScreen> {
                         _GpsToggleCard(
                           theme: theme,
                           value: settings.useGps,
-                          onChanged: (v) => _save(
-                            PrayerSettings(
-                              calculationMethod: settings.calculationMethod,
-                              madhab: settings.madhab,
-                              useGps: v,
-                              manualCity: settings.manualCity,
-                            ),
-                          ),
+                          onChanged: (v) async {
+                            if (v) {
+                              final granted = await ensurePermissionWithUi(
+                                context,
+                                kind: AppPermissionKind.location,
+                              );
+                              if (!granted || !context.mounted) return;
+                            }
+                            await _save(
+                              PrayerSettings(
+                                calculationMethod: settings.calculationMethod,
+                                madhab: settings.madhab,
+                                useGps: v,
+                                manualCity: settings.manualCity,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -164,7 +175,10 @@ class _PrayerSettingsScreenState extends ConsumerState<PrayerSettingsScreen> {
                 ],
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('$e')),
+              error: (e, _) => AsyncErrorView(
+                error: e,
+                onRetry: () => ref.invalidate(prayerSettingsProvider),
+              ),
             ),
           ),
         ),

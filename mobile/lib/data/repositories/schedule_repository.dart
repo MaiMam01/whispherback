@@ -57,7 +57,14 @@ class ScheduleRepository {
     final existing = await getAll();
     for (final other in existing) {
       if (other.playlistId == playlistId) continue;
-      if (_wouldConflict(other, startTime, intervalMinutes)) {
+      if (!other.enabled) continue;
+      if (_wouldConflict(
+        other,
+        startTime: startTime,
+        endTime: endTime,
+        intervalMinutes: intervalMinutes,
+        daysMask: daysMask,
+      )) {
         throw ScheduleConflictException(other.playlistName);
       }
     }
@@ -110,22 +117,54 @@ class ScheduleRepository {
   }
 
   bool _wouldConflict(
-    PlaybackSchedule existing,
-    DateTime newStart,
-    int newIntervalMinutes,
-  ) {
-    final windowEnd = DateTime.now().add(const Duration(hours: 24));
-    var t1 = existing.startTime.isBefore(DateTime.now())
-        ? DateTime.now()
-        : existing.startTime;
-    var t2 = newStart.isBefore(DateTime.now()) ? DateTime.now() : newStart;
+    PlaybackSchedule existing, {
+    required DateTime startTime,
+    required DateTime? endTime,
+    required int intervalMinutes,
+    required int daysMask,
+  }) {
+    if ((existing.daysMask & daysMask) == 0) return false;
 
-    while (t1.isBefore(windowEnd) && t2.isBefore(windowEnd)) {
-      if (t1.difference(t2).inSeconds.abs() < 30) return true;
-      t1 = t1.add(Duration(minutes: existing.intervalMinutes));
-      t2 = t2.add(Duration(minutes: newIntervalMinutes));
+    final existingSlots = _slotSeconds(
+      existing.startTime,
+      existing.endTime,
+      existing.intervalMinutes,
+    );
+    final newSlots = _slotSeconds(startTime, endTime, intervalMinutes);
+
+    for (final a in existingSlots) {
+      for (final b in newSlots) {
+        if ((a - b).abs() < 30) return true;
+      }
     }
     return false;
+  }
+
+  /// Seconds since midnight for each grid slot (30s conflict tolerance).
+  List<int> _slotSeconds(
+    DateTime start,
+    DateTime? end,
+    int intervalMinutes,
+  ) {
+    final startSeconds = start.hour * 3600 + start.minute * 60 + start.second;
+    final endMinutes = end != null ? end.hour * 60 + end.minute : null;
+    final startMinutes = start.hour * 60 + start.minute;
+    final overnight =
+        endMinutes != null && endMinutes <= startMinutes;
+    final windowEndSeconds = endMinutes == null
+        ? startSeconds + (24 * 3600)
+        : (overnight
+            ? endMinutes * 60 + 24 * 3600
+            : endMinutes * 60);
+
+    final slots = <int>[];
+    var cursor = startSeconds;
+    while (cursor <= windowEndSeconds) {
+      slots.add(cursor % (24 * 3600));
+      cursor += intervalMinutes * 60;
+      if (slots.length > 500) break;
+    }
+    return slots;
   }
 
   PlaybackSchedule _fromRow(Map<String, Object?> row) {

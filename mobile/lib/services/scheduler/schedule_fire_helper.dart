@@ -8,6 +8,24 @@ abstract final class ScheduleFireHelper {
   /// Whether [now] falls inside today's start/end window for [schedule].
   static bool isInWindow(PlaybackSchedule schedule, DateTime now) {
     if (!schedule.enabled) return false;
+
+    if (_isOvernight(schedule)) {
+      final previousDay = now.subtract(const Duration(days: 1));
+      if (schedule.runsOnWeekday(previousDay.weekday)) {
+        final prevStart = _startOnDay(schedule, previousDay);
+        final morningEnd = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          schedule.endTime!.hour,
+          schedule.endTime!.minute,
+        );
+        if (!now.isBefore(prevStart) && now.isBefore(morningEnd)) {
+          return true;
+        }
+      }
+    }
+
     if (!schedule.runsOnWeekday(now.weekday)) return false;
 
     final startToday = _startOnDay(schedule, now);
@@ -16,6 +34,15 @@ abstract final class ScheduleFireHelper {
     final endToday = _endOnDay(schedule, now);
     if (endToday != null && now.isAfter(endToday)) return false;
     return true;
+  }
+
+  static bool _isOvernight(PlaybackSchedule schedule) {
+    if (schedule.endTime == null) return false;
+    final startMinutes =
+        schedule.startTime.hour * 60 + schedule.startTime.minute;
+    final endMinutes =
+        schedule.endTime!.hour * 60 + schedule.endTime!.minute;
+    return endMinutes <= startMinutes;
   }
 
   static DateTime _startOnDay(PlaybackSchedule schedule, DateTime day) {
@@ -30,13 +57,17 @@ abstract final class ScheduleFireHelper {
 
   static DateTime? _endOnDay(PlaybackSchedule schedule, DateTime day) {
     if (schedule.endTime == null) return null;
-    return DateTime(
+    final end = DateTime(
       day.year,
       day.month,
       day.day,
       schedule.endTime!.hour,
       schedule.endTime!.minute,
     );
+    if (_isOvernight(schedule)) {
+      return end.add(const Duration(days: 1));
+    }
+    return end;
   }
 
   /// Next grid slot after [lastFired], or [startToday] if never fired today.
@@ -196,13 +227,21 @@ abstract final class ScheduleFireHelper {
         schedule.startTime.minute,
       );
       final end = schedule.endTime != null
-          ? DateTime(
-              slot.year,
-              slot.month,
-              slot.day,
-              schedule.endTime!.hour,
-              schedule.endTime!.minute,
-            )
+          ? (_isOvernight(schedule)
+              ? DateTime(
+                  slot.year,
+                  slot.month,
+                  slot.day,
+                  schedule.endTime!.hour,
+                  schedule.endTime!.minute,
+                ).add(const Duration(days: 1))
+              : DateTime(
+                  slot.year,
+                  slot.month,
+                  slot.day,
+                  schedule.endTime!.hour,
+                  schedule.endTime!.minute,
+                ))
           : slot.add(const Duration(hours: 23, minutes: 59));
 
       while (!slot.isAfter(end)) {

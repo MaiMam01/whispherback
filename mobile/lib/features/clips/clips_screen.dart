@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/entities/audio_clip.dart';
+import '../../core/widgets/async_error_view.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/duration_format.dart';
 import '../../providers/playback_providers.dart';
@@ -137,7 +138,10 @@ class _ClipsScreenState extends ConsumerState<ClipsScreen> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('$e')),
+              error: (e, _) => AsyncErrorView(
+                error: e,
+                onRetry: () => ref.invalidate(clipsProvider),
+              ),
             ),
           ),
         ),

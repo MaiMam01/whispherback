@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
@@ -12,6 +11,7 @@ import '../../core/theme/app_radii.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/playback_providers.dart';
+import '../../services/platform/permission_prompt.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {
   const RecordScreen({super.key});
@@ -44,15 +44,10 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
   }
 
   Future<bool> _ensureMicPermission() async {
-    final l10n = context.l10n;
-    final status = await Permission.microphone.request();
-    if (status.isGranted) return true;
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.micPermissionSnack)),
-      );
-    }
-    return false;
+    return ensurePermissionWithUi(
+      context,
+      kind: AppPermissionKind.microphone,
+    );
   }
 
   Future<void> _toggleRecord() async {
@@ -60,23 +55,40 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
     final service = ref.read(audioRecordingServiceProvider);
     if (_recording) {
       _elapsedTimer?.cancel();
-      final clip = await service.stopAndSave();
-      ref.invalidate(clipsProvider);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              clip != null
-                  ? l10n.savedClip(clip.title)
-                  : l10n.recordingCancelled,
+      try {
+        final clip = await service.stopAndSave();
+        ref.invalidate(clipsProvider);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                clip != null
+                    ? l10n.savedClip(clip.title)
+                    : l10n.recordingCancelled,
+              ),
             ),
-          ),
-        );
-        context.pop();
+          );
+          context.pop();
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.recordingFailed)),
+          );
+        }
       }
     } else {
       if (!await _ensureMicPermission()) return;
-      await service.startRecording(_titleController.text.trim());
+      try {
+        await service.startRecording(_titleController.text.trim());
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.recordingFailed)),
+          );
+        }
+        return;
+      }
       _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (mounted) setState(() => _elapsed += const Duration(seconds: 1));
       });

@@ -33,6 +33,7 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
   int _daysMask = 127;
   bool _loading = true;
   String _playlistName = '';
+  String? _existingScheduleId;
 
   static const _intervalPresets = [15, 30, 45, 60, 90, 120];
 
@@ -58,6 +59,7 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
     }
     setState(() {
       _playlistName = playlist?.name ?? l10n.playlist;
+      _existingScheduleId = existing?.id;
       if (existing != null) {
         _startTime = TimeOfDay.fromDateTime(existing.startTime);
         _endTime = existing.endTime != null
@@ -110,6 +112,7 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
 
     try {
       await ref.read(scheduleRepositoryProvider).save(
+            id: _existingScheduleId,
             playlistId: widget.playlistId,
             startTime: start,
             endTime: end,

@@ -153,6 +153,9 @@ adb install -r whispherback\dist\whisperback-client-arm64.apk
 | Import | Storage / files |
 | Prayer mode | Location (optional) |
 | Notifications | Post notifications (Android 13+) |
+| Scheduled whispers | Alarms & reminders (Android 12+) + battery unrestricted |
+
+See [ANDROID_COMPATIBILITY.md](ANDROID_COMPATIBILITY.md) for Android 7–16 support and client setup steps.
 
 ---
 

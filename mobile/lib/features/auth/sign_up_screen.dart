@@ -84,6 +84,32 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.isDark ? theme.glass : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: theme.glassBorder),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(AppIcons.cloud, size: 18, color: theme.muted),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.authComingSoon,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.45,
+                      color: theme.muted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           AuthTextField(
             label: l10n.fullName,
             hint: l10n.fullNameHint,

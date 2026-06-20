@@ -101,7 +101,10 @@ class _SleepModeScreenState extends ConsumerState<SleepModeScreen> {
                                       .read(sleepRepositoryProvider)
                                       .deactivateAll();
                                   ref.invalidate(activeSleepProvider);
-                                  setState(() {});
+                                  await ref
+                                      .read(playbackCoordinatorProvider)
+                                      .refreshModeState();
+                                  if (mounted) setState(() {});
                                 },
                               ),
                             );

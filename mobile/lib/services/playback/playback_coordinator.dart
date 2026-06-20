@@ -8,8 +8,12 @@ import '../../data/repositories/sleep_repository.dart';
 import '../../domain/entities/audio_clip.dart';
 import '../../domain/playback/playback_state.dart';
 import '../audio/audio_services.dart';
+import '../audio/clip_path_guard.dart';
+import '../../l10n/runtime_copy.dart';
 import '../prayer/prayer_service.dart';
 import '../shuffle/shuffle_engine.dart';
+
+enum ActiveToggleResult { success }
 
 class PlaybackCoordinator {
   PlaybackCoordinator({
@@ -152,7 +156,9 @@ class PlaybackCoordinator {
         clip.filePath,
         title: clip.title,
         playlistName: playlist?.name,
-        subtitle: fromSchedule ? 'Scheduled whisper' : 'Now playing',
+        subtitle: fromSchedule
+            ? RuntimeCopy.l10n.scheduledWhisper
+            : RuntimeCopy.l10n.nowPlaying,
         playlistMode: clips.length > 1,
       );
     } catch (_) {
@@ -270,7 +276,7 @@ class PlaybackCoordinator {
     ));
   }
 
-  Future<void> toggleActive() async {
+  Future<ActiveToggleResult> toggleActive() async {
     final active = await _appState.isActive();
     if (active) {
       _emit(const PlaybackSnapshot(state: AppPlaybackState.inactive));
@@ -284,6 +290,7 @@ class PlaybackCoordinator {
       await _appState.setActive(true);
       unawaited(_activateInBackground());
     }
+    return ActiveToggleResult.success;
   }
 
   Future<void> _activateInBackground() async {
@@ -318,7 +325,9 @@ class PlaybackCoordinator {
         clip.filePath,
         title: clip.title,
         playlistName: playlist?.name,
-        subtitle: fromSchedule ? 'Scheduled whisper' : 'Now playing',
+        subtitle: fromSchedule
+            ? RuntimeCopy.l10n.scheduledWhisper
+            : RuntimeCopy.l10n.nowPlaying,
         playlistMode: clips.length > 1,
       );
     } catch (_) {
@@ -366,7 +375,7 @@ class PlaybackCoordinator {
       await _audio.playFile(
         clip.filePath,
         title: clip.title,
-        subtitle: 'Library preview',
+        subtitle: RuntimeCopy.l10n.libraryPreview,
       );
     } catch (_) {
       await stop();
@@ -376,7 +385,7 @@ class PlaybackCoordinator {
   }
 
   bool _isPlayablePath(String path) {
-    return !path.startsWith('asset://') && !path.startsWith('demo://');
+    return ClipPathGuard.isAllowed(path);
   }
 
   Future<void> pause() async {
@@ -394,7 +403,7 @@ class PlaybackCoordinator {
         await _audio.playFile(
           path,
           title: _snapshot.clipTitle ?? '',
-          subtitle: 'Library preview',
+          subtitle: RuntimeCopy.l10n.libraryPreview,
         );
       } else {
         await _audio.resume();

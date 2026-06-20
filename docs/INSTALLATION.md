@@ -6,17 +6,20 @@ Complete setup guide for **any new PC or laptop** (Windows, macOS, Linux). Use t
 
 ## Is the app built from scratch?
 
-**No.** WhisperBack is already a **substantial Flutter MVP (~45% toward release)**:
+**No.** WhisperBack is a **production-oriented Flutter MVP** (~85% toward client release):
 
-| Done | Not done yet (see [PROJECT_AUDIT.md](PROJECT_AUDIT.md)) |
-|------|-----------------------------------------------------------|
-| 13+ screens, routing, glass UI theme | Client sign-off polish on S02, S04, S08, S13 |
-| SQLite + repositories | Full background audio / lock screen |
-| Playback coordinator, scheduler, shuffle | Cloud sync (Phase 2) |
-| Sleep & prayer modes (offline) | Store submission (TestFlight / Play) |
-| Approved HTML design reference | Some features unwired (notifications, limits) |
+| Done | Planned (Phase 2) |
+|------|-------------------|
+| 13+ screens, routing, glass UI, light + dark theme | Cloud sync + real auth backend |
+| SQLite + repositories, clip import/record | Play Store upload signing |
+| Background audio, lock-screen controls, foreground service | Premium tier billing |
+| Playback coordinator, scheduler, OS alarms, shuffle | Full onboarding coach marks |
+| Sleep & prayer modes (offline GPS) | Automated device integration CI |
+| 6-language i18n, permission UX, friendly error states | |
 
-You **continue this codebase**—you do **not** restart in a new framework or empty repo.
+You **continue this codebase**—not a greenfield rewrite.
+
+**Related docs:** [PRODUCTION_AUDIT.md](PRODUCTION_AUDIT.md) · [ANDROID_COMPATIBILITY.md](ANDROID_COMPATIBILITY.md) · [PLAY_STORE_POLICIES.md](PLAY_STORE_POLICIES.md)
 
 ---
 

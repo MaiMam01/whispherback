@@ -3,6 +3,7 @@ import '../../data/repositories/schedule_repository.dart';
 import '../audio/whisper_audio_handler.dart';
 import '../scheduler/schedule_fire_helper.dart';
 import '../scheduler/schedule_last_fired_store.dart';
+import '../../l10n/runtime_copy.dart';
 import 'notification_service.dart';
 
 /// • **Idle + Active** → flutter status notification (schedule summary)
@@ -32,9 +33,12 @@ Future<void> syncWhisperNotifications({
 
   String? nextUpcoming;
   String? upcomingSummary;
+  final copy = RuntimeCopy.l10n;
   if (upcoming.isNotEmpty) {
-    nextUpcoming =
-        'Next: “${upcoming.first.playlistName}” at ${_formatTime(upcoming.first.when)}';
+    nextUpcoming = copy.notificationNextUpcoming(
+      upcoming.first.playlistName,
+      _formatTime(upcoming.first.when),
+    );
     if (upcoming.length > 1) {
       upcomingSummary = upcoming
           .take(4)

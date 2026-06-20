@@ -10,6 +10,7 @@ import '../../domain/entities/playback_schedule.dart';
 import '../audio/whisper_audio_handler.dart';
 import '../scheduler/schedule_engine_binding.dart';
 import '../scheduler/schedule_fire_helper.dart';
+import '../../l10n/runtime_copy.dart';
 
 /// Payload attached to scheduled alarm notifications.
 const scheduleAlarmPayload = 'schedule_alarm';
@@ -39,8 +40,12 @@ class NotificationService {
     try {
       final localName = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(localName));
-    } catch (_) {
-      // Fall back to UTC if the platform timezone can't be resolved.
+    } catch (e) {
+      // Use device UTC offset instead of pure UTC (critical for AU/US/EU clients).
+      if (kDebugMode) {
+        debugPrint('Timezone lookup failed, using offset fallback: $e');
+      }
+      _setLocalFromDeviceOffset();
     }
 
     const androidInit =
@@ -110,6 +115,14 @@ class NotificationService {
     await ios?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
+  /// Returns true when the app was opened from a scheduled-alarm notification.
+  Future<bool> launchedFromScheduleAlarm() async {
+    await init();
+    final details = await _plugin.getNotificationAppLaunchDetails();
+    if (details?.didNotificationLaunchApp != true) return false;
+    return details!.notificationResponse?.payload == scheduleAlarmPayload;
+  }
+
   static void _onNotificationResponse(NotificationResponse response) {
     if (response.payload == scheduleAlarmPayload) {
       unawaited(ScheduleEngineBinding.instance.fireNow());
@@ -132,16 +145,17 @@ class NotificationService {
   }) async {
     await init();
     if (whisperAudioHandler.occupiesMediaNotification) return;
+    final copy = RuntimeCopy.l10n;
     final body = upcomingSummary ??
         nextUpcoming ??
         (scheduleCount > 0
-            ? '$scheduleCount schedule(s) armed · whispers will play automatically'
-            : 'Listening for your scheduled whispers');
+            ? copy.notificationSchedulesArmed(scheduleCount)
+            : copy.notificationActiveBodyIdle);
     final details = NotificationDetails(
       android: AndroidNotificationDetails(
         _statusChannelId,
-        'Active status',
-        channelDescription: 'Shows while WhisperBack is active.',
+        copy.nowPlaying,
+        channelDescription: copy.notificationActiveBodyIdle,
         importance: Importance.low,
         priority: Priority.low,
         ongoing: true,
@@ -151,14 +165,14 @@ class NotificationService {
         styleInformation: upcomingSummary != null
             ? BigTextStyleInformation(
                 upcomingSummary,
-                contentTitle: 'WhisperBack is active',
+                contentTitle: copy.notificationActiveTitle,
                 summaryText: nextUpcoming,
               )
             : null,
         category: AndroidNotificationCategory.status,
       ),
     );
-    await _plugin.show(_ongoingId, 'WhisperBack is active', body, details);
+    await _plugin.show(_ongoingId, copy.notificationActiveTitle, body, details);
   }
 
   Future<void> cancelActiveOngoing() async {
@@ -172,17 +186,17 @@ class NotificationService {
     String? subtitle,
   }) async {
     await init();
-    final body = subtitle ?? 'Tap to open WhisperBack';
+    final copy = RuntimeCopy.l10n;
+    final body = subtitle ?? copy.tapToOpenApp;
     await _plugin.show(
       _ongoingId,
       title,
       body,
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           _nowPlayingChannelId,
-          'Now playing',
-          channelDescription:
-              'Shows the currently playing whisper with controls.',
+          copy.nowPlaying,
+          channelDescription: copy.tapToOpenApp,
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
           ongoing: true,
@@ -195,8 +209,6 @@ class NotificationService {
     );
   }
 
-  // ── Scheduled alarms (fire when app is killed) ────────────────────────────
-
   /// Re-arms all scheduled-alarm notifications from the current schedules.
   /// Call after any schedule change or when the toggle turns ON.
   Future<void> syncSchedules(
@@ -208,6 +220,7 @@ class NotificationService {
     if (!active) return;
 
     var id = _scheduleBase;
+    final copy = RuntimeCopy.l10n;
     for (final schedule in schedules) {
       if (!schedule.enabled || !schedule.alarmEnabled) continue;
       for (final slot in ScheduleFireHelper.intervalAlarmSlots(schedule)) {
@@ -218,7 +231,7 @@ class NotificationService {
           id: id,
           when: when,
           title: 'WhisperBack',
-          body: '“$name” is ready to play',
+          body: copy.notificationScheduledReady(name),
           payload: scheduleAlarmPayload,
         );
         id++;
@@ -285,6 +298,19 @@ class NotificationService {
       scheduled = scheduled.add(const Duration(days: 1));
     }
     return scheduled;
+  }
+
+  /// Fallback when [FlutterTimezone] cannot resolve IANA id (some OEM builds).
+  void _setLocalFromDeviceOffset() {
+    final offsetSeconds = DateTime.now().timeZoneOffset.inSeconds;
+    tz.setLocalLocation(
+      tz.Location(
+        'DeviceOffset',
+        [0],
+        [0],
+        [tz.TimeZone(offsetSeconds, isDst: false, abbreviation: 'LOCAL')],
+      ),
+    );
   }
 
   Future<void> _cancelAllScheduleAlarms() async {
