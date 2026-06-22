@@ -33,6 +33,7 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
   bool _alarm = true;
   int _daysMask = 127;
   bool _loading = true;
+  bool _saving = false;
   String _playlistName = '';
   String? _existingScheduleId;
 
@@ -108,6 +109,9 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
   }
 
   Future<void> _save() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+
     final start = _todayAt(_startTime);
     final end = _endTime != null ? _todayAt(_endTime!) : null;
 
@@ -139,6 +143,7 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
       }
     } on ScheduleConflictException catch (e) {
       if (!mounted) return;
+      setState(() => _saving = false);
       final l10n = context.l10n;
       showDialog<void>(
         context: context,
@@ -150,6 +155,13 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
                 onPressed: () => Navigator.pop(ctx), child: Text(l10n.ok)),
           ],
         ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      context.showShellSnackBar(
+        context.l10n.genericErrorTryAgain,
+        icon: AppIcons.alertCircle,
       );
     }
   }
@@ -365,29 +377,58 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
               onChanged: (v) => setState(() => _alarm = v),
             ),
             const SizedBox(height: 28),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: AppColors.neonGradient,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.neon.withValues(alpha: 0.45),
-                    blurRadius: 22,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: FilledButton(
-                onPressed: _save,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 180),
+              opacity: _saving ? 0.85 : 1.0,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: AppColors.neonGradient,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.neon
+                          .withValues(alpha: _saving ? 0.25 : 0.45),
+                      blurRadius: 22,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: Text(l10n.saveSchedule),
+                child: FilledButton(
+                  onPressed: _saving ? null : _save,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    disabledForegroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_saving) ...[
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(l10n.savingSchedule),
+                      ] else ...[
+                        const Icon(AppIcons.checkCircle,
+                            size: 18, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Text(l10n.saveSchedule),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
             SizedBox(height: MediaQuery.paddingOf(context).bottom + 8),

@@ -839,6 +839,13 @@ class AppLocalizations {
       'Báo khi đến giờ mỗi lời thì thầm');
   String get saveSchedule => _s('Save Schedule', 'شیڈول محفوظ کریں',
       'حفظ الجدول', 'Schema opslaan', 'Enregistrer le planning', 'Lưu lịch');
+  String get savingSchedule => _s(
+      'Saving…',
+      'محفوظ کر رہا ہے…',
+      'جارٍ الحفظ…',
+      'Bezig met opslaan…',
+      'Enregistrement…',
+      'Đang lưu…');
   String get scheduleSaved => _s(
       'Schedule saved',
       'شیڈول محفوظ',

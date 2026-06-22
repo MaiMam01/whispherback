@@ -124,7 +124,14 @@ class PlaybackCoordinator {
     final playlistId = _snapshot.playlistId;
     if (playlistId == null) {
       // Library-queue context: walk through the currently shown clip list.
-      if (_libraryQueue.length <= 1) return;
+      if (_libraryQueue.length <= 1) {
+        // Single clip — restart from the top so the button still feels alive
+        // instead of silently doing nothing.
+        if (_libraryQueue.isEmpty) return;
+        await _audio.seek(Duration.zero);
+        await _audio.resume();
+        return;
+      }
       final currentIndex = _libraryIndex < 0 ? 0 : _libraryIndex;
       final nextIndex = next
           ? (currentIndex + 1) % _libraryQueue.length
@@ -431,12 +438,13 @@ class PlaybackCoordinator {
     await refreshScheduleNotifications?.call();
   }
 
-  /// True when the user can skip forward/back to another clip from the current
-  /// context (either inside a playlist with 2+ clips, or browsing a library
-  /// queue with 2+ clips).
+  /// True when the user is in any clip-playing context — we always show the
+  /// Next/Previous buttons while a clip is playing so the player has consistent
+  /// controls. With a single-clip context the buttons restart the clip; with
+  /// multiple clips they walk the queue / playlist.
   bool get canSkipClips {
-    if (_snapshot.playlistId != null) return true;
-    return _libraryQueue.length > 1 && _libraryIndex >= 0;
+    return _snapshot.state == AppPlaybackState.manualPlaying ||
+        _snapshot.state == AppPlaybackState.scheduledPlaying;
   }
 
   bool _isPlayablePath(String path) {
