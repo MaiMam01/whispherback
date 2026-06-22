@@ -32,7 +32,7 @@ class MiniPlayerBar extends ConsumerWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isPlaylist = snapshot.playlistId != null;
+    final canSkip = coordinator.canSkipClips;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -113,7 +113,7 @@ class MiniPlayerBar extends ConsumerWidget {
                     ),
                   ),
                 ),
-                if (isPlaylist)
+                if (canSkip)
                   _MiniIconButton(
                     icon: Icons.skip_previous_rounded,
                     semanticLabel: l10n.previousTrack,
@@ -132,7 +132,7 @@ class MiniPlayerBar extends ConsumerWidget {
                     }
                   },
                 ),
-                if (isPlaylist)
+                if (canSkip)
                   _MiniIconButton(
                     icon: Icons.skip_next_rounded,
                     semanticLabel: l10n.nextTrack,

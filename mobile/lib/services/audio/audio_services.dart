@@ -164,6 +164,14 @@ class AudioPlaybackService {
   Future<void> pause() => _handler.pause();
   Future<void> resume() => _handler.play();
 
+  /// Seeks the currently playing clip to [position]. Safe no-op when nothing is
+  /// playing (e.g. silent keep-alive) — we only forward the request while a
+  /// real clip is active so we never scrub the loop.
+  Future<void> seek(Duration position) async {
+    if (!_handler.isPlayingClip) return;
+    await _handler.seek(position);
+  }
+
   /// Stops the current clip (internal). Resumes the silent keep-alive if the
   /// foreground session is still active.
   Future<void> stop() async {

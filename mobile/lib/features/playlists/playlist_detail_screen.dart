@@ -307,6 +307,10 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                       _ActionRow(
                         theme: theme,
                         shuffleOn: shuffle,
+                        canPlay: _clips.isNotEmpty,
+                        onPlayAll: () => ref
+                            .read(playbackCoordinatorProvider)
+                            .playPlaylist(widget.playlistId),
                         onShuffle: _toggleShuffle,
                         onSchedule: () => context
                             .push('/schedule/build/${widget.playlistId}'),
@@ -371,7 +375,7 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                             ),
                             onPlay: () => ref
                                 .read(playbackCoordinatorProvider)
-                                .playClip(clip),
+                                .playClip(clip, queue: _clips),
                             onRemove: () async {
                               final ok = await showDialog<bool>(
                                 context: context,
@@ -402,15 +406,6 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                 ),
             ],
           ),
-          bottomNavigationBar: _clips.isEmpty
-              ? null
-              : _PlayBar(
-                  theme: theme,
-                  clipCount: _clips.length,
-                  onPlay: () => ref
-                      .read(playbackCoordinatorProvider)
-                      .playPlaylist(widget.playlistId),
-                ),
         ),
       ],
     ),
@@ -692,6 +687,8 @@ class _ActionRow extends StatelessWidget {
   const _ActionRow({
     required this.theme,
     required this.shuffleOn,
+    required this.canPlay,
+    required this.onPlayAll,
     required this.onShuffle,
     required this.onSchedule,
     required this.onAddClips,
@@ -699,6 +696,8 @@ class _ActionRow extends StatelessWidget {
 
   final WhisperThemeExtension theme;
   final bool shuffleOn;
+  final bool canPlay;
+  final VoidCallback onPlayAll;
   final VoidCallback onShuffle;
   final VoidCallback onSchedule;
   final VoidCallback onAddClips;
@@ -707,34 +706,96 @@ class _ActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      clipBehavior: Clip.none,
-      child: Row(
-        children: [
-          _ActionChip(
-            theme: theme,
-            icon: AppIcons.shuffle,
-            label: shuffleOn ? l10n.shuffleOn : l10n.shuffleOff,
-            selected: shuffleOn,
-            onTap: onShuffle,
-          ),
-          const SizedBox(width: 8),
-          _ActionChip(
-            theme: theme,
-            icon: AppIcons.schedule,
-            label: l10n.schedules,
-            onTap: onSchedule,
-          ),
-          const SizedBox(width: 8),
-          _ActionChip(
-            theme: theme,
-            icon: AppIcons.add,
-            label: l10n.addClips,
-            onTap: onAddClips,
-          ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (canPlay) ...[
+          _PlayAllButton(theme: theme, onTap: onPlayAll),
+          const SizedBox(height: 12),
         ],
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          clipBehavior: Clip.none,
+          child: Row(
+            children: [
+              _ActionChip(
+                theme: theme,
+                icon: AppIcons.shuffle,
+                label: shuffleOn ? l10n.shuffleOn : l10n.shuffleOff,
+                selected: shuffleOn,
+                onTap: onShuffle,
+              ),
+              const SizedBox(width: 8),
+              _ActionChip(
+                theme: theme,
+                icon: AppIcons.schedule,
+                label: l10n.schedules,
+                onTap: onSchedule,
+              ),
+              const SizedBox(width: 8),
+              _ActionChip(
+                theme: theme,
+                icon: AppIcons.add,
+                label: l10n.addClips,
+                onTap: onAddClips,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PlayAllButton extends StatelessWidget {
+  const _PlayAllButton({required this.theme, required this.onTap});
+
+  final WhisperThemeExtension theme;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Semantics(
+      label: l10n.playAll,
+      button: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: AppColors.brandGradient,
+              boxShadow: const [
+                BoxShadow(
+                  color: AppColors.brandGlow,
+                  blurRadius: 22,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(AppIcons.play, color: Colors.white, size: 22),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.playAll,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -902,96 +963,3 @@ class _EmptyClipsState extends StatelessWidget {
   }
 }
 
-class _PlayBar extends StatelessWidget {
-  const _PlayBar({
-    required this.theme,
-    required this.clipCount,
-    required this.onPlay,
-  });
-
-  final WhisperThemeExtension theme;
-  final int clipCount;
-  final VoidCallback onPlay;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      decoration: BoxDecoration(
-        color: theme.isDark
-            ? AppColors.card.withValues(alpha: 0.95)
-            : AppColors.lightCard.withValues(alpha: 0.98),
-        border: Border(top: BorderSide(color: theme.glassBorder)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: theme.isDark ? 0.3 : 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l10n.playAll,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      color: theme.foreground,
-                    ),
-                  ),
-                  Text(
-                    l10n.clipsInOrder(clipCount),
-                    style: TextStyle(fontSize: 12, color: theme.muted),
-                  ),
-                ],
-              ),
-            ),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onPlay,
-                customBorder: const StadiumBorder(),
-                child: Ink(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),
-                    gradient: AppColors.brandGradient,
-                    boxShadow: const [
-                      BoxShadow(color: AppColors.brandGlow, blurRadius: 16),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(AppIcons.play, color: Colors.white, size: 24),
-                      const SizedBox(width: 4),
-                      Text(
-                        l10n.play,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

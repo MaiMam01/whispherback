@@ -197,63 +197,16 @@ class PlaybackModal extends ConsumerWidget {
                                   children: [
                                     _WaveformProgress(progress: clamped),
                                     const SizedBox(height: 10),
-                                    LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        final thumbLeft =
-                                            (clamped * constraints.maxWidth - 7)
-                                                .clamp(0.0,
-                                                    constraints.maxWidth - 14);
-                                        return SizedBox(
-                                          height: 14,
-                                          child: Stack(
-                                            clipBehavior: Clip.none,
-                                            alignment: Alignment.centerLeft,
-                                            children: [
-                                              ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                                child: SizedBox(
-                                                  height: 4,
-                                                  width: constraints.maxWidth,
-                                                  child: Stack(
-                                                    children: [
-                                                      Container(
-                                                          color: AppColors
-                                                              .glassBorder),
-                                                      FractionallySizedBox(
-                                                        widthFactor: clamped,
-                                                        child: Container(
-                                                            color: AppColors
-                                                                .brand),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              Positioned(
-                                                left: thumbLeft,
-                                                top: 0,
-                                                child: Container(
-                                                  width: 14,
-                                                  height: 14,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: AppColors.brand,
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: AppColors.brand
-                                                            .withValues(
-                                                                alpha: 0.12),
-                                                        blurRadius: 0,
-                                                        spreadRadius: 4,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                    _SeekBar(
+                                      progress: clamped,
+                                      enabled: maxMs > 0,
+                                      onSeek: (fraction) {
+                                        if (maxMs <= 0) return;
+                                        final target = Duration(
+                                          milliseconds:
+                                              (fraction * maxMs).round(),
                                         );
+                                        coordinator.seek(target);
                                       },
                                     ),
                                     const SizedBox(height: 8),
@@ -294,67 +247,70 @@ class PlaybackModal extends ConsumerWidget {
                           },
                         ),
                         const SizedBox(height: 24),
-                        // Scroll horizontally on very narrow phones (≤320 dp)
-                        // so 5 controls never overflow or get clipped.
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          padding: EdgeInsets.zero,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (snapshot.playlistId != null)
-                                _CtrlButton(
-                                  semanticLabel: l10n.toggleShuffle,
-                                  icon: AppIcons.shuffle,
-                                  highlighted: snapshot.shuffleEnabled,
-                                  onPressed: () => coordinator.toggleShuffle(
-                                    snapshot.playlistId!,
-                                    !snapshot.shuffleEnabled,
+                        Builder(builder: (context) {
+                          final canSkip = coordinator.canSkipClips;
+                          final isPlaylistContext = snapshot.playlistId != null;
+                          // Scroll horizontally on very narrow phones (≤320 dp)
+                          // so the controls row never overflows or gets clipped.
+                          return SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: EdgeInsets.zero,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (isPlaylistContext)
+                                  _CtrlButton(
+                                    semanticLabel: l10n.toggleShuffle,
+                                    icon: AppIcons.shuffle,
+                                    highlighted: snapshot.shuffleEnabled,
+                                    onPressed: () => coordinator.toggleShuffle(
+                                      snapshot.playlistId!,
+                                      !snapshot.shuffleEnabled,
+                                    ),
                                   ),
-                                ),
-                              if (snapshot.playlistId != null)
-                                const SizedBox(width: 12),
-                              if (snapshot.playlistId != null)
+                                if (isPlaylistContext)
+                                  const SizedBox(width: 12),
+                                if (canSkip)
+                                  _CtrlButton(
+                                    semanticLabel: l10n.previousTrack,
+                                    icon: Icons.skip_previous_rounded,
+                                    onPressed: coordinator.skipPrevious,
+                                  ),
+                                if (canSkip) const SizedBox(width: 12),
                                 _CtrlButton(
-                                  semanticLabel: l10n.previousTrack,
-                                  icon: Icons.skip_previous_rounded,
-                                  onPressed: coordinator.skipPrevious,
+                                  semanticLabel: snapshot.isPlaying
+                                      ? l10n.pause
+                                      : l10n.play,
+                                  icon: snapshot.isPlaying
+                                      ? AppIcons.pause
+                                      : AppIcons.play,
+                                  filled: true,
+                                  onPressed: () {
+                                    if (snapshot.isPlaying) {
+                                      coordinator.pause();
+                                    } else {
+                                      coordinator.resume();
+                                    }
+                                  },
                                 ),
-                              if (snapshot.playlistId != null)
+                                if (canSkip) const SizedBox(width: 12),
+                                if (canSkip)
+                                  _CtrlButton(
+                                    semanticLabel: l10n.nextTrack,
+                                    icon: Icons.skip_next_rounded,
+                                    onPressed: coordinator.skipNext,
+                                  ),
                                 const SizedBox(width: 12),
-                              _CtrlButton(
-                                semanticLabel:
-                                    snapshot.isPlaying ? l10n.pause : l10n.play,
-                                icon: snapshot.isPlaying
-                                    ? AppIcons.pause
-                                    : AppIcons.play,
-                                filled: true,
-                                onPressed: () {
-                                  if (snapshot.isPlaying) {
-                                    coordinator.pause();
-                                  } else {
-                                    coordinator.resume();
-                                  }
-                                },
-                              ),
-                              if (snapshot.playlistId != null)
-                                const SizedBox(width: 12),
-                              if (snapshot.playlistId != null)
                                 _CtrlButton(
-                                  semanticLabel: l10n.nextTrack,
-                                  icon: Icons.skip_next_rounded,
-                                  onPressed: coordinator.skipNext,
+                                  semanticLabel: l10n.stopPlayback,
+                                  icon: AppIcons.close,
+                                  onPressed: coordinator.stop,
                                 ),
-                              const SizedBox(width: 12),
-                              _CtrlButton(
-                                semanticLabel: l10n.stopPlayback,
-                                icon: AppIcons.stop,
-                                onPressed: coordinator.stop,
-                              ),
-                            ],
-                          ),
-                        ),
+                              ],
+                            ),
+                          );
+                        }),
                       ],
                     ),
                   ),
@@ -595,6 +551,127 @@ class _CtrlButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Scrubbable progress bar — tap anywhere to seek, drag to scrub.
+///
+/// While the user is interacting we render the local thumb position instead of
+/// the live [progress] so the bar doesn't fight finger movement when audio
+/// position updates lag the gesture by a frame or two.
+class _SeekBar extends StatefulWidget {
+  const _SeekBar({
+    required this.progress,
+    required this.enabled,
+    required this.onSeek,
+  });
+
+  final double progress;
+  final bool enabled;
+  final ValueChanged<double> onSeek;
+
+  @override
+  State<_SeekBar> createState() => _SeekBarState();
+}
+
+class _SeekBarState extends State<_SeekBar> {
+  double? _draggingFraction;
+
+  double _fractionForDx(double dx, double width) {
+    if (width <= 0) return 0;
+    return (dx / width).clamp(0.0, 1.0);
+  }
+
+  void _handleDown(double dx, double width) {
+    if (!widget.enabled) return;
+    final f = _fractionForDx(dx, width);
+    setState(() => _draggingFraction = f);
+  }
+
+  void _handleUpdate(double dx, double width) {
+    if (!widget.enabled) return;
+    final f = _fractionForDx(dx, width);
+    setState(() => _draggingFraction = f);
+  }
+
+  void _commit() {
+    if (!widget.enabled || _draggingFraction == null) return;
+    final f = _draggingFraction!;
+    widget.onSeek(f);
+    setState(() => _draggingFraction = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final fraction =
+            (_draggingFraction ?? widget.progress).clamp(0.0, 1.0);
+        final thumbLeft = (fraction * width - 9).clamp(0.0, width - 18);
+
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (d) {
+            _handleDown(d.localPosition.dx, width);
+            _commit();
+          },
+          onHorizontalDragStart: (d) => _handleDown(d.localPosition.dx, width),
+          onHorizontalDragUpdate: (d) =>
+              _handleUpdate(d.localPosition.dx, width),
+          onHorizontalDragEnd: (_) => _commit(),
+          onHorizontalDragCancel: () => setState(() => _draggingFraction = null),
+          child: SizedBox(
+            // Tall hit area for a finger-friendly tap/drag target.
+            height: 28,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.centerLeft,
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: SizedBox(
+                      height: 4,
+                      width: width,
+                      child: Stack(
+                        children: [
+                          Container(color: AppColors.glassBorder),
+                          FractionallySizedBox(
+                            widthFactor: fraction,
+                            child: Container(color: AppColors.brand),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: thumbLeft,
+                  top: 5,
+                  child: Container(
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.brand,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.brand.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

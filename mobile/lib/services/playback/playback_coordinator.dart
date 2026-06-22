@@ -47,6 +47,11 @@ class PlaybackCoordinator {
   int? _playlistClipIndex;
   String? _lastAdhanWindowKey;
 
+  /// Snapshot of the clip list shown when the user tapped a library clip.
+  /// Lets us walk Next/Previous through the Clip Library, not just playlists.
+  List<AudioClip> _libraryQueue = const [];
+  int _libraryIndex = -1;
+
   /// Called after a scheduled whisper finishes so notifications show the next slot.
   Future<void> Function()? refreshScheduleNotifications;
 
@@ -117,11 +122,31 @@ class PlaybackCoordinator {
 
   Future<void> _skipPlaylistClip({required bool next}) async {
     final playlistId = _snapshot.playlistId;
-    if (playlistId == null) return;
+    if (playlistId == null) {
+      // Library-queue context: walk through the currently shown clip list.
+      if (_libraryQueue.length <= 1) return;
+      final currentIndex = _libraryIndex < 0 ? 0 : _libraryIndex;
+      final nextIndex = next
+          ? (currentIndex + 1) % _libraryQueue.length
+          : (currentIndex - 1 + _libraryQueue.length) % _libraryQueue.length;
+      _libraryIndex = nextIndex;
+      final clip = _libraryQueue[nextIndex];
+      await playClip(clip, queue: _libraryQueue);
+      return;
+    }
 
     final clips = await _playlists.getClips(playlistId);
     if (clips.length <= 1) {
-      await stop();
+      // Single-clip playlist: replay from the top instead of stopping —
+      // matches user expectation for a "next" tap on a one-track playlist.
+      if (clips.isEmpty) return;
+      _playlistClipIndex = 0;
+      await _playClipAtIndex(
+        playlistId,
+        clips,
+        0,
+        fromSchedule: _snapshot.state == AppPlaybackState.scheduledPlaying,
+      );
       return;
     }
 
@@ -321,6 +346,8 @@ class PlaybackCoordinator {
     final shuffle = playlist?.shuffleEnabled ?? false;
     final clip = shuffle ? _nextShuffledClip(playlistId, clips) : clips.first;
     _playlistClipIndex = shuffle ? null : 0;
+    _libraryQueue = const [];
+    _libraryIndex = -1;
 
     if (!_isPlayablePath(clip.filePath)) return false;
 
@@ -365,12 +392,20 @@ class PlaybackCoordinator {
   /// Plays a single clip on demand (library preview). A manual tap plays
   /// immediately — Sleep/Prayer quiet windows only gate *automatic* playback,
   /// so we don't block the user behind a GPS prayer-time lookup here.
-  Future<void> playClip(AudioClip clip) async {
+  ///
+  /// [queue] is the ordered list of clips currently shown to the user (e.g. the
+  /// filtered Clip Library). When provided, Next/Previous on the mini-player
+  /// and modal walk this list. Pass `[clip]` (or omit) for a true single play.
+  Future<void> playClip(AudioClip clip, {List<AudioClip>? queue}) async {
     if (!_isPlayablePath(clip.filePath)) return;
 
     if (_snapshot.isPlaying) {
       await _audio.stop();
     }
+
+    _libraryQueue = (queue == null || queue.isEmpty) ? <AudioClip>[clip] : queue;
+    _libraryIndex = _libraryQueue.indexWhere((c) => c.id == clip.id);
+    if (_libraryIndex < 0) _libraryIndex = 0;
 
     // Optimistic: show the now-playing sheet instantly for snappy feedback.
     // playlistId is null so completion stops cleanly.
@@ -387,12 +422,21 @@ class PlaybackCoordinator {
         clip.filePath,
         title: clip.title,
         subtitle: RuntimeCopy.l10n.libraryPreview,
+        playlistMode: _libraryQueue.length > 1,
       );
     } catch (_) {
       await stop();
       return;
     }
     await refreshScheduleNotifications?.call();
+  }
+
+  /// True when the user can skip forward/back to another clip from the current
+  /// context (either inside a playlist with 2+ clips, or browsing a library
+  /// queue with 2+ clips).
+  bool get canSkipClips {
+    if (_snapshot.playlistId != null) return true;
+    return _libraryQueue.length > 1 && _libraryIndex >= 0;
   }
 
   bool _isPlayablePath(String path) {
@@ -430,20 +474,29 @@ class PlaybackCoordinator {
 
   Future<void> stop() async {
     _playlistClipIndex = null;
+    _libraryQueue = const [];
+    _libraryIndex = -1;
+
+    // Optimistically hide the player UI BEFORE waiting on audio_service. This
+    // prevents the modal/mini-player from flashing 00:00 frames while the
+    // background player tears down, and avoids any silent keep-alive position
+    // stream events from rendering after the user hit Stop.
+    final wasActive = await _appState.isActive();
+    _emit(PlaybackSnapshot(
+      state: wasActive
+          ? AppPlaybackState.activeIdle
+          : AppPlaybackState.inactive,
+      isPlaying: false,
+      modalVisible: false,
+    ));
+
     await _audio.stop();
     // If a prayer/adhan happened to be playing, stop it too — the user just
     // hit the Stop control on the player and expects silence.
     await AdhanPlayer.instance.stop();
-    final active = await _appState.isActive();
-    if (active) {
-      _emit(const PlaybackSnapshot(
-        state: AppPlaybackState.activeIdle,
-        isPlaying: false,
-        modalVisible: false,
-      ));
+
+    if (wasActive) {
       unawaited(refreshModeState());
-    } else {
-      _emit(const PlaybackSnapshot(state: AppPlaybackState.inactive));
     }
     await refreshScheduleNotifications?.call();
   }
@@ -451,6 +504,18 @@ class PlaybackCoordinator {
   void dismissModal() {
     if (_snapshot.state == AppPlaybackState.inactive) return;
     _emit(_snapshot.copyWith(modalVisible: false));
+  }
+
+  /// Seeks the current clip to [position]. Silently no-ops when there is no
+  /// active clip (e.g. activeIdle keep-alive) to avoid scrubbing the silent
+  /// loop and breaking the foreground service.
+  Future<void> seek(Duration position) async {
+    if (_snapshot.state != AppPlaybackState.manualPlaying &&
+        _snapshot.state != AppPlaybackState.scheduledPlaying) {
+      return;
+    }
+    if (position.isNegative) position = Duration.zero;
+    await _audio.seek(position);
   }
 
   void showModal() {

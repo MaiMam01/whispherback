@@ -69,30 +69,6 @@ class HomeScreen extends ConsumerWidget {
         RepaintBoundary(
           child: HomeAmbience(isActive: isActive),
         ),
-        Stack(
-          children: [
-            IgnorePointer(
-              child: Stack(
-                children: [
-                  DepthOrb(
-                    size: 100,
-                    color: theme.isDark ? AppColors.brandLight : AppColors.ink,
-                    top: 48,
-                    right: -20,
-                    intensity: 0.38,
-                  ),
-                  DepthOrb(
-                    size: 72,
-                    color: theme.isDark ? AppColors.gold : AppColors.lightMuted,
-                    top: 120,
-                    left: -24,
-                    intensity: 0.32,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
         SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {

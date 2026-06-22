@@ -123,16 +123,18 @@ class _ClipsScreenState extends ConsumerState<ClipsScreen> {
                     onImport: () => context.push('/clips/import'),
                   );
                 }
+                final filtered = _applyFilter(clips);
                 return _ClipsBody(
                   clips: clips,
-                  filtered: _applyFilter(clips),
+                  filtered: filtered,
                   filter: _filter,
                   theme: theme,
                   onFilter: (f) => setState(() => _filter = f),
                   onRecord: () => context.push('/clips/record'),
                   onImport: () => context.push('/clips/import'),
-                  onPlayClip: (clip) =>
-                      ref.read(playbackCoordinatorProvider).playClip(clip),
+                  onPlayClip: (clip) => ref
+                      .read(playbackCoordinatorProvider)
+                      .playClip(clip, queue: filtered),
                   onDeleteClip: _deleteClip,
                 );
               },
