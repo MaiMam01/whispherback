@@ -3,9 +3,9 @@
 Senior multi-disciplinary review (mobile architecture, audio, scheduling, security, QA, UX).  
 **Date:** June 2026 · **Scope:** `mobile/` Flutter app + Android build + docs.
 
-## Overall score: **9.4 / 10** (post Round 3 — clips, playlists, scheduling hardening)
+## Overall score: **9.6 / 10** (post Round 4 — first-clip warmup, lock-screen controls, schedule activation discovery)
 
-Production-oriented offline MVP. The full clip/playlist/schedule pipeline has been audited end-to-end, every P0/P1 issue is fixed and covered by regression tests, and the test suite has grown from 33 to **59 passing tests**. Play Store submission still needs release signing.
+Production-oriented offline MVP. The full clip/playlist/schedule pipeline has been audited end-to-end, every P0/P1 issue is fixed and covered by regression tests, and the test suite has grown from 33 to **71 passing tests**. Play Store submission still needs release signing.
 
 ---
 
@@ -17,7 +17,7 @@ Production-oriented offline MVP. The full clip/playlist/schedule pipeline has be
 | Audio / FGS | 9/10 | `audio_service` + coordinator + audio-session interruption handling (phone call, headphones disconnect) |
 | Scheduling | 9.5/10 | Overnight windows, stable schedule IDs, two-stamp `lastFired` model (slot vs completion), tick watchdog, in-flight playback cancellation on disable |
 | Security | 7.5/10 | Path sandbox; `USE_EXACT_ALARM` removed; debug signing remains |
-| QA / Tests | **9/10** | **59 automated tests** (was 33), covering every Round 3 regression |
+| QA / Tests | **9/10** | **71 automated tests** (was 33), covering every Round 3 + 4 regression |
 | UI/UX / i18n | 9/10 | Every play tap now surfaces success or error; shell snackbars float above nav bar; 6 languages |
 | Production readiness | 9/10 | Client APK ready; Play needs keystore |
 
@@ -75,11 +75,20 @@ Production-oriented offline MVP. The full clip/playlist/schedule pipeline has be
 | Empty/whitespace clip title shown in library | `_pendingTitle` accepted `""` | `stopAndSave` coerces empty/whitespace titles to `'Recording'`. |
 | `removeClip` did not bump `updated_at` | Playlist list view didn't move the edited playlist to top | `removeClip` now updates `updated_at` in the same transaction. |
 
+### Round 4 — QA-on-device fixes (first clip, lock screen, schedule discovery)
+
+| Symptom (verbatim from QA) | Root cause | Fix |
+|----------------------------|------------|-----|
+| **"first voice clip record kiya, woh play NAHI hui — uske baad 6 clips record kiye, woh play hogaye"** | Audio session was lazy-initialized inside `_player.playFile`. On the very first user tap after a fresh install, `audio_session.setActive(true)` ran in parallel with `_player.play()`. On Samsung / Android 12-14, the OS denied audio focus by the time `play()` started — `_player` silently sat in `idle`. After the first attempt the session was bound, so the next 6 clips worked. | `WhisperAudioHandler.warmUp()` is fired-and-forgotten from `main()` immediately after `AudioService.init`. It pre-configures the audio session and registers interruption listeners BEFORE the first user tap. Also added `playFile` input validation (empty path / missing file → `throw`) and a 2 s `_confirmPlaybackStarted` deadline that throws `StateError` if the player never reaches a playable state — `PlaybackCoordinator` catches it and emits `decodeFailed`, so a hung first tap now surfaces a snackbar instead of silence. |
+| **"Scheduling features are working and schedules are being saved successfully but the scheduling audio is not being played"** | `ScheduleEngine._runTick` first line: `if (!await _appState.isActive()) return;`. Users (and QA) saved schedules and assumed they'd fire — they had no idea the master Active toggle on Home is required. The post-save snackbar was the only hint and disappeared in 4 s. | Two-pronged: (1) **Persistent banner** on the Schedules screen — amber, top of list, "Activate WhisperBack to start your schedules" + an inline `Activate now` button — shown whenever `anyEnabledSchedule && !isActive`. (2) **Hard-stop dialog** on schedule save when Active is OFF: "Schedule saved" with `Turn Active on` and `Later` buttons. Both routes call `coordinator.toggleActive()` and refresh `isAppActiveProvider` so the banner disappears immediately. |
+| **"Notification aaraha hai screen lock wala bhi or background wala bhi, but pause pe click karo to next clip play hooraha"** | In playlist mode the lock-screen control list was `[prev, pause/play, next, stop]` with compact indices `[0, 1, 2]`. When the clip reached `ProcessingState.completed`, the `pause/play` entry was conditionally **dropped** from the list. The list became `[prev, next, stop]` but the compact indices still pointed at `[0, 1, 2]` — so the icon at compact position 1 was now `skipToNext`, where users had learned to tap pause. Tap pause → got next. | `_publishClipControls` now ALWAYS renders a `MediaControl.play` (or `pause`) at index 1, even on `completed`. The compact indices `[0, 1, 2]` (playlist) and `[0, 1]` (single) keep the same logical buttons across every state transition. New test file `whisper_audio_handler_controls_test.dart` pins the layout invariants under all `playing × processing` combinations. |
+| **"App close hogai automatically kind of app crashed, again on karne pe kuch bhi play NAHI ho raha, clips or playlist delete ho rahi but play NAHI"** | After a crash + reopen, the `audio_service` plugin sometimes silently failed to bind the foreground service while DB operations remained healthy. `playFile` returned without throwing because the underlying `_player.play()` resolved instantly (still in `idle`). No exception → no snackbar → user thought playback was broken with no error feedback. | The new `_confirmPlaybackStarted` deadline in `playFile` catches this exact scenario. After 2 s of `idle/loading` without reaching `ready/buffering/completed`, it throws `StateError`. The coordinator's existing `try/catch` around `_audio.playFile` then emits `PlaybackErrorEvent(PlaybackErrorReason.decodeFailed)`, and the shell shows a localized "Couldn't play this clip — try again" snackbar. User now gets actionable feedback instead of silence. |
+
 ---
 
-## Test suite (Round 3)
+## Test suite (Round 4)
 
-### Unit + widget tests — 59 passing on every CI run
+### Unit + widget tests — 71 passing on every CI run
 
 | File | Coverage |
 |------|----------|
@@ -98,6 +107,9 @@ Production-oriented offline MVP. The full clip/playlist/schedule pipeline has be
 | `test/shuffle_engine_test.dart` | No-repeat-until-cycle guarantee (1 test) |
 | `test/user_facing_error_test.dart` | Friendly-error mapping (4 tests) |
 | `test/widget_test.dart` | App boots without throwing (1 test) |
+| `test/whisper_audio_handler_controls_test.dart` | **NEW (Round 4)** — Pins the lock-screen control layout across every `playing × processing` combination so the "pause tap triggers next" regression cannot reappear (4 tests) |
+| `test/playback_first_clip_warmup_test.dart` | **NEW (Round 4)** — Pins `playFile` input validation (empty path, missing file) + the warmup deadline contract that makes hung first-clip playback surface as a snackbar (4 tests) |
+| `test/schedule_active_off_banner_test.dart` | **NEW (Round 4)** — Pins the banner visibility rule (`anyEnabled && !active`) so future refactors can't quietly disable the discovery UX (4 tests) |
 
 ### Integration smoke — `integration_test/app_test.dart`
 
@@ -128,7 +140,7 @@ Runs on any connected device: `flutter test integration_test/app_test.dart -d <d
 1. `flutter pub get`
 2. `dart format --output=none --set-exit-if-changed .` (formatting gate)
 3. `flutter analyze --no-fatal-infos` (lint gate)
-4. `flutter test` (unit + widget gate — 59 tests)
+4. `flutter test` (unit + widget gate — 71 tests)
 5. `flutter test integration_test/app_test.dart` (smoke, non-blocking)
 6. `flutter build apk --debug --dart-define=FLAVOR=dev` (build gate)
 

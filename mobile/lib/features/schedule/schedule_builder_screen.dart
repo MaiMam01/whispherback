@@ -175,6 +175,47 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
 
     if (!mounted) return;
     final l10n = context.l10n;
+
+    // Branch: if Active is OFF, the user just saved a schedule that will not
+    // fire. A fleeting snackbar (the previous behaviour) was easy to miss —
+    // we hard-stop them with a dialog so the connection between "saved" and
+    // "Active toggle" is impossible to miss. If Active is ON, fall back to
+    // the quick snackbar so the save flow stays snappy.
+    final isActive = await ref.read(appStateRepositoryProvider).isActive();
+    if (!mounted) return;
+    if (!isActive) {
+      final shouldActivate = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.scheduleSavedDialogTitle),
+          content: Text(l10n.scheduleSavedDialogBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.scheduleSavedDialogLater),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.scheduleSavedDialogActivate),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (shouldActivate == true) {
+        await ref.read(playbackCoordinatorProvider).toggleActive();
+        ref.invalidate(isAppActiveProvider);
+        if (!mounted) return;
+        context.showShellSnackBar(
+          l10n.schedulesActivatedSnackbar,
+          icon: AppIcons.checkCircle,
+        );
+      }
+      if (mounted) context.pop();
+      return;
+    }
+
     context.pop();
     context.showShellSnackBar(
       l10n.scheduleSavedTurnActive,

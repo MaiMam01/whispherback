@@ -97,6 +97,21 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
       _player.processingState != ProcessingState.idle;
   String? get currentClipTitle => _clipTitle;
 
+  /// Pre-warms the audio session so the very first `playFile` doesn't race
+  /// with native session activation. Without this, on Samsung / fresh installs
+  /// the first recorded clip's `playFile` call completes BEFORE the OS has
+  /// granted audio focus, so the underlying `MediaPlayer` plays silently and
+  /// the user sees nothing happen. Called once from `main()` after
+  /// `AudioService.init` so it never blocks app launch — best effort.
+  Future<void> warmUp() async {
+    try {
+      await _ensureAudioSession();
+    } catch (_) {
+      // Already swallowed errors — `_ensureAudioSession` is best-effort and
+      // will retry on the first `playFile` call anyway.
+    }
+  }
+
   Future<void> _ensureAudioSession() async {
     if (_audioSessionReady) return;
     final session = await AudioSession.instance;
@@ -237,9 +252,32 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     String? subtitle,
     bool playlistMode = false,
   }) async {
+    // Reject obviously bad inputs early so the caller's `try/catch` can show
+    // a snackbar instead of the system silently doing nothing.
+    if (path.isEmpty) {
+      throw ArgumentError('playFile requires a non-empty path');
+    }
+    if (!File(path).existsSync()) {
+      throw StateError('Clip file is missing on disk: $path');
+    }
+
     await _ensureAudioSession();
     final session = await AudioSession.instance;
     await session.setActive(true);
+
+    // CRITICAL: if a previous source is still loading (rapid tap or schedule
+    // racing with manual play), `setAudioSource` would queue behind it on
+    // some OEMs and the new source never starts. Force-stop the player first
+    // so the next `setAudioSource` is a clean swap.
+    if (_player.processingState == ProcessingState.loading ||
+        _player.processingState == ProcessingState.buffering) {
+      try {
+        await _player.stop();
+      } catch (_) {
+        // Best-effort: keep going; the explicit setAudioSource below will
+        // overwrite the source even if stop() couldn't unwind cleanly.
+      }
+    }
 
     _playingClip = true;
     _clipTitle = title;
@@ -262,6 +300,35 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     await _player.setAudioSource(AudioSource.file(path), preload: true);
     onClipSessionChanged?.call();
     await play();
+
+    // Belt-and-braces: confirm the player actually moved to a playable state
+    // within a short window. On the very first recording after a fresh
+    // install we used to see `_player.play()` return successfully but the
+    // native side stayed `idle` because the audio session focus hadn't
+    // propagated yet. If we're still not playing after the warmup window,
+    // throw so the coordinator can fire a user-visible error.
+    await _confirmPlaybackStarted();
+  }
+
+  Future<void> _confirmPlaybackStarted() async {
+    // 2 seconds is generous: a healthy `playFile` typically reaches `ready`
+    // within 200-500ms even on low-end Samsung devices. Anything longer is
+    // the symptom we're guarding against.
+    final deadline = DateTime.now().add(const Duration(seconds: 2));
+    while (DateTime.now().isBefore(deadline)) {
+      final ps = _player.processingState;
+      if (ps == ProcessingState.ready ||
+          ps == ProcessingState.buffering ||
+          ps == ProcessingState.completed) {
+        return;
+      }
+      if (_player.playing) return;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    throw StateError(
+      'Playback did not start within the warmup window — '
+      'audio session may not be bound (state=${_player.processingState}).',
+    );
   }
 
   MediaItem _clipMediaItem({
@@ -497,16 +564,23 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     final completed = processing == ProcessingState.completed;
     final reportPlaying = !completed && (playing || loading);
 
+    // CRITICAL: the controls array must keep the SAME positions for the
+    // same logical buttons across loading / playing / completed states.
+    // Previously the play/pause entry was dropped on completion, which
+    // shifted `skipToNext` into the compact-bar slot where pause used to
+    // be — users tapped what looked like a pause icon and got "next clip"
+    // instead. Always render a play/pause entry at index 1 (use `play`
+    // when paused, completed, or finished so the icon never disappears).
+    final MediaControl playPauseControl =
+        reportPlaying ? MediaControl.pause : MediaControl.play;
+
     final List<MediaControl> controls;
     List<int> compactIndices;
 
     if (_playlistMode) {
       controls = [
         MediaControl.skipToPrevious,
-        if (!completed && reportPlaying)
-          MediaControl.pause
-        else if (!completed)
-          MediaControl.play,
+        playPauseControl,
         MediaControl.skipToNext,
         _stopControl,
       ];
@@ -514,10 +588,7 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     } else {
       controls = [
         MediaControl.skipToPrevious,
-        if (!completed && reportPlaying)
-          MediaControl.pause
-        else if (!completed)
-          MediaControl.play,
+        playPauseControl,
         _stopControl,
       ];
       compactIndices = const [0, 1];

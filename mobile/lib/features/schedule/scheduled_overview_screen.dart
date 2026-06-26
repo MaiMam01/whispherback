@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/layout/responsive.dart';
+import '../../core/layout/shell_messenger.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/theme/app_radii.dart';
@@ -29,6 +30,7 @@ class ScheduledOverviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final schedulesAsync = ref.watch(schedulesProvider);
+    final isActiveAsync = ref.watch(isAppActiveProvider);
     final theme = whisperTheme(context);
     final locale = Localizations.localeOf(context).toString();
     final timeFmt = DateFormat.jm(locale);
@@ -56,8 +58,24 @@ class ScheduledOverviewScreen extends ConsumerWidget {
                 schedules: schedules,
                 theme: theme,
                 timeFmt: timeFmt,
+                // True when the user has at least one ENABLED schedule but
+                // the master Active toggle is off — surfaces the banner that
+                // explains why nothing is firing (the #1 production support
+                // ticket).
+                showActiveOffWarning: schedules.any((s) => s.enabled) &&
+                    (isActiveAsync.valueOrNull == false),
                 onCreate: () => context.go('/playlists'),
                 onEdit: (id) => context.push('/schedule/build/$id'),
+                onActivate: () async {
+                  final coordinator = ref.read(playbackCoordinatorProvider);
+                  await coordinator.toggleActive();
+                  ref.invalidate(isAppActiveProvider);
+                  if (!context.mounted) return;
+                  context.showShellSnackBar(
+                    context.l10n.schedulesActivatedSnackbar,
+                    icon: AppIcons.checkCircle,
+                  );
+                },
                 onToggle: (s, enabled) async {
                   await ref
                       .read(scheduleRepositoryProvider)
@@ -142,6 +160,8 @@ class _ScheduleBody extends StatefulWidget {
     required this.onCreate,
     required this.onEdit,
     required this.onToggle,
+    required this.showActiveOffWarning,
+    required this.onActivate,
   });
 
   final List<PlaybackSchedule> schedules;
@@ -150,6 +170,8 @@ class _ScheduleBody extends StatefulWidget {
   final VoidCallback onCreate;
   final ValueChanged<String> onEdit;
   final void Function(PlaybackSchedule schedule, bool enabled) onToggle;
+  final bool showActiveOffWarning;
+  final Future<void> Function() onActivate;
 
   @override
   State<_ScheduleBody> createState() => _ScheduleBodyState();
@@ -239,6 +261,17 @@ class _ScheduleBodyState extends State<_ScheduleBody> {
                     nextLabel: _globalNextCountdown(),
                   ),
                 if (schedules.isNotEmpty) const SizedBox(height: 16),
+                // High-visibility banner: enabled schedules exist but the
+                // master Active toggle is OFF, so the engine is silently
+                // skipping every tick. Without this, users assume the
+                // scheduling code is broken and file support tickets.
+                if (widget.showActiveOffWarning) ...[
+                  _ActiveOffBanner(
+                    theme: theme,
+                    onActivate: widget.onActivate,
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 _CustomizeAction(theme: theme, onTap: widget.onCreate),
                 const SizedBox(height: 22),
                 Row(
@@ -723,6 +756,112 @@ class _ScheduleCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Persistent banner shown on the schedule overview when at least one
+/// schedule is enabled but the master Active toggle is OFF. Without this,
+/// users assume "save succeeded" means "will play" and blame the scheduling
+/// engine when nothing fires — they had no idea the foreground service was
+/// gated behind a separate toggle on the Home tab.
+class _ActiveOffBanner extends StatefulWidget {
+  const _ActiveOffBanner({required this.theme, required this.onActivate});
+
+  final WhisperThemeExtension theme;
+  final Future<void> Function() onActivate;
+
+  @override
+  State<_ActiveOffBanner> createState() => _ActiveOffBannerState();
+}
+
+class _ActiveOffBannerState extends State<_ActiveOffBanner> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = widget.theme;
+    // Bright amber so the banner reads as "needs attention" without
+    // looking like a destructive error. Theming kept identical in light
+    // and dark — accessibility constraints (4.5:1 against the foreground
+    // text) are satisfied because we render copy in `theme.foreground`,
+    // not on top of the accent fill.
+    const accent = Color(0xFFE0A800);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        color: accent.withValues(alpha: theme.isDark ? 0.14 : 0.10),
+        border: Border.all(
+          color: accent.withValues(alpha: 0.45),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(AppIcons.alertCircle, color: accent, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.schedulesActiveOffTitle,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: theme.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.schedulesActiveOffBody,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.muted,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.tonalIcon(
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      setState(() => _busy = true);
+                      try {
+                        await widget.onActivate();
+                      } finally {
+                        if (mounted) setState(() => _busy = false);
+                      }
+                    },
+              icon: _busy
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(AppIcons.checkCircle, size: 16),
+              label: Text(l10n.schedulesActiveOffActivate),
+              style: FilledButton.styleFrom(
+                backgroundColor: accent,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
@@ -45,6 +46,13 @@ Future<void> main() async {
         ),
       ).timeout(const Duration(seconds: 8));
       whisperAudioServiceBound = true;
+      // Pre-warm the audio session BEFORE the first user tap so the first
+      // recorded clip doesn't race with native session activation. This is
+      // the fix for "first clip recorded won't play, the next 6 do" — the
+      // session config + setActive(true) used to land AFTER the first
+      // `playFile` had already called `play()` and the OS denied audio
+      // focus. Best-effort: errors are swallowed inside `warmUp`.
+      unawaited(whisperAudioHandler.warmUp());
     } catch (e, st) {
       debugPrint('AudioService.init failed, using plain handler: $e\n$st');
       whisperAudioHandler = WhisperAudioHandler();

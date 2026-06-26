@@ -569,6 +569,94 @@ class AppLocalizations {
         'Planning enregistrée. Activez l\'app sur l\'accueil pour démarrer.',
         'Đã lưu lịch. Bật ứng dụng ở Trang chủ để bắt đầu phát.',
       );
+
+  /// Headline shown on the Schedules screen when there are enabled schedules
+  /// but the master Active toggle is OFF. Without it, users confidently
+  /// configure schedules and assume the app will fire them — only to find
+  /// nothing plays and blame the scheduling logic.
+  String get schedulesActiveOffTitle => _s(
+        'Activate WhisperBack to start your schedules',
+        'شیڈول شروع کرنے کے لیے واسپربیک کو فعال کریں',
+        'فعّل WhisperBack لبدء جداولك',
+        'Activeer WhisperBack om je schema\'s te starten',
+        'Activez WhisperBack pour lancer vos planifications',
+        'Bật WhisperBack để chạy lịch của bạn',
+      );
+
+  /// Subtitle / explanation under the Active-OFF banner so users understand
+  /// the relationship between the master toggle and scheduled playback.
+  String get schedulesActiveOffBody => _s(
+        'Your schedules are saved but the app is not active. Whispers will not play until you turn on the Active toggle.',
+        'آپ کے شیڈولز محفوظ ہیں مگر ایپ فعال نہیں۔ سرگوشیاں اس وقت تک نہیں چلیں گی جب تک آپ فعال ٹوگل آن نہ کریں۔',
+        'تم حفظ جداولك ولكن التطبيق غير مفعل. لن يتم تشغيل الهمسات حتى تفعّل زر التفعيل.',
+        'Je schema\'s zijn opgeslagen, maar de app is niet actief. Whispers spelen pas wanneer je Actief inschakelt.',
+        'Vos planifications sont enregistrées mais l\'application n\'est pas active. Les murmures ne joueront pas tant que vous n\'aurez pas activé l\'app.',
+        'Lịch đã được lưu nhưng ứng dụng chưa hoạt động. Whisper sẽ không phát cho đến khi bạn bật chế độ Hoạt động.',
+      );
+
+  /// CTA button on the Active-OFF banner. Tapping it flips the master toggle
+  /// on without forcing the user to go back to the Home tab.
+  String get schedulesActiveOffActivate => _s(
+        'Activate now',
+        'ابھی فعال کریں',
+        'فعّل الآن',
+        'Nu activeren',
+        'Activer maintenant',
+        'Kích hoạt ngay',
+      );
+
+  /// Snackbar shown after the user taps "Activate now" from the schedule
+  /// overview banner — confirms that the toggle is on and schedules will
+  /// fire on their next interval boundary.
+  String get schedulesActivatedSnackbar => _s(
+        'Active turned on. Your schedules will fire on their next interval.',
+        'فعال آن ہوگیا۔ آپ کے شیڈول اگلے وقفے پر چلیں گے۔',
+        'تم تفعيل التطبيق. ستعمل جداولك في الفاصل التالي.',
+        'Actief ingeschakeld. Je schema\'s starten op het volgende interval.',
+        'Activé. Vos planifications démarreront au prochain intervalle.',
+        'Đã bật hoạt động. Lịch sẽ chạy vào lần kế tiếp.',
+      );
+
+  /// Dialog title shown on schedule save when Active is still OFF — gives
+  /// the user a chance to immediately activate without losing context.
+  String get scheduleSavedDialogTitle => _s(
+        'Schedule saved',
+        'شیڈول محفوظ ہو گیا',
+        'تم حفظ الجدول',
+        'Schema opgeslagen',
+        'Planification enregistrée',
+        'Đã lưu lịch',
+      );
+
+  /// Dialog body. Mirrors the banner copy so the user gets a consistent
+  /// explanation of why "saved" does not mean "running".
+  String get scheduleSavedDialogBody => _s(
+        'WhisperBack is not active right now. Turn on Active to start playing whispers at the times you set.',
+        'واسپربیک ابھی فعال نہیں ہے۔ مقررہ اوقات پر سرگوشیاں چلانے کے لیے فعال آن کریں۔',
+        'WhisperBack غير مفعل حالياً. فعّل التطبيق لتشغيل الهمسات في الأوقات التي حددتها.',
+        'WhisperBack is op dit moment niet actief. Zet Actief aan om de whispers op de ingestelde tijden te starten.',
+        'WhisperBack n\'est pas actif. Activez-le pour démarrer les murmures aux heures choisies.',
+        'WhisperBack chưa hoạt động. Bật Hoạt động để phát whisper theo lịch.',
+      );
+
+  String get scheduleSavedDialogActivate => _s(
+        'Turn Active on',
+        'فعال آن کریں',
+        'فعّل الآن',
+        'Actief inschakelen',
+        'Activer maintenant',
+        'Bật Hoạt động',
+      );
+
+  String get scheduleSavedDialogLater => _s(
+        'Later',
+        'بعد میں',
+        'لاحقاً',
+        'Later',
+        'Plus tard',
+        'Để sau',
+      );
+
   String get scheduleRemoved => _s(
         'Schedule removed.',
         'شیڈول ہٹا دیا گیا۔',
