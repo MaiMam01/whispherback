@@ -113,7 +113,12 @@ class PlaybackCoordinator {
   /// queue forever — that was the "after a while nothing plays but delete
   /// still works" symptom: delete bypassed the gate, every play attempt
   /// was queued behind a permanently-hung previous gate body.
-  static const _playGateBodyTimeout = Duration(seconds: 12);
+  ///
+  /// 20 seconds is a comfortable upper bound: a healthy playFile finishes
+  /// in <2s even on cold Samsung devices, and the 8s setAudioSource cap
+  /// inside the handler plus a small margin for surrounding bookkeeping
+  /// fits well under this.
+  static const _playGateBodyTimeout = Duration(seconds: 20);
 
   Future<T> _serializePlay<T>(Future<T> Function() body) {
     final previous = _playGate;
@@ -124,7 +129,8 @@ class PlaybackCoordinator {
         .then((_) => null, onError: (Object _, StackTrace __) => null)
         .then((_) async {
       try {
-        final result = await body().timeout(_playGateBodyTimeout, onTimeout: () {
+        final result =
+            await body().timeout(_playGateBodyTimeout, onTimeout: () {
           // The body never finished — return a fallback (typed as T) so
           // the gate can advance. We can't synthesise an arbitrary T here,
           // so let the timeout propagate via a thrown TimeoutException;

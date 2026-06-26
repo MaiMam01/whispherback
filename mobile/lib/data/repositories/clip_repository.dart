@@ -88,9 +88,8 @@ class ClipRepository {
       // the player at all. This is the order-of-operations bug that made
       // probing-during-import unsafe.
       await Future<void>.delayed(const Duration(milliseconds: 50));
-      final duration = await probe
-          .setFilePath(filePath)
-          .timeout(const Duration(seconds: 5));
+      final duration =
+          await probe.setFilePath(filePath).timeout(const Duration(seconds: 5));
       if (duration != null && duration.inMilliseconds > 0) {
         await updateDuration(clipId, duration.inMilliseconds);
       }

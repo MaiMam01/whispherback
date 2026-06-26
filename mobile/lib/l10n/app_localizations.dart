@@ -570,6 +570,15 @@ class AppLocalizations {
         'Đã lưu lịch. Bật ứng dụng ở Trang chủ để bắt đầu phát.',
       );
 
+  String get scheduleSavedActiveOn => _s(
+        'Schedule saved. Your whispers will fire at the set interval.',
+        'شیڈول محفوظ۔ آپ کی سرگوشیاں مقررہ وقت پر چلیں گی۔',
+        'تم حفظ الجدول. ستُشغَّل الهمسات في الموعد المحدد.',
+        'Schema opgeslagen. Je whispers worden op tijd afgespeeld.',
+        'Planification enregistrée. Vos whispers se lanceront à l\'heure prévue.',
+        'Đã lưu lịch. Whisper sẽ phát đúng giờ đã đặt.',
+      );
+
   /// Headline shown on the Schedules screen when there are enabled schedules
   /// but the master Active toggle is OFF. Without it, users confidently
   /// configure schedules and assume the app will fire them — only to find

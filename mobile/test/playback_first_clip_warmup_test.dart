@@ -31,6 +31,11 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
+class _SimulatedHandler {
+  bool playingClip = true;
+  bool processingIsAdvanced = false;
+}
+
 void main() {
   group('Playback first-clip contract', () {
     test('playFile must reject empty paths so the UI gets a real error', () {
@@ -82,14 +87,14 @@ void main() {
         var failureCallbackFired = false;
         String? lastTitle;
 
-        // Simulate handler state.
-        var playingClip = true;
-        var processingIsAdvanced = false;
+        // Simulated handler state. Wrapped in a struct so the analyzer
+        // can't constant-fold the gate conditions and warn about dead code.
+        final state = _SimulatedHandler();
 
         void scheduleWatchdog(String? title) {
           Timer(const Duration(seconds: 5), () {
-            if (!playingClip) return;
-            if (processingIsAdvanced) return;
+            if (!state.playingClip) return;
+            if (state.processingIsAdvanced) return;
             failureCallbackFired = true;
             lastTitle = title;
           });
@@ -114,13 +119,12 @@ void main() {
         'before the deadline', () {
       fakeAsync((async) {
         var failureCallbackFired = false;
-        var playingClip = true;
-        var processingIsAdvanced = false;
+        final state = _SimulatedHandler();
 
         void scheduleWatchdog(String? title) {
           Timer(const Duration(seconds: 5), () {
-            if (!playingClip) return;
-            if (processingIsAdvanced) return;
+            if (!state.playingClip) return;
+            if (state.processingIsAdvanced) return;
             failureCallbackFired = true;
           });
         }
@@ -129,12 +133,11 @@ void main() {
 
         // Player reaches `ready` after 200ms — the watchdog must not fire.
         async.elapse(const Duration(milliseconds: 200));
-        processingIsAdvanced = true;
+        state.processingIsAdvanced = true;
 
         async.elapse(const Duration(seconds: 10));
         expect(failureCallbackFired, isFalse,
-            reason:
-                'Healthy playback must never trip the snackbar — otherwise '
+            reason: 'Healthy playback must never trip the snackbar — otherwise '
                 'we would re-introduce the false-positive errors that broke '
                 'slow Samsung devices.');
       });
@@ -178,9 +181,8 @@ void main() {
       // it would re-introduce. This style of test catches a class of
       // mistakes (a fresh dev copy-pasting probe code from a Stack Overflow
       // answer) that pure behaviour tests can't.
-      final audioServicesPath =
-          p.join(Directory.current.path, 'lib', 'services', 'audio',
-              'audio_services.dart');
+      final audioServicesPath = p.join(Directory.current.path, 'lib',
+          'services', 'audio', 'audio_services.dart');
       final source = File(audioServicesPath).readAsStringSync();
       // The two methods that touched the probe player previously. We
       // assert each is now free of `AudioPlayer()` instantiation.

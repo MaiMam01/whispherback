@@ -25,7 +25,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// implementation — if it drifts, the test will start passing by
 /// accident, which is why we re-derive `kPlayGateBodyTimeout` from the
 /// same source as the production code (see comment).
-const Duration kPlayGateBodyTimeout = Duration(seconds: 12);
+const Duration kPlayGateBodyTimeout = Duration(seconds: 20);
 
 class _MiniGate {
   Future<void> _playGate = Future<void>.value();
@@ -64,8 +64,7 @@ void main() {
       // The first body never resolves — this is what a wedged
       // `just_audio.setAudioSource` looks like on a hung Samsung
       // MediaPlayer.
-      final firstFuture =
-          gate.serialize<void>(() => Completer<void>().future);
+      final firstFuture = gate.serialize<void>(() => Completer<void>().future);
 
       // A real user tap a moment later. Without the fix this future
       // would never complete and the user sees "play does nothing".
@@ -81,10 +80,10 @@ void main() {
         return null;
       });
 
-      // First body will time out after 12s. We expect it to throw, and
+      // First body will time out after 20s. We expect it to throw, and
       // we expect the second body to run AFTER that timeout fires. Use
       // a real clock so we exercise the production code path; bump the
-      // suite timeout a bit so the 12s wait fits.
+      // suite timeout a bit so the 20s wait fits.
       await expectLater(firstFuture, throwsA(isA<TimeoutException>()));
       await secondFuture;
 
@@ -95,7 +94,7 @@ void main() {
       expect(secondError, isNull,
           reason: 'The second body succeeds on its own merits; it should '
               'not inherit the first body\'s error.');
-    }, timeout: const Timeout(Duration(seconds: 30)));
+    }, timeout: const Timeout(Duration(seconds: 45)));
 
     test(
         'an error in the previous body MUST NOT propagate into the next '

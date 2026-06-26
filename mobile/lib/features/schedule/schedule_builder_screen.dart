@@ -246,7 +246,7 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
 
     context.pop();
     context.showShellSnackBar(
-      l10n.scheduleSavedTurnActive,
+      l10n.scheduleSavedActiveOn,
       icon: AppIcons.checkCircle,
     );
   }
