@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../l10n/runtime_copy.dart';
@@ -84,11 +85,23 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
 
   bool get isPlayingClip => _playingClip;
   bool get isKeepAliveActive => _keepAlive && !_playingClip;
+  // True only when the audio_service media card is ACTUALLY live (silence
+  // loop started + playing). The extra `_keepAliveRunning` guard guarantees
+  // we never report "card is up" if `_startIdleKeepAlive` threw silently on
+  // an OEM where `setAudioSource(silence)` is rejected.
   bool get isForegroundNotificationActive =>
       whisperAudioServiceBound &&
       isKeepAliveActive &&
+      _keepAliveRunning &&
       _player.playing &&
       mediaItem.value != null;
+  // Render the flutter persistent notification whenever:
+  //   • no clip is playing (clip uses its own media notification), AND
+  //   • the audio_service keep-alive card is NOT actually live.
+  // The previous version mis-reported "card live" when keep-alive threw
+  // silently, leaving the user with NO notification at all on the very
+  // devices where the silence loop fails (Vivo, Infinix, some Xiaomi MIUI).
+  // Now we render the flutter notification AS A FALLBACK in that case.
   bool get shouldUseFlutterActiveNotification =>
       !isPlayingClip && !isForegroundNotificationActive;
   bool get occupiesMediaNotification =>
@@ -179,6 +192,14 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     await _startIdleKeepAlive();
   }
 
+  /// True after `_startIdleKeepAlive` actually committed and the silence
+  /// loop is running. Exposed via `isKeepAliveRunning` so notification_sync
+  /// can know whether to render the flutter persistent notification as a
+  /// fallback (silence loop never started → no audio_service media card →
+  /// the user has NO indication the app is active without our fallback).
+  bool _keepAliveRunning = false;
+  bool get isKeepAliveRunning => _keepAliveRunning;
+
   Future<void> _startIdleKeepAlive() async {
     if (_playingClip) return;
     try {
@@ -220,8 +241,20 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
       );
 
       await _player.play();
-    } catch (_) {
-      // OS alarms still fire if keep-alive fails; scheduling is best-effort here.
+      _keepAliveRunning = true;
+    } catch (e, st) {
+      _keepAliveRunning = false;
+      // Surface the failure in debug so we know which OEM path is breaking
+      // the silence loop. The flutter persistent notification fallback in
+      // `notification_sync` will take over (it now correctly handles
+      // `!isKeepAliveRunning`) so the user STILL sees a notification
+      // bar — previously the keep-alive failure was silent AND the
+      // fallback was gated behind `shouldUseFlutterActiveNotification`
+      // which required `!isForegroundNotificationActive` — both
+      // unreliable on the same devices.
+      if (kDebugMode) {
+        debugPrint('keep-alive silence loop failed: $e\n$st');
+      }
     }
   }
 

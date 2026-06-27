@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +12,21 @@ import '../../core/theme/app_icons.dart';
 import '../../domain/playback/playback_state.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/playback_providers.dart';
+
+/// Fires [body] without awaiting; routes any thrown future error to a
+/// logged no-op instead of letting it propagate as an unhandled
+/// future error (which the OS surfaces as "app crashed").
+void _safeCall(Future<void> Function() body, String tag) {
+  unawaited(() async {
+    try {
+      await body();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('mini_player $tag failed (handled): $e\n$st');
+      }
+    }
+  }());
+}
 
 /// Compact now-playing bar above the bottom navigation (Spotify-style).
 class MiniPlayerBar extends ConsumerWidget {
@@ -120,15 +137,16 @@ class MiniPlayerBar extends ConsumerWidget {
                     color: isDark
                         ? AppColors.soft
                         : AppColors.ink.withValues(alpha: 0.72),
-                    onPressed: coordinator.skipPrevious,
+                    onPressed: () =>
+                        _safeCall(coordinator.skipPrevious, 'skipPrevious'),
                   ),
                 _MiniPlayPauseButton(
                   isPlaying: snapshot.isPlaying,
                   onTap: () {
                     if (snapshot.isPlaying) {
-                      coordinator.pause();
+                      _safeCall(coordinator.pause, 'pause');
                     } else {
-                      coordinator.resume();
+                      _safeCall(coordinator.resume, 'resume');
                     }
                   },
                 ),
@@ -139,7 +157,8 @@ class MiniPlayerBar extends ConsumerWidget {
                     color: isDark
                         ? AppColors.soft
                         : AppColors.ink.withValues(alpha: 0.72),
-                    onPressed: coordinator.skipNext,
+                    onPressed: () =>
+                        _safeCall(coordinator.skipNext, 'skipNext'),
                   ),
                 _MiniIconButton(
                   icon: AppIcons.close,
@@ -147,7 +166,7 @@ class MiniPlayerBar extends ConsumerWidget {
                   color: isDark
                       ? AppColors.muted
                       : AppColors.ink.withValues(alpha: 0.55),
-                  onPressed: coordinator.stop,
+                  onPressed: () => _safeCall(coordinator.stop, 'stop'),
                 ),
               ],
             ),

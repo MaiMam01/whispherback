@@ -826,6 +826,11 @@ class _PlayAllButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    // Neon gradient guarantees a saturated blue fill in BOTH light and dark
+    // theme. Previously this used `brandGradient` (near-white pair) with
+    // explicit `Colors.white` text — invisible on the dark playlist sheet
+    // because the background was also white. Forcing white text on a deep
+    // neon gradient gives reliable >5:1 contrast in either mode.
     return Semantics(
       label: l10n.playAll,
       button: true,
@@ -838,12 +843,12 @@ class _PlayAllButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              gradient: AppColors.brandGradient,
-              boxShadow: const [
+              gradient: AppColors.neonGradient,
+              boxShadow: [
                 BoxShadow(
-                  color: AppColors.brandGlow,
-                  blurRadius: 22,
-                  offset: Offset(0, 8),
+                  color: AppColors.neon.withValues(alpha: 0.45),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),

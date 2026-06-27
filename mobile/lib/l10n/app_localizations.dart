@@ -107,6 +107,14 @@ class AppLocalizations {
       _s('Save', 'محفوظ کریں', 'حفظ', 'Opslaan', 'Enregistrer', 'Lưu');
   String get cancel =>
       _s('Cancel', 'منسوخ کریں', 'إلغاء', 'Annuleren', 'Annuler', 'Hủy');
+  String get confirm => _s(
+        'Confirm',
+        'تصدیق کریں',
+        'تأكيد',
+        'Bevestigen',
+        'Confirmer',
+        'Xác nhận',
+      );
   String get edit =>
       _s('Edit', 'ترمیم', 'تعديل', 'Bewerken', 'Modifier', 'Sửa');
   String get play => _s('Play', 'چلائیں', 'تشغيل', 'Afspelen', 'Lire', 'Phát');
@@ -874,6 +882,48 @@ class AppLocalizations {
       'Interval tussen whispers',
       'Intervalle entre les murmures',
       'Khoảng cách giữa các lời thì thầm');
+  String get customInterval => _s(
+        'Custom',
+        'حسبِ منشا',
+        'مخصص',
+        'Aangepast',
+        'Personnalisé',
+        'Tùy chỉnh',
+      );
+  String get customIntervalHelp => _s(
+        'Any whole number, 1 to 720 minutes.',
+        'کوئی پورا عدد، 1 سے 720 منٹ تک۔',
+        'أي رقم صحيح من 1 إلى 720 دقيقة.',
+        'Elk geheel getal van 1 tot 720 minuten.',
+        'Tout entier de 1 à 720 minutes.',
+        'Bất kỳ số nguyên nào từ 1 đến 720 phút.',
+      );
+  String get customIntervalInvalid => _s(
+        'Please enter a number.',
+        'براہِ کرم کوئی نمبر درج کریں۔',
+        'يرجى إدخال رقم.',
+        'Voer een nummer in.',
+        'Veuillez entrer un nombre.',
+        'Vui lòng nhập một số.',
+      );
+  String get customIntervalTooSmall => _s(
+        'Minimum interval is 1 minute.',
+        'کم سے کم وقفہ 1 منٹ ہے۔',
+        'الحد الأدنى للفاصل دقيقة واحدة.',
+        'Minimum interval is 1 minuut.',
+        'L\'intervalle minimum est de 1 minute.',
+        'Khoảng cách tối thiểu là 1 phút.',
+      );
+  String get customIntervalTooLarge => _s(
+        'Maximum interval is 720 minutes (12 hours).',
+        'زیادہ سے زیادہ وقفہ 720 منٹ (12 گھنٹے) ہے۔',
+        'الحد الأقصى للفاصل 720 دقيقة (12 ساعة).',
+        'Maximum interval is 720 minuten (12 uur).',
+        'L\'intervalle maximum est de 720 minutes (12 heures).',
+        'Khoảng cách tối đa là 720 phút (12 giờ).',
+      );
+  String get minutesUnit =>
+      _s('min', 'منٹ', 'دقيقة', 'min', 'min', 'phút');
   String get playbackAndAlarms => _s(
       'Playback & alarms',
       'پلے بیک اور الارم',

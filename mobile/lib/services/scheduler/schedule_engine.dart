@@ -66,7 +66,21 @@ class ScheduleEngine {
   /// fire" after the app had thrown a transient warmup error early in
   /// the session.
   final Map<String, DateTime> _failureBackoff = {};
-  static const _failureBackoffDuration = Duration(minutes: 1);
+  // Per-schedule consecutive-failure count. Drives an exponential
+  // backoff so a single transient failure (audio_service still binding
+  // on cold start) only delays the schedule by 5 s, but a genuinely
+  // broken playlist (empty / unplayable) doesn't keep getting retried
+  // every 5 s in perpetuity.
+  final Map<String, int> _failureStreak = {};
+  static const _baseBackoff = Duration(seconds: 5);
+  static const _maxBackoff = Duration(minutes: 2);
+
+  Duration _backoffFor(int streak) {
+    // 5s → 10s → 20s → 40s → 80s → 120s (capped)
+    final secs = _baseBackoff.inSeconds * (1 << (streak - 1).clamp(0, 5));
+    final clamped = secs > _maxBackoff.inSeconds ? _maxBackoff.inSeconds : secs;
+    return Duration(seconds: clamped);
+  }
 
   void start() {
     if (_started) return;
@@ -208,16 +222,23 @@ class ScheduleEngine {
 
       if (!played) {
         // Roll back the stamps so the engine doesn't think this slot was
-        // honored. Apply a 1-minute backoff so we don't spin every 5s.
+        // honored. Apply an EXPONENTIAL backoff so a transient cold-start
+        // failure (audio_service still binding) is retried after only 5 s
+        // instead of 1 min — that was the QA report that schedules
+        // "didn't fire when the app opened with next whisper NOW".
         await _lastFired.clear(schedule.id);
-        _failureBackoff[schedule.id] = now.add(_failureBackoffDuration);
+        final streak = (_failureStreak[schedule.id] ?? 0) + 1;
+        _failureStreak[schedule.id] = streak;
+        final backoff = _backoffFor(streak);
+        _failureBackoff[schedule.id] = now.add(backoff);
         debugPrint(
           'ScheduleEngine: schedule ${schedule.id} did not play — '
-          'backing off for $_failureBackoffDuration.',
+          'backing off for $backoff (streak=$streak).',
         );
         continue;
       }
       _failureBackoff.remove(schedule.id);
+      _failureStreak.remove(schedule.id);
 
       await onNotificationsSync?.call();
       break;
@@ -236,9 +257,18 @@ class ScheduleEngine {
     final id = _coordinator.activeScheduleId;
     if (id == null) return;
     // Roll back the stamps so the next tick retries within the grace window
-    // instead of waiting for the *next* interval boundary.
+    // instead of waiting for the *next* interval boundary. We deliberately
+    // do NOT bump the streak here — `_runTick` does that when it sees
+    // `played == false`. Otherwise a single failed fire could
+    // double-increment when both code paths run in the same tick.
     _lastFired.clear(id);
-    _failureBackoff[id] = DateTime.now().add(_failureBackoffDuration);
+    final existingBackoff = _failureBackoff[id];
+    if (existingBackoff == null ||
+        DateTime.now().isAfter(existingBackoff)) {
+      // Only set a default fallback backoff if one isn't already in
+      // effect. The proper exponential backoff is applied by `_runTick`.
+      _failureBackoff[id] = DateTime.now().add(_baseBackoff);
+    }
   }
 
   /// Slot dedup needs the GRID time, not the completion time. Returns the

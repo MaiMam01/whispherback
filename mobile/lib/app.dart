@@ -73,6 +73,30 @@ class _WhisperBackAppState extends ConsumerState<WhisperBackApp>
     );
     // Cold start / alarm tap — run an immediate scheduling pass.
     await ScheduleEngineBinding.instance.fireNow();
+
+    // POST_NOTIFICATIONS is asked asynchronously by the OS dialog; the
+    // first sync above may have run BEFORE the user tapped "Allow". A
+    // delayed retry guarantees the persistent "active" notification
+    // appears within a couple of seconds of granting permission instead
+    // of waiting for the next lifecycle event. Best-effort: re-sync
+    // every 2 s for 10 s then stop. Cheap and bounded.
+    if (mounted) {
+      for (final delay in const [
+        Duration(seconds: 2),
+        Duration(seconds: 4),
+        Duration(seconds: 8),
+      ]) {
+        await Future<void>.delayed(delay);
+        if (!mounted) return;
+        try {
+          await syncWhisperNotifications(
+            appState: ref.read(appStateRepositoryProvider),
+            schedules: ref.read(scheduleRepositoryProvider),
+            prayer: ref.read(prayerRepositoryProvider),
+          );
+        } catch (_) {}
+      }
+    }
   }
 
   @override

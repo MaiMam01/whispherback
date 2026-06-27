@@ -151,28 +151,61 @@ class HomeScreen extends ConsumerWidget {
                           ActiveToggle(
                             isActive: isActive,
                             onToggle: () {
+                              // Whole tap path runs inside try/catch so a
+                              // failure in the permission wizard or the
+                              // notification refresh never crashes the
+                              // user's tap. The global zone guard is a
+                              // safety net; this is the per-tap belt.
                               unawaited(() async {
-                                await ref
-                                    .read(playbackCoordinatorProvider)
-                                    .toggleActive();
-                                if (!context.mounted) return;
-                                final appState =
-                                    ref.read(appStateRepositoryProvider);
-                                final nowActive = await appState.isActive();
-                                await syncWhisperNotifications(
-                                  appState: appState,
-                                  schedules:
-                                      ref.read(scheduleRepositoryProvider),
-                                  prayer: ref.read(prayerRepositoryProvider),
-                                );
-                                if (nowActive && context.mounted) {
-                                  await runSchedulingSetupWizard(context);
-                                  if (context.mounted &&
-                                      !whisperAudioServiceBound) {
-                                    await showAudioServiceUnavailableDialog(
-                                      context,
+                                try {
+                                  await ref
+                                      .read(playbackCoordinatorProvider)
+                                      .toggleActive();
+                                  if (!context.mounted) return;
+                                  final appState =
+                                      ref.read(appStateRepositoryProvider);
+                                  final nowActive = await appState.isActive();
+
+                                  if (nowActive && context.mounted) {
+                                    // CRITICAL: run the permission wizard
+                                    // FIRST so POST_NOTIFICATIONS and exact-
+                                    // alarm are granted BEFORE we attempt to
+                                    // post the persistent "active" status
+                                    // notification. Previously the sync ran
+                                    // first, the OS silently dropped the
+                                    // notification because the runtime
+                                    // permission was denied, and the user
+                                    // saw no notification bar even after
+                                    // granting the permission via the
+                                    // wizard a moment later — there was no
+                                    // re-sync afterwards.
+                                    await runSchedulingSetupWizard(context);
+                                    if (context.mounted &&
+                                        !whisperAudioServiceBound) {
+                                      await showAudioServiceUnavailableDialog(
+                                        context,
+                                      );
+                                    }
+                                  }
+
+                                  // Sync notifications AFTER the wizard so
+                                  // newly-granted permissions take effect
+                                  // on the very first attempt to post the
+                                  // status / schedule alarms. Runs for
+                                  // both ON and OFF transitions (OFF
+                                  // needs to cancel the ongoing card).
+                                  if (context.mounted) {
+                                    await syncWhisperNotifications(
+                                      appState: appState,
+                                      schedules: ref
+                                          .read(scheduleRepositoryProvider),
+                                      prayer:
+                                          ref.read(prayerRepositoryProvider),
                                     );
                                   }
+                                } catch (e, st) {
+                                  debugPrint(
+                                      'Active toggle tap failed (handled): $e\n$st');
                                 }
                               }());
                             },

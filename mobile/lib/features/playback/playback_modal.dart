@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,6 +13,25 @@ import '../../core/theme/app_icons.dart';
 import '../../domain/playback/playback_state.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/playback_providers.dart';
+
+/// Fires [body] without awaiting and routes any thrown error to the zone
+/// handler instead of letting it crash the app. The buttons in the
+/// playback modal call into the coordinator which talks to native audio
+/// — every interaction has a small but non-zero chance of throwing a
+/// `PlatformException` on certain OEM firmwares (Vivo / Infinix /
+/// Samsung mid-range). This guard guarantees a tap is never the
+/// reason the app crashes.
+void _safeCall(Future<void> Function() body, String tag) {
+  unawaited(() async {
+    try {
+      await body();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('playback_modal $tag failed (handled): $e\n$st');
+      }
+    }
+  }());
+}
 
 class PlaybackModal extends ConsumerWidget {
   const PlaybackModal({super.key});
@@ -270,10 +291,12 @@ class PlaybackModal extends ConsumerWidget {
                                           semanticLabel: l10n.toggleShuffle,
                                           icon: AppIcons.shuffle,
                                           highlighted: snapshot.shuffleEnabled,
-                                          onPressed: () =>
-                                              coordinator.toggleShuffle(
-                                            snapshot.playlistId!,
-                                            !snapshot.shuffleEnabled,
+                                          onPressed: () => _safeCall(
+                                            () => coordinator.toggleShuffle(
+                                              snapshot.playlistId!,
+                                              !snapshot.shuffleEnabled,
+                                            ),
+                                            'toggleShuffle',
                                           ),
                                         ),
                                       if (isPlaylistContext)
@@ -282,7 +305,10 @@ class PlaybackModal extends ConsumerWidget {
                                         _CtrlButton(
                                           semanticLabel: l10n.previousTrack,
                                           icon: Icons.skip_previous_rounded,
-                                          onPressed: coordinator.skipPrevious,
+                                          onPressed: () => _safeCall(
+                                            coordinator.skipPrevious,
+                                            'skipPrevious',
+                                          ),
                                         ),
                                       if (canSkip) const SizedBox(width: 12),
                                       _CtrlButton(
@@ -295,9 +321,11 @@ class PlaybackModal extends ConsumerWidget {
                                         filled: true,
                                         onPressed: () {
                                           if (snapshot.isPlaying) {
-                                            coordinator.pause();
+                                            _safeCall(
+                                                coordinator.pause, 'pause');
                                           } else {
-                                            coordinator.resume();
+                                            _safeCall(
+                                                coordinator.resume, 'resume');
                                           }
                                         },
                                       ),
@@ -306,13 +334,19 @@ class PlaybackModal extends ConsumerWidget {
                                         _CtrlButton(
                                           semanticLabel: l10n.nextTrack,
                                           icon: Icons.skip_next_rounded,
-                                          onPressed: coordinator.skipNext,
+                                          onPressed: () => _safeCall(
+                                            coordinator.skipNext,
+                                            'skipNext',
+                                          ),
                                         ),
                                       const SizedBox(width: 12),
                                       _CtrlButton(
                                         semanticLabel: l10n.stopPlayback,
                                         icon: AppIcons.close,
-                                        onPressed: coordinator.stop,
+                                        onPressed: () => _safeCall(
+                                          coordinator.stop,
+                                          'stop',
+                                        ),
                                       ),
                                     ],
                                   ),

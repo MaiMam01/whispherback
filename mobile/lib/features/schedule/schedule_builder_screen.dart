@@ -93,6 +93,65 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
     });
   }
 
+  /// Opens a small text-input dialog so the user can type ANY interval
+  /// between 1 and 720 minutes. Validates client-side so the picker can
+  /// never produce a value the schedule engine rejects.
+  Future<void> _pickCustomInterval() async {
+    final l10n = context.l10n;
+    final theme = whisperTheme(context);
+    final controller = TextEditingController(text: _intervalMinutes.toString());
+    final formKey = GlobalKey<FormState>();
+
+    final picked = await showDialog<int>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: theme.surface,
+          title: Text(l10n.customInterval),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.intervalBetweenWhispers,
+                helperText: l10n.customIntervalHelp,
+                border: const OutlineInputBorder(),
+                suffixText: l10n.minutesUnit,
+              ),
+              validator: (v) {
+                final n = int.tryParse((v ?? '').trim());
+                if (n == null) return l10n.customIntervalInvalid;
+                if (n < 1) return l10n.customIntervalTooSmall;
+                if (n > 720) return l10n.customIntervalTooLarge;
+                return null;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (!(formKey.currentState?.validate() ?? false)) return;
+                final n = int.parse(controller.text.trim());
+                Navigator.of(ctx).pop(n);
+              },
+              child: Text(l10n.confirm),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (picked != null && mounted) {
+      setState(() => _intervalMinutes = picked);
+    }
+  }
+
   void _toggleDay(int bit) {
     setState(() {
       if ((_daysMask & (1 << bit)) != 0) {
@@ -414,32 +473,102 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _intervalPresets.map((m) {
-                final selected = _intervalMinutes == m;
-                final label = l10n.intervalLabel(m);
-                return ChoiceChip(
-                  label: Text(label),
-                  labelStyle: TextStyle(
-                    color: selected ? AppColors.neonBright : theme.foreground,
-                    fontWeight: FontWeight.w600,
+              children: [
+                ..._intervalPresets.map((m) {
+                  final selected = _intervalMinutes == m;
+                  final label = l10n.intervalLabel(m);
+                  return ChoiceChip(
+                    label: Text(label),
+                    labelStyle: TextStyle(
+                      color: selected ? AppColors.neonBright : theme.foreground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    selected: selected,
+                    onSelected: (_) => setState(() => _intervalMinutes = m),
+                    selectedColor: AppColors.neon.withValues(alpha: 0.18),
+                    backgroundColor: theme.glass,
+                    side: BorderSide(
+                      color: selected ? AppColors.neon : theme.glassBorder,
+                    ),
+                  );
+                }),
+                // Explicit "Custom" chip opens a text-input dialog so the
+                // user can type any value 1–720 min. The slider below is
+                // still there for quick fine-tuning, but the dialog gives
+                // a clear "I want a specific minute" affordance the user
+                // asked for ("no option for custom time").
+                ActionChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        AppIcons.edit,
+                        size: 14,
+                        color: !_intervalPresets.contains(_intervalMinutes)
+                            ? AppColors.neonBright
+                            : theme.muted,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        !_intervalPresets.contains(_intervalMinutes)
+                            ? l10n.intervalLabel(_intervalMinutes)
+                            : l10n.customInterval,
+                        style: TextStyle(
+                          color: !_intervalPresets.contains(_intervalMinutes)
+                              ? AppColors.neonBright
+                              : theme.foreground,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                  selected: selected,
-                  onSelected: (_) => setState(() => _intervalMinutes = m),
-                  selectedColor: AppColors.neon.withValues(alpha: 0.18),
-                  backgroundColor: theme.glass,
+                  onPressed: _pickCustomInterval,
+                  backgroundColor: !_intervalPresets.contains(_intervalMinutes)
+                      ? AppColors.neon.withValues(alpha: 0.18)
+                      : theme.glass,
                   side: BorderSide(
-                    color: selected ? AppColors.neon : theme.glassBorder,
+                    color: !_intervalPresets.contains(_intervalMinutes)
+                        ? AppColors.neon
+                        : theme.glassBorder,
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
-            Slider(
-              value: _intervalMinutes.toDouble(),
-              min: 5,
-              max: 180,
-              divisions: 35,
-              label: l10n.durationMin(_intervalMinutes),
-              onChanged: (v) => setState(() => _intervalMinutes = v.round()),
+            const SizedBox(height: 6),
+            // Slider for fine-tuning. Keeps the dial visible so the user
+            // sees the current value at a glance + can drag without
+            // opening a dialog.
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: _intervalMinutes.toDouble().clamp(1, 180),
+                    min: 1,
+                    max: 180,
+                    divisions: 179,
+                    label: l10n.durationMin(_intervalMinutes),
+                    onChanged: (v) =>
+                        setState(() => _intervalMinutes = v.round()),
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: theme.glass,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: theme.glassBorder),
+                  ),
+                  child: Text(
+                    l10n.durationMin(_intervalMinutes),
+                    style: TextStyle(
+                      color: theme.foreground,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             _SectionTitle(l10n.playbackAndAlarms, theme: theme),

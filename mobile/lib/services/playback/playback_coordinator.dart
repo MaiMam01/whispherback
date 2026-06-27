@@ -229,16 +229,29 @@ class PlaybackCoordinator {
     };
     // Soft-fail: if `playFile` returns successfully but the native player
     // sits in `idle` / `loading` for >5s without ever reaching a playable
-    // state, the handler fires this callback. We surface a snackbar so a
-    // genuinely stuck tap isn't silent — and we DO NOT rewind playback or
-    // touch the player state here, because by the time this fires the user
-    // may already have moved on to another clip.
+    // state, the handler fires this callback. We surface a snackbar AND
+    // tear down the optimistic snapshot so the user doesn't see a
+    // mini-player claiming to play when the audio session is wedged.
+    // The teardown is fired-and-forgotten: failure to clean up never
+    // re-throws to the caller.
     _audio.onPlaybackStartFailure = (title) {
       if (_errorController.isClosed) return;
       _errorController.add(PlaybackErrorEvent(
         PlaybackErrorReason.decodeFailed,
         clipTitle: title,
       ));
+      // Only roll the snapshot back if THIS clip is still the active
+      // one — by the time the 5s watchdog fires the user may have
+      // already tapped another clip that started fine.
+      final still =
+          _snapshot.isPlaying && (_snapshot.clipTitle == title);
+      if (still) {
+        unawaited(() async {
+          try {
+            await stop();
+          } catch (_) {}
+        }());
+      }
     };
     _emit(
       PlaybackSnapshot(
@@ -307,8 +320,29 @@ class PlaybackCoordinator {
     await refreshScheduleNotifications?.call();
   }
 
-  Future<void> skipNext() => _skipPlaylistClip(next: true);
-  Future<void> skipPrevious() => _skipPlaylistClip(next: false);
+  Future<void> skipNext() => _guardedSkip(next: true);
+  Future<void> skipPrevious() => _guardedSkip(next: false);
+
+  /// Wraps `_skipPlaylistClip` in a try/catch + error event so a thrown
+  /// PlatformException from the native player never propagates out of a
+  /// skip tap. The user perceives an unhandled throw as "app crashed when
+  /// I pressed next" — which is the exact symptom they reported on the
+  /// mini-player and modal controls.
+  Future<void> _guardedSkip({required bool next}) async {
+    try {
+      await _skipPlaylistClip(next: next);
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('skip${next ? 'Next' : 'Previous'} failed: $e\n$st');
+      }
+      if (!_errorController.isClosed) {
+        _errorController.add(PlaybackErrorEvent(
+          PlaybackErrorReason.decodeFailed,
+          clipTitle: _snapshot.clipTitle,
+        ));
+      }
+    }
+  }
 
   Future<void> _skipPlaylistClip({required bool next}) async {
     // Explicit skip is an unambiguous user intent to move forward/back, even
@@ -337,7 +371,6 @@ class PlaybackCoordinator {
     }
 
     final clips = await _playlists.getClips(playlistId);
-    _knownPlaylistClipCount = clips.length;
     if (clips.length <= 1) {
       // Single-clip playlist: replay from the top instead of stopping —
       // matches user expectation for a "next" tap on a one-track playlist.
@@ -484,7 +517,6 @@ class PlaybackCoordinator {
 
     final playlistId = _snapshot.playlistId!;
     final clips = await _playlists.getClips(playlistId);
-    _knownPlaylistClipCount = clips.length;
     if (clips.isEmpty) {
       await stop();
       await _drainPendingScheduled();
@@ -663,13 +695,33 @@ class PlaybackCoordinator {
       await _interruptForSchedule();
       _activeScheduleId = scheduleId;
       _activeScheduleShuffle = shuffle;
-      final started =
-          await _playPlaylistInternal(playlistId, fromSchedule: true);
-      if (!started) {
+      // Use try/finally so a throw inside `_playPlaylistInternal` always
+      // clears the active-schedule pointer. Previously a thrown error
+      // (rare, but possible from a PlatformException deep in the audio
+      // handler) would leave `_activeScheduleId` set, and the engine
+      // would never re-enter the schedule for a fresh attempt — user
+      // perceived as "schedule disappeared from the next-up list".
+      try {
+        final started =
+            await _playPlaylistInternal(playlistId, fromSchedule: true);
+        if (!started) {
+          _activeScheduleId = null;
+          _activeScheduleShuffle = null;
+        }
+        return started;
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('requestScheduledPlay: internal play threw: $e\n$st');
+        }
         _activeScheduleId = null;
         _activeScheduleShuffle = null;
+        if (!_errorController.isClosed) {
+          _errorController.add(const PlaybackErrorEvent(
+            PlaybackErrorReason.decodeFailed,
+          ));
+        }
+        return false;
       }
-      return started;
     });
   }
 
@@ -749,7 +801,6 @@ class PlaybackCoordinator {
     if (fromSchedule && !await _appState.isActive()) return false;
 
     final clips = await _playlists.getClips(playlistId);
-    _knownPlaylistClipCount = clips.length;
     if (clips.isEmpty) {
       // Empty playlist tap from the UI should never look like a silent no-op.
       // Scheduled fires intentionally do NOT surface this — the schedule engine
@@ -806,8 +857,15 @@ class PlaybackCoordinator {
             : RuntimeCopy.l10n.nowPlaying,
         playlistMode: clips.length > 1,
       );
-    } catch (_) {
-      if (!fromSchedule) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('playPlaylist: playFile failed: $e\n$st');
+      }
+      // ALWAYS surface the decode failure, even for fromSchedule, so the
+      // user gets a snackbar instead of "I set a schedule and nothing
+      // happened at the scheduled time". The schedule engine will roll
+      // back the stamp on its own (it sees the false return).
+      if (!_errorController.isClosed) {
         _errorController.add(PlaybackErrorEvent(
           PlaybackErrorReason.decodeFailed,
           clipTitle: clip.title,
@@ -930,31 +988,28 @@ class PlaybackCoordinator {
     }
   }
 
-  /// True when the user is in any clip-playing context — we always show the
-  /// Next/Previous buttons while a clip is playing so the player has consistent
-  /// controls. With a single-clip context the buttons restart the clip; with
-  /// multiple clips they walk the queue / playlist.
+  /// True when the user is in any clip-playing context.
+  ///
+  /// The buttons are ALWAYS shown while a clip is playing, even on a
+  /// single-clip preview or a one-track playlist. In a single-clip context
+  /// tapping next/previous restarts the clip from `Duration.zero` (handled
+  /// by `_skipPlaylistClip` and the seek+resume path) — that feels like a
+  /// natural "restart" instead of a broken button.
+  ///
+  /// QA history: Round 6 hid these buttons for single-clip queues to fix
+  /// a Samsung lock-screen "pause routed through long-press fast-forward"
+  /// regression. That fix mis-targeted the in-app modal too. The lock
+  /// screen action routing was actually fixed by overriding `seekForward`
+  /// / `seekBackward` / `fastForward` / `rewind` in the audio handler
+  /// (`SeekHandler` mixin) — so the in-app skip buttons can safely show
+  /// for every playback context. The new "I imported one clip and there
+  /// are no NEXT/PREV buttons" QA report confirms users expect to see
+  /// them and tap to restart.
   bool get canSkipClips {
-    // Hide the skip-next / skip-previous buttons entirely when there is
-    // genuinely nothing to skip to — a single-clip preview or a one-track
-    // playlist. Previously the buttons were always shown for any playing
-    // state, and tapping them just restarted the same clip, which the QA
-    // perceived as "forward / backward do nothing".
     final inPlayback = _snapshot.state == AppPlaybackState.manualPlaying ||
         _snapshot.state == AppPlaybackState.scheduledPlaying;
-    if (!inPlayback) return false;
-    if (_snapshot.playlistId == null) {
-      return _libraryQueue.length > 1;
-    }
-    return _knownPlaylistClipCount > 1;
+    return inPlayback;
   }
-
-  /// Last-known clip count for the active playlist, captured each time we
-  /// load the playlist so the mini-bar / modal don't have to do their own
-  /// async lookups. Defaults to 2 so the buttons appear by default for a
-  /// fresh playback before the first refresh — single-clip playlists are
-  /// the edge case, not the norm.
-  int _knownPlaylistClipCount = 2;
 
   bool _isPlayablePath(String path) {
     return ClipPathGuard.isAllowed(path);
@@ -965,33 +1020,67 @@ class PlaybackCoordinator {
     // emit between the user's tap and `_player.pause()` actually landing is
     // treated as "paused at the end" rather than "auto-advance to next clip".
     _userInitiatedPause = true;
-    await _audio.pause();
+    // Optimistic UI flip first so the user sees their pause take effect
+    // immediately even if the native player call is slow / throws.
     _emit(_snapshot.copyWith(isPlaying: false));
+    try {
+      await _audio.pause();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('pause: _audio.pause failed (UI already updated): $e\n$st');
+      }
+    }
   }
 
   Future<void> resume() async {
     _userInitiatedPause = false;
-    // Library clip preview does not require the master toggle.
-    if (_snapshot.playlistId == null) {
-      final path = _audio.currentPath;
-      if (path == null) return;
-      final atEnd = _audio.player.processingState == ProcessingState.completed;
-      if (atEnd) {
-        await _audio.playFile(
-          path,
-          title: _snapshot.clipTitle ?? '',
-          subtitle: RuntimeCopy.l10n.libraryPreview,
-        );
-      } else {
-        await _audio.resume();
-      }
-      _emit(_snapshot.copyWith(isPlaying: true, modalVisible: true));
-      return;
-    }
-
-    if (!await _canPlay()) return;
-    await _audio.resume();
+    // Optimistic UI flip first — the user expects the play icon to flip
+    // to pause the instant they tap. We roll back below if the native
+    // call fails.
+    final previous = _snapshot;
     _emit(_snapshot.copyWith(isPlaying: true, modalVisible: true));
+
+    try {
+      // Library clip preview does not require the master toggle.
+      if (_snapshot.playlistId == null) {
+        final path = _audio.currentPath;
+        if (path == null) {
+          // Nothing to resume — restore the previous snapshot so the
+          // UI doesn't lie about being playing.
+          _emit(previous);
+          return;
+        }
+        final atEnd =
+            _audio.player.processingState == ProcessingState.completed;
+        if (atEnd) {
+          await _audio.playFile(
+            path,
+            title: _snapshot.clipTitle ?? '',
+            subtitle: RuntimeCopy.l10n.libraryPreview,
+          );
+        } else {
+          await _audio.resume();
+        }
+        return;
+      }
+
+      if (!await _canPlay()) {
+        _emit(previous);
+        return;
+      }
+      await _audio.resume();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('resume: failed, rolling back snapshot: $e\n$st');
+      }
+      _emit(previous);
+      if (!_errorController.isClosed) {
+        _errorController.add(PlaybackErrorEvent(
+          PlaybackErrorReason.decodeFailed,
+          clipTitle: previous.clipTitle,
+        ));
+      }
+    }
   }
 
   Future<void> stop() async {
@@ -1008,7 +1097,14 @@ class PlaybackCoordinator {
     // prevents the modal/mini-player from flashing 00:00 frames while the
     // background player tears down, and avoids any silent keep-alive position
     // stream events from rendering after the user hit Stop.
-    final wasActive = await _appState.isActive();
+    bool wasActive = false;
+    try {
+      wasActive = await _appState.isActive();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('stop: isActive lookup failed (assuming inactive): $e\n$st');
+      }
+    }
     _emit(PlaybackSnapshot(
       state:
           wasActive ? AppPlaybackState.activeIdle : AppPlaybackState.inactive,
@@ -1016,15 +1112,41 @@ class PlaybackCoordinator {
       modalVisible: false,
     ));
 
-    await _audio.stop();
-    // If a prayer/adhan happened to be playing, stop it too — the user just
-    // hit the Stop control on the player and expects silence.
-    await AdhanPlayer.instance.stop();
+    // CRITICAL: each external call is independently try/caught so a
+    // failure in one path never aborts the stop sequence. The user
+    // tapped the cross icon on the modal expecting silence + an
+    // immediate UI dismiss; on Samsung One UI / Vivo, a half-bound
+    // audio_service session can throw a PlatformException from
+    // `_audio.stop()` that would otherwise propagate up to the InkWell
+    // tap handler and the user perceived this as "the app crashed on
+    // close". The optimistic snapshot above already hid the UI, so
+    // even if every cleanup call below throws, the user-visible
+    // state is correct.
+    try {
+      await _audio.stop();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('stop: _audio.stop failed: $e\n$st');
+      }
+    }
+    try {
+      await AdhanPlayer.instance.stop();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('stop: AdhanPlayer.stop failed: $e\n$st');
+      }
+    }
 
     if (wasActive) {
       unawaited(refreshModeState());
     }
-    await refreshScheduleNotifications?.call();
+    try {
+      await refreshScheduleNotifications?.call();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('stop: schedule notif refresh failed: $e\n$st');
+      }
+    }
   }
 
   void dismissModal() {
@@ -1128,7 +1250,14 @@ class PlaybackCoordinator {
 
   void _emit(PlaybackSnapshot snapshot) {
     _snapshot = snapshot;
-    _snapshotController.add(snapshot);
+    // Guard against `add` on a closed controller (happens if dispose
+    // races with a deferred system callback). Without this, a single
+    // post-dispose emit throws StateError on the user's tap — which
+    // bubbles out as "app crashed" on the cross icon, even though
+    // every other path is try/caught.
+    if (!_snapshotController.isClosed) {
+      _snapshotController.add(snapshot);
+    }
   }
 
   void dispose() {
