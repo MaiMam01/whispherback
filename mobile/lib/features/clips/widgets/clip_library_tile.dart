@@ -70,20 +70,27 @@ class ClipLibraryTile extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      relativeDate(clip.createdAt, l10n),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: theme.muted,
-                        letterSpacing: 0.2,
+                    Flexible(
+                      child: Text(
+                        relativeDate(clip.createdAt, l10n),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: theme.muted,
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
-                    WhisperBadge(
-                      label: isRecorded ? 'Recorded' : 'Imported',
-                      variant: isRecorded
-                          ? WhisperBadgeVariant.brand
-                          : WhisperBadgeVariant.gold,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: WhisperBadge(
+                        label: isRecorded ? 'Recorded' : 'Imported',
+                        variant: isRecorded
+                            ? WhisperBadgeVariant.brand
+                            : WhisperBadgeVariant.gold,
+                      ),
                     ),
                   ],
                 ),

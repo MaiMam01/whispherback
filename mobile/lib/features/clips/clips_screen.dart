@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -141,9 +143,25 @@ class _ClipsScreenState extends ConsumerState<ClipsScreen> {
                   onFilter: (f) => setState(() => _filter = f),
                   onRecord: () => context.push('/clips/record'),
                   onImport: () => context.push('/clips/import'),
-                  onPlayClip: (clip) => ref
-                      .read(playbackCoordinatorProvider)
-                      .playClip(clip, queue: filtered),
+                  onPlayClip: (clip) {
+                    // Fire-and-forget AND swallow: the coordinator surfaces
+                    // user-facing errors via the `errors` stream (which the
+                    // shell turns into a snackbar), so we don't propagate
+                    // exceptions back to the tap handler — that was the
+                    // "I clicked play and the app crashed" report when an
+                    // unhandled PlatformException from `just_audio` got
+                    // bubbled up to the framework as an uncaught error.
+                    unawaited(
+                      ref
+                          .read(playbackCoordinatorProvider)
+                          .playClip(clip, queue: filtered)
+                          .catchError((Object e, StackTrace st) {
+                        debugPrint(
+                          'playClip onTap surfaced error (handled): $e\n$st',
+                        );
+                      }),
+                    );
+                  },
                   onDeleteClip: _deleteClip,
                 );
               },

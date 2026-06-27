@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -56,8 +58,17 @@ class PlaylistsScreen extends ConsumerWidget {
                 playlists: playlists,
                 onCreate: () => context.push('/playlists/new'),
                 onOpen: (id) => context.push('/playlists/$id'),
-                onPlay: (id) =>
-                    ref.read(playbackCoordinatorProvider).playPlaylist(id),
+                onPlay: (id) {
+                  unawaited(
+                    ref
+                        .read(playbackCoordinatorProvider)
+                        .playPlaylist(id)
+                        .catchError((Object e, StackTrace st) {
+                      debugPrint('playlists playPlaylist handled: $e\n$st');
+                      return false;
+                    }),
+                  );
+                },
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => AsyncErrorView(

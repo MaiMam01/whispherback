@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -355,9 +357,19 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                           theme: theme,
                           shuffleOn: shuffle,
                           canPlay: _clips.isNotEmpty,
-                          onPlayAll: () => ref
-                              .read(playbackCoordinatorProvider)
-                              .playPlaylist(widget.playlistId),
+                          onPlayAll: () {
+                            unawaited(
+                              ref
+                                  .read(playbackCoordinatorProvider)
+                                  .playPlaylist(widget.playlistId)
+                                  .catchError((Object e, StackTrace st) {
+                                debugPrint(
+                                  'playPlaylist handled: $e\n$st',
+                                );
+                                return false;
+                              }),
+                            );
+                          },
                           onShuffle: _toggleShuffle,
                           onSchedule: () => context
                               .push('/schedule/build/${widget.playlistId}'),
@@ -420,9 +432,18 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                                 color: theme.muted,
                                 size: 20,
                               ),
-                              onPlay: () => ref
-                                  .read(playbackCoordinatorProvider)
-                                  .playClip(clip, queue: _clips),
+                              onPlay: () {
+                                unawaited(
+                                  ref
+                                      .read(playbackCoordinatorProvider)
+                                      .playClip(clip, queue: _clips)
+                                      .catchError((Object e, StackTrace st) {
+                                    debugPrint(
+                                      'playlist detail playClip handled: $e\n$st',
+                                    );
+                                  }),
+                                );
+                              },
                               onRemove: () async {
                                 final ok = await showDialog<bool>(
                                   context: context,

@@ -75,30 +75,72 @@ class HomeScreen extends ConsumerWidget {
               final r = context.responsive;
               final viewportHeight = constraints.maxHeight;
 
-              // The header (greeting) is naturally at the top of the page
-              // and small. The TOGGLE (power button) is the centerpiece —
-              // it MUST remain visible no matter what else is on the page.
-              // The secondary widgets (status pill, schedule chip, quick
-              // stats, next-whisper card, mode chip) may overflow the
-              // viewport depending on form factor + active state — they go
-              // inside a scrollable region BELOW the always-visible toggle.
+              // The home page is structured into THREE regions, top to
+              // bottom:
               //
-              // Previous implementations put the entire column (including
-              // the toggle) into a single scroll view. On devices where
-              // active-state widgets pushed total height over the viewport,
-              // the user could scroll the toggle out of view and end up
-              // staring at empty space — the exact QA bug:
-              // "power button scroll up hoky gaib hony lag gya".
+              //   1. HEADER ZONE (fixed)
+              //        - app title + date
+              //        - greeting card ("Good morning")
+              //        - scheduling setup chip (if Active)
+              //      These NEVER scroll away. The QA-reported "GOOD morning
+              //      and the finish setup button is scrollable and they
+              //      become hidden on scroll down" was caused by putting
+              //      these in a scrollable region — they are now pinned.
+              //
+              //   2. TOGGLE ZONE (centered in remaining space)
+              //        - waveform
+              //        - master Active power button
+              //        - pedestal
+              //        - status pill
+              //      Vertically centered in the leftover viewport so the
+              //      power button sits comfortably in the middle of the
+              //      visible area, not "inclined upward".
+              //
+              //   3. STATS ZONE (scrollable, only if overflow)
+              //        - quick stats
+              //        - next-whisper card (if Active)
+              //        - sleep/prayer mode chip
+              //      Sits below the toggle. On normal phones every region
+              //      fits without scrolling; only when the user has many
+              //      mode chips visible does this region scroll — and even
+              //      then, the toggle and header stay anchored.
+              //
+              // This was the "I think the power button should be a little
+              // bit lower" + "GOOD morning ... is scrollable" QA report
+              // from the last round. Both are resolved by pinning header +
+              // greeting, vertically centering the toggle, and making only
+              // the bottom stats region scrollable.
 
-              final toggleSection = Column(
+              final headerZone = Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 8),
                   _HomeHeader(
                     theme: theme,
                     onSleep: () => context.push('/sleep'),
                   ),
-                  SizedBox(height: r.isFlipCover ? 12 : 18),
+                  SizedBox(height: r.isFlipCover ? 10 : 14),
+                  _GreetingCard(
+                    theme: theme,
+                    playlistCount: playlistsAsync.valueOrNull?.length ?? 0,
+                    greetingPeriod: greetingPeriod,
+                  ),
+                  if (isActive) ...[
+                    SizedBox(height: r.isFlipCover ? 8 : 10),
+                    Center(
+                      child: _SchedulingSetupChip(
+                        isActive: isActive,
+                        theme: theme,
+                      ),
+                    ),
+                  ],
+                ],
+              );
+
+              final toggleZone = Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Center(
                     child: DepthScene(
                       child: Column(
@@ -141,29 +183,14 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: r.isFlipCover ? 6 : 8),
+                  SizedBox(height: r.isFlipCover ? 8 : 10),
                   Center(
                     child: _StatusPill(isActive: isActive, theme: theme),
                   ),
                 ],
               );
 
-              final secondaryChildren = <Widget>[
-                _GreetingCard(
-                  theme: theme,
-                  playlistCount: playlistsAsync.valueOrNull?.length ?? 0,
-                  greetingPeriod: greetingPeriod,
-                ),
-                if (isActive) ...[
-                  const SizedBox(height: 10),
-                  Center(
-                    child: _SchedulingSetupChip(
-                      isActive: isActive,
-                      theme: theme,
-                    ),
-                  ),
-                ],
-                SizedBox(height: r.isFlipCover ? 14 : 20),
+              final statsChildren = <Widget>[
                 _QuickStats(
                   theme: theme,
                   playlistCount: playlistsAsync.valueOrNull?.length ?? 0,
@@ -198,15 +225,21 @@ class HomeScreen extends ConsumerWidget {
               ];
 
               // Defensive fallback: on extremely short form factors (flip
-              // covers, split-screen ~250px) the toggle section alone may
-              // exceed the viewport. In that case, layout would crash
-              // with a negative Expanded child. Drop back to a single
-              // scroll view that contains everything — the user can still
-              // scroll to find the toggle, and the layout doesn't blow up.
-              final estimatedToggleHeight = r.isFlipCover ? 360.0 : 440.0;
-              final canPinToggle = viewportHeight >= estimatedToggleHeight;
+              // covers, split-screen ~250px) the toggle alone may exceed
+              // what's left after the header. Drop back to a single scroll
+              // view that contains everything so the layout doesn't crash
+              // with a negative Spacer. The user can still scroll to the
+              // toggle and back; nothing is lost.
+              final estimatedMinToggleHeight = r.isFlipCover ? 280.0 : 360.0;
+              final estimatedHeaderHeight =
+                  isActive ? (r.isFlipCover ? 170.0 : 200.0) : 130.0;
+              final reservedForStats = r.isFlipCover ? 90.0 : 120.0;
+              final canPinLayout = viewportHeight >=
+                  (estimatedHeaderHeight +
+                      estimatedMinToggleHeight +
+                      reservedForStats);
 
-              if (!canPinToggle) {
+              if (!canPinLayout) {
                 return Padding(
                   padding:
                       EdgeInsets.symmetric(horizontal: r.horizontalGutter),
@@ -215,9 +248,11 @@ class HomeScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        toggleSection,
-                        SizedBox(height: r.isFlipCover ? 12 : 16),
-                        ...secondaryChildren,
+                        headerZone,
+                        SizedBox(height: r.isFlipCover ? 14 : 20),
+                        toggleZone,
+                        SizedBox(height: r.isFlipCover ? 14 : 20),
+                        ...statsChildren,
                       ],
                     ),
                   ),
@@ -229,22 +264,35 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    toggleSection,
-                    SizedBox(height: r.isFlipCover ? 12 : 16),
-                    // Everything below the toggle is allowed to scroll
-                    // INDEPENDENTLY. The toggle stays pinned in place; the
-                    // user can browse stats / cards / mode chips without
-                    // ever losing sight of the master Active control.
-                    // `ClampingScrollPhysics` makes the secondary region
-                    // stop at its last meaningful widget (no bounce into
-                    // empty space).
+                    headerZone,
                     Expanded(
-                      child: SingleChildScrollView(
-                        physics: const ClampingScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: secondaryChildren,
-                        ),
+                      child: Column(
+                        children: [
+                          // Centers the toggle vertically in the remaining
+                          // viewport AFTER header + stats are reserved.
+                          // The user no longer perceives the power button
+                          // as "inclined upward" — it sits in the middle
+                          // of the visible content area.
+                          Expanded(child: Center(child: toggleZone)),
+                          // The stats region is bounded to a fraction of
+                          // the viewport so it never starves the toggle
+                          // zone. If stats overflow this bound (multiple
+                          // mode chips, very small phone), they scroll
+                          // inside the cap.
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: viewportHeight * 0.42,
+                            ),
+                            child: SingleChildScrollView(
+                              physics: const ClampingScrollPhysics(),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
+                                children: statsChildren,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

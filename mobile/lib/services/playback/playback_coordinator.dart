@@ -860,7 +860,19 @@ class PlaybackCoordinator {
     }
 
     if (_snapshot.isPlaying) {
-      await _audio.stop();
+      // CRITICAL: never let a pre-flight stop kill the whole play tap. On
+      // some Samsung / Vivo devices a fresh boot can leave the previous
+      // session in a half-bound state, and `_audio.stop()` throws a
+      // PlatformException. The user perceives this as "tapping play
+      // crashed the app". We swallow and proceed — the upcoming
+      // `setAudioSource` will overwrite whatever the player had.
+      try {
+        await _audio.stop();
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('playClip: pre-flight stop failed (continuing): $e\n$st');
+        }
+      }
     }
 
     _libraryQueue =
@@ -886,19 +898,36 @@ class PlaybackCoordinator {
         subtitle: RuntimeCopy.l10n.libraryPreview,
         playlistMode: _libraryQueue.length > 1,
       );
-    } catch (_) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('playClip: playFile failed: $e\n$st');
+      }
       // Roll back the optimistic snapshot and let the shell warn the user
       // instead of failing silently — this was the client-reported "recorded
       // a clip, tried to play, nothing happened" case on Samsung devices
-      // where the audio_service session sometimes never binds.
-      await stop();
-      _errorController.add(PlaybackErrorEvent(
-        PlaybackErrorReason.decodeFailed,
-        clipTitle: clip.title,
-      ));
+      // where the audio_service session sometimes never binds. Use a
+      // guarded stop so a follow-up failure can't propagate up to the UI.
+      try {
+        await stop();
+      } catch (_) {}
+      if (!_errorController.isClosed) {
+        _errorController.add(PlaybackErrorEvent(
+          PlaybackErrorReason.decodeFailed,
+          clipTitle: clip.title,
+        ));
+      }
       return;
     }
-    await refreshScheduleNotifications?.call();
+    // Best-effort: failure to refresh the schedule notifications must not
+    // crash the play tap. The notification will eventually self-correct on
+    // the next engine tick or app resume.
+    try {
+      await refreshScheduleNotifications?.call();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('playClip: schedule notif refresh failed: $e\n$st');
+      }
+    }
   }
 
   /// True when the user is in any clip-playing context — we always show the

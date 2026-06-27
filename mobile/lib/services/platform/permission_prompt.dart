@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -148,6 +149,31 @@ Future<PermissionPromptOutcome> requestAppPermissionKind(
 ) async {
   if (kind == AppPermissionKind.location) {
     return requestLocationPermission();
+  }
+
+  // audioImport: we use Storage Access Framework (`ACTION_OPEN_DOCUMENT` via
+  // file_picker) which does NOT require `READ_MEDIA_AUDIO` or
+  // `READ_EXTERNAL_STORAGE` on any Android version we support — the system
+  // picker grants per-URI access via Intent.FLAG_GRANT_READ_URI_PERMISSION.
+  //
+  // Previously we called `Permission.audio.request()` here. On Android 12
+  // and below, `Permission.audio` (READ_MEDIA_AUDIO) does not exist, so the
+  // plugin returns "denied" immediately and we'd never open the picker —
+  // the QA report "I clicked import / browse and nothing happened" on a
+  // Samsung A-series with Android 12.
+  //
+  // On Android 13+ a "best-effort" attempt is made to request the
+  // permission anyway (some users may also have a media-library-browse
+  // flow in the future), but we ALWAYS proceed to the picker regardless
+  // of the outcome — the SAF flow is independent of that grant.
+  if (kind == AppPermissionKind.audioImport) {
+    if (Platform.isAndroid) {
+      try {
+        // Fire-and-forget: if the OS asks, great — if not, no harm.
+        unawaited(Permission.audio.request());
+      } catch (_) {}
+    }
+    return PermissionPromptOutcome.granted;
   }
 
   final permission = permissionForKind(kind);
