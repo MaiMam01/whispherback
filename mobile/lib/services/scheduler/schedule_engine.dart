@@ -150,7 +150,15 @@ class ScheduleEngine {
   /// every 30s via its own Timer; we mirror that cadence here so
   /// the two surfaces stay aligned.
   DateTime? _lastNotificationSync;
-  static const _notificationSyncCadence = Duration(seconds: 30);
+  // Round 15: dropped from 30s to 5s (matches the engine tick). The
+  // notification line "Next at 1:18" was staying stale for up to 30
+  // seconds after the slot actually fired, which the QA report called
+  // out verbatim ("notification shows 1:18 when current time is
+  // 1:20"). At 5s the user-perceived refresh feels instant, and
+  // `syncSchedules` now early-returns by fingerprint when nothing
+  // changed so the steady-state cost is just a single
+  // `_plugin.show(_ongoingId, …)` text refresh.
+  static const _notificationSyncCadence = Duration(seconds: 5);
 
   Future<void> _runTick() async {
     if (!await _appState.isActive()) {
@@ -216,6 +224,47 @@ class ScheduleEngine {
       // cycle. Compare against the GRID slot stamp, not the completion stamp,
       // so the dedup keeps working after we add `setCompletion`.
       if (_slotTakenByOtherSchedule(all, schedule.id, slot)) continue;
+
+      // Round 15: real-time overlap prevention. If ANOTHER schedule is
+      // currently playing AND its active window
+      // `[startedAt, startedAt + playlistDuration]` overlaps with this
+      // schedule's about-to-fire slot, defer THIS schedule by writing
+      // the slot stamp (so we don't busy-loop trying to fire it) but
+      // NOT the completion stamp (so the engine can re-evaluate on the
+      // next tick once the in-flight clip finishes). The user's QA
+      // example: a 5-minute playlist starting at 9:00 with 10-minute
+      // interval plays at 9:00-9:05, 9:15-9:20, … — any second schedule
+      // whose slot lands inside an active 5-minute window must NOT
+      // start mid-playlist (overlapping audio is unintelligible).
+      final activeScheduleId = _coordinator.activeScheduleId;
+      if (activeScheduleId != null && activeScheduleId != schedule.id) {
+        final activeSchedule = all.firstWhere(
+          (s) => s.id == activeScheduleId,
+          orElse: () => schedule,
+        );
+        if (activeSchedule.id != schedule.id) {
+          final activeStarted = _lastFired.slot(activeScheduleId);
+          if (activeStarted != null) {
+            final activeEnd = activeStarted.add(Duration(
+                milliseconds: activeSchedule.playlistDurationMs > 0
+                    ? activeSchedule.playlistDurationMs
+                    : 60000));
+            // Slot falls inside [activeStarted, activeEnd) → defer.
+            if (!slot.isBefore(activeStarted) && slot.isBefore(activeEnd)) {
+              if (kDebugMode) {
+                debugPrint(
+                    'ScheduleEngine: deferring ${schedule.id} slot $slot '
+                    'because ${activeSchedule.id} is active until '
+                    '$activeEnd');
+              }
+              // Park the slot so we don't busy-poll. The next tick after
+              // `activeEnd` will pick up the NEXT slot of this schedule.
+              await _lastFired.setSlot(schedule.id, slot);
+              continue;
+            }
+          }
+        }
+      }
 
       // Last-chance re-read: between the top of this tick and now (the
       // playlist lookup + slot computations are I/O-bound and can take 10s

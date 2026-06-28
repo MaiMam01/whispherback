@@ -36,16 +36,38 @@ class MiniPlayerBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playback = ref.watch(playbackSnapshotProvider);
     final snapshot = playback.valueOrNull;
-    if (snapshot == null ||
-        snapshot.state == AppPlaybackState.inactive ||
-        snapshot.state == AppPlaybackState.activeIdle ||
-        snapshot.playlistName == null ||
-        snapshot.modalVisible) {
-      return const SizedBox.shrink();
-    }
-
     final coordinator = ref.read(playbackCoordinatorProvider);
     final audio = ref.read(audioPlaybackServiceProvider);
+
+    // Round 15: visibility contract — "IF audio is being played the bar
+    // MUST be visible. There is no edge case where audio is playing
+    // and the bar is hidden." (verbatim from QA)
+    //
+    // Visible IF:
+    //   • the snapshot is in a play context (`manualPlaying` /
+    //     `scheduledPlaying`) and the modal isn't covering it, OR
+    //   • a real CLIP is currently loaded in the handler and the
+    //     player is playing it (defensive: catches any race between
+    //     a state transition and the player's actual state). We use
+    //     `currentPath != null` so the silence keep-alive can never
+    //     mistakenly trigger the bar.
+    if (snapshot == null || snapshot.modalVisible) {
+      return const SizedBox.shrink();
+    }
+    final inPlayContext =
+        snapshot.state == AppPlaybackState.manualPlaying ||
+            snapshot.state == AppPlaybackState.scheduledPlaying;
+    final clipActuallyPlaying =
+        audio.currentPath != null && audio.isPlaying;
+    if (!inPlayContext && !clipActuallyPlaying) {
+      return const SizedBox.shrink();
+    }
+    // Defensive: even if state is a play context, suppress when there
+    // is literally no clip metadata to render. Without this the bar
+    // could render an empty row mid-transition between states.
+    if (snapshot.playlistName == null && snapshot.clipTitle == null) {
+      return const SizedBox.shrink();
+    }
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;

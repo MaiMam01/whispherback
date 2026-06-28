@@ -169,13 +169,20 @@ abstract final class ScheduleFireHelper {
         }
       }
 
+      // Round 15: step between grid slots = playlistDuration + interval.
+      // This is the same effective step used by `intervalAlarmSlots`
+      // so the engine, alarm scheduler, and display all agree on what
+      // the next grid line is.
+      final stepDuration =
+          Duration(minutes: effectiveStepMinutes(schedule));
+
       while (true) {
         if (end != null && slot.isAfter(end)) break;
         if (dayOffset == 0 && slot.isBefore(now)) {
           // Skip past slots: under display mode, always advance; under
           // engine mode, only skip slots beyond the grace window.
           if (forDisplay || now.difference(slot) > maxLateness) {
-            slot = slot.add(Duration(minutes: schedule.intervalMinutes));
+            slot = slot.add(stepDuration);
             continue;
           }
         }
@@ -183,7 +190,7 @@ abstract final class ScheduleFireHelper {
           return slot;
         }
         if (!forDisplay && now.difference(slot) <= maxLateness) return slot;
-        slot = slot.add(Duration(minutes: schedule.intervalMinutes));
+        slot = slot.add(stepDuration);
       }
     }
     return null;
@@ -299,10 +306,20 @@ abstract final class ScheduleFireHelper {
   }
 
   /// All weekly alarm slots (hour/minute) for notification scheduling.
+  ///
+  /// Round 15 contract change: gap between successive fires is
+  /// `playlistDuration + intervalMinutes`, NOT just `intervalMinutes`.
+  /// Example (user-reported): a 5-minute playlist with a 10-minute
+  /// interval starting at 1:00 should fire at 1:00, 1:15, 1:30, …
+  /// because each fire occupies 5 minutes and we want a 10-minute
+  /// silent gap AFTER the playlist finishes. Previously this method
+  /// produced 1:00, 1:10, 1:20 which overlapped the playlist with
+  /// the "silent gap" the user explicitly configured.
   static Iterable<({int weekday, int hour, int minute, String label})>
       intervalAlarmSlots(PlaybackSchedule schedule) sync* {
     if (!schedule.enabled || !schedule.alarmEnabled) return;
 
+    final stepMinutes = effectiveStepMinutes(schedule);
     for (var weekday = 1; weekday <= 7; weekday++) {
       if (!schedule.runsOnWeekday(weekday)) continue;
 
@@ -338,8 +355,20 @@ abstract final class ScheduleFireHelper {
           minute: slot.minute,
           label: schedule.playlistName,
         );
-        slot = slot.add(Duration(minutes: schedule.intervalMinutes));
+        slot = slot.add(Duration(minutes: stepMinutes));
       }
     }
+  }
+
+  /// Effective step between successive fires in minutes
+  /// = `playlistDurationMinutes + intervalMinutes`, rounded UP.
+  /// Falls back to `intervalMinutes` alone when the playlist
+  /// duration is unknown / 0.
+  static int effectiveStepMinutes(PlaybackSchedule schedule) {
+    final durationMinutes = schedule.playlistDurationMs > 0
+        ? ((schedule.playlistDurationMs + 59999) ~/ 60000)
+        : 0;
+    final step = schedule.intervalMinutes + durationMinutes;
+    return step < 1 ? 1 : step;
   }
 }

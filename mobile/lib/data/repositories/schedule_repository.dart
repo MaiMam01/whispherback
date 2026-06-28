@@ -85,6 +85,18 @@ class ScheduleRepository {
   }) async {
     final db = await _db.database;
     final existing = await getAll();
+    // Compute THIS playlist's total duration so the conflict check can
+    // model the new schedule's active windows correctly.
+    final durationRows = await db.rawQuery('''
+      SELECT COALESCE(SUM(c.duration_ms), 0) AS total
+      FROM playlist_clips pc
+      INNER JOIN clips c ON c.id = pc.clip_id
+      WHERE pc.playlist_id = ?
+    ''', [playlistId]);
+    final rawNewDuration = durationRows.first['total'];
+    final newDurationMs = rawNewDuration is int
+        ? rawNewDuration
+        : (rawNewDuration is num ? rawNewDuration.toInt() : 0);
     for (final other in existing) {
       if (other.playlistId == playlistId) continue;
       if (!other.enabled) continue;
@@ -94,12 +106,14 @@ class ScheduleRepository {
         endTime: endTime,
         intervalMinutes: intervalMinutes,
         daysMask: daysMask,
+        playlistDurationMs: newDurationMs,
       )) {
         final suggested = _suggestNonConflictingStart(
           requested: startTime,
           endTime: endTime,
           intervalMinutes: intervalMinutes,
           daysMask: daysMask,
+          playlistDurationMs: newDurationMs,
           existing: existing
               .where((e) => e.playlistId != playlistId && e.enabled)
               .toList(),
@@ -195,33 +209,28 @@ class ScheduleRepository {
     );
   }
 
-  /// Returns true ONLY when two schedules collide on their FIRST slot of an
-  /// overlapping day (i.e. their `startTime` is within 1 minute on a shared
-  /// weekday). Previously this method compared every clock-grid slot of one
-  /// schedule against every slot of the other and flagged any pair within
-  /// 30 seconds as a conflict — so a 100-minute interval schedule generated
-  /// ~15 slots per day and a 5-minute interval schedule generated ~288,
-  /// producing 4320 pairs to test. The chance that ANY pair was within
-  /// 30s was astronomically high even for schedules the user perceived as
-  /// completely non-conflicting (the QA report "100-min interval + ANY
-  /// interval → conflict error").
+  /// Round 15: TRUE active-window overlap check. The previous version
+  /// only looked at start-time equality, which let two playlists with
+  /// the same start day but offset minutes still overlap if one's
+  /// playback duration extended into the other's slot. The new check
+  /// generates up to 96 successive slots (24h worth at 15-minute
+  /// effective steps) of EACH schedule, computes each slot's active
+  /// window `[slot, slot + playlistDurationMs]`, and reports a
+  /// conflict iff ANY pair of windows on a shared weekday overlaps.
   ///
-  /// The runtime engine (see `ScheduleEngine._slotTakenByOtherSchedule`)
-  /// already dedups by exact `lastFired.slot` minute equality, so a real
-  /// runtime collision cannot fire two playlists at the same instant. This
-  /// pre-save check now only catches the OBVIOUS case where two users
-  /// schedule the same start-time on the same days — a true UX-level
-  /// duplication. Everything else is the engine's job at fire time.
-  /// Walks forward 1 minute at a time (up to 4 hours) from [requested]
-  /// looking for the first start time that does NOT conflict with any
-  /// of [existing]. Returns null if every minute in the search window
-  /// conflicts (extremely rare — would require dozens of competing
-  /// schedules).
+  /// User example (verbatim QA): "if a playlist is 5 minute long and
+  /// starts at 9:00 with 10-minute interval, slots are 9:00, 9:15,
+  /// 9:30. Another playlist of 5 minutes must not overlap those
+  /// 5-minute active windows." So `(9:00, 5min)` blocks `[9:00, 9:05]`,
+  /// `(9:03, 5min)` would conflict (window `[9:03, 9:08]` overlaps
+  /// `[9:00, 9:05]`), `(9:06, 5min)` would NOT conflict (window
+  /// `[9:06, 9:11]` falls in the silent gap before the next 9:15 slot).
   DateTime? _suggestNonConflictingStart({
     required DateTime requested,
     required DateTime? endTime,
     required int intervalMinutes,
     required int daysMask,
+    required int playlistDurationMs,
     required List<PlaybackSchedule> existing,
   }) {
     for (var offsetMin = 1; offsetMin <= 240; offsetMin++) {
@@ -232,6 +241,7 @@ class ScheduleRepository {
             endTime: endTime,
             intervalMinutes: intervalMinutes,
             daysMask: daysMask,
+            playlistDurationMs: playlistDurationMs,
           ));
       if (!conflicts) return candidate;
     }
@@ -244,16 +254,86 @@ class ScheduleRepository {
     required DateTime? endTime,
     required int intervalMinutes,
     required int daysMask,
+    required int playlistDurationMs,
   }) {
-    if ((existing.daysMask & daysMask) == 0) return false;
-    final existingStartMin =
-        existing.startTime.hour * 60 + existing.startTime.minute;
-    final newStartMin = startTime.hour * 60 + startTime.minute;
-    final delta = (existingStartMin - newStartMin).abs();
-    // 1-minute tolerance accounts for users who pick 9:00 vs 9:01 (clearly
-    // a "different" schedule from their POV). Wider tolerance would
-    // generate the false-positive QA reports.
-    return delta < 1;
+    final sharedDays = existing.daysMask & daysMask;
+    if (sharedDays == 0) return false;
+
+    final existingStep = existing.intervalMinutes +
+        (existing.playlistDurationMs > 0
+            ? ((existing.playlistDurationMs + 59999) ~/ 60000)
+            : 0);
+    final newStep = intervalMinutes +
+        (playlistDurationMs > 0 ? ((playlistDurationMs + 59999) ~/ 60000) : 0);
+    if (existingStep < 1 || newStep < 1) return false;
+
+    final newDurationMin =
+        playlistDurationMs > 0 ? ((playlistDurationMs + 59999) ~/ 60000) : 1;
+    final existingDurationMin = existing.playlistDurationMs > 0
+        ? ((existing.playlistDurationMs + 59999) ~/ 60000)
+        : 1;
+
+    // For each shared weekday, expand both schedules into minute-of-day
+    // windows. Cap the per-schedule expansion at 200 slots so a 1-minute
+    // step doesn't explode runtime — that's still 200 × 24h coverage
+    // for typical 7-day-mask intervals.
+    const maxSlotsPerSchedule = 200;
+    final existingWindows = <(int, int)>[];
+    final newWindows = <(int, int)>[];
+
+    int dayWindowEnd(PlaybackSchedule s) {
+      if (s.endTime != null) {
+        return s.endTime!.hour * 60 + s.endTime!.minute;
+      }
+      return 24 * 60;
+    }
+
+    int newDayWindowEnd() {
+      if (endTime != null) {
+        return endTime.hour * 60 + endTime.minute;
+      }
+      return 24 * 60;
+    }
+
+    for (var bit = 0; bit < 7; bit++) {
+      if ((sharedDays & (1 << bit)) == 0) continue;
+
+      existingWindows.clear();
+      newWindows.clear();
+
+      // Existing schedule slots for this weekday.
+      final existingDayEnd = dayWindowEnd(existing);
+      var t = existing.startTime.hour * 60 + existing.startTime.minute;
+      var count = 0;
+      while (t < existingDayEnd && count < maxSlotsPerSchedule) {
+        existingWindows.add((t, t + existingDurationMin));
+        t += existingStep;
+        count++;
+      }
+
+      // New schedule slots for this weekday.
+      final newDayEnd = newDayWindowEnd();
+      var n = startTime.hour * 60 + startTime.minute;
+      count = 0;
+      while (n < newDayEnd && count < maxSlotsPerSchedule) {
+        newWindows.add((n, n + newDurationMin));
+        n += newStep;
+        count++;
+      }
+
+      // O(N*M) overlap check. Both sides are <= 200 → up to 40k pair
+      // tests. In practice both are <= 50 because typical playlist
+      // gaps are minutes not seconds, so this completes in micro-
+      // seconds. We short-circuit on the first overlap found.
+      for (final a in existingWindows) {
+        for (final b in newWindows) {
+          // Half-open intervals: [a.start, a.end) ∩ [b.start, b.end)
+          // overlap iff a.start < b.end AND b.start < a.end.
+          if (a.$1 < b.$2 && b.$1 < a.$2) return true;
+        }
+      }
+    }
+    return false;
   }
 
   PlaybackSchedule _fromRow(Map<String, Object?> row) {

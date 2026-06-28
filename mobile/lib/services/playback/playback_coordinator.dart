@@ -1078,21 +1078,68 @@ class PlaybackCoordinator {
     return ClipPathGuard.isAllowed(path);
   }
 
-  Future<void> pause() async {
-    // Mark BEFORE the await so any completion event that the player races to
-    // emit between the user's tap and `_player.pause()` actually landing is
-    // treated as "paused at the end" rather than "auto-advance to next clip".
-    _userInitiatedPause = true;
-    // Optimistic UI flip first so the user sees their pause take effect
-    // immediately even if the native player call is slow / throws.
-    _emit(_snapshot.copyWith(isPlaying: false));
-    try {
-      await _audio.pause();
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('pause: _audio.pause failed (UI already updated): $e\n$st');
+  /// Round 15: serialize pause/resume so rapid taps NEVER race the native
+  /// player. Without this gate, tapping pause→resume→pause→resume within
+  /// a few hundred milliseconds queues up overlapping `_player.pause()`
+  /// / `_player.play()` / `AudioSession.setActive()` calls. Each
+  /// individual call is safe, but the just_audio + audio_session
+  /// combination on Samsung One UI / Vivo Funtouch can throw
+  /// `PlatformException("(-38) MediaPlayerNative")` when 3+ state
+  /// changes are in flight at once — that PlatformException then
+  /// surfaces through the `playbackEventStream` listener and crashes
+  /// the audio_service onError plumbing on certain firmware revisions.
+  /// Serialization ensures we only ever have ONE state-change in
+  /// flight at a time.
+  Future<void> _pauseResume = Future<void>.value();
+
+  Future<T> _serializePauseResume<T>(Future<T> Function() body) {
+    final previous = _pauseResume;
+    final completer = Completer<T>();
+    _pauseResume = previous
+        .then((_) => null, onError: (Object _, StackTrace __) => null)
+        .then((_) async {
+      try {
+        // Hard cap so a hung native call cannot starve future taps.
+        final result =
+            await body().timeout(const Duration(seconds: 4), onTimeout: () {
+          throw TimeoutException(
+            'pause/resume: native call exceeded 4s — releasing gate '
+            'so the next tap can proceed.',
+            const Duration(seconds: 4),
+          );
+        });
+        if (!completer.isCompleted) completer.complete(result);
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint(
+              'PlaybackCoordinator._serializePauseResume body failed: $e\n$st');
+        }
+        if (!completer.isCompleted) completer.completeError(e, st);
       }
-    }
+    });
+    return completer.future;
+  }
+
+  Future<void> pause() {
+    return _serializePauseResume(() async {
+      // Mark BEFORE the await so any completion event that the player
+      // races to emit between the user's tap and `_player.pause()`
+      // actually landing is treated as "paused at the end" rather
+      // than "auto-advance to next clip".
+      _userInitiatedPause = true;
+      // Optimistic UI flip first so the user sees their pause take
+      // effect immediately even if the native player call is slow /
+      // throws.
+      _emit(_snapshot.copyWith(isPlaying: false));
+      try {
+        await _audio.pause();
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint(
+              'pause: _audio.pause failed (UI already updated): $e\n$st');
+        }
+      }
+    });
   }
 
   /// Pauses the current clip AND hides the mini-player + modal — but does
@@ -1173,6 +1220,22 @@ class PlaybackCoordinator {
       }
     }
 
+    // Round 15: also clear the lock-screen / pull-down media card so the
+    // user's "cross icon" tap removes both the in-app bar AND the
+    // system notification card. Previously the card lingered, which the
+    // user perceived as "I dismissed but it didn't really close".
+    // hideClipMediaNotification is a no-op if no clip is loaded and
+    // never tears down the audio_service binding (the FG service stays
+    // alive on the silence keep-alive).
+    try {
+      await _audio.hideClipMediaNotification();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint(
+            'dismissPlayer: hideClipMediaNotification failed: $e\n$st');
+      }
+    }
+
     // Best-effort: refresh the persistent notification so it shows the
     // post-dismiss "no clip playing" state.
     try {
@@ -1184,63 +1247,66 @@ class PlaybackCoordinator {
     }
   }
 
-  Future<void> resume() async {
-    _userInitiatedPause = false;
-    // Optimistic UI flip first — the user expects the play icon to flip
-    // to pause the instant they tap. We roll back below if the native
-    // call fails. CRITICAL: do NOT force `modalVisible: true`. The QA
-    // report "I tap pause, the detail popup opens, I tap resume and
-    // everything disappears" was exactly this bug — `resume` was
-    // forcing the modal open, the modal's own dismiss action then
-    // ran `dismissModal()` which set `modalVisible: false`, and the
-    // mini-player check `snapshot.modalVisible` was satisfied by
-    // the brief `true` window so it never re-attached. Preserve the
-    // user's current modal visibility instead — they keep the mini
-    // player if they were on it, or the modal if they were in it.
-    final previous = _snapshot;
-    _emit(_snapshot.copyWith(isPlaying: true));
+  Future<void> resume() {
+    return _serializePauseResume(() async {
+      _userInitiatedPause = false;
+      // Optimistic UI flip first — the user expects the play icon to
+      // flip to pause the instant they tap. We roll back below if the
+      // native call fails. CRITICAL: do NOT force `modalVisible: true`.
+      // The QA report "I tap pause, the detail popup opens, I tap
+      // resume and everything disappears" was exactly this bug —
+      // `resume` was forcing the modal open, the modal's own dismiss
+      // action then ran `dismissModal()` which set `modalVisible:
+      // false`, and the mini-player check `snapshot.modalVisible` was
+      // satisfied by the brief `true` window so it never re-attached.
+      // Preserve the user's current modal visibility instead — they
+      // keep the mini-player if they were on it, or the modal if they
+      // were in it.
+      final previous = _snapshot;
+      _emit(_snapshot.copyWith(isPlaying: true));
 
-    try {
-      // Library clip preview does not require the master toggle.
-      if (_snapshot.playlistId == null) {
-        final path = _audio.currentPath;
-        if (path == null) {
-          // Nothing to resume — restore the previous snapshot so the
-          // UI doesn't lie about being playing.
+      try {
+        // Library clip preview does not require the master toggle.
+        if (_snapshot.playlistId == null) {
+          final path = _audio.currentPath;
+          if (path == null) {
+            // Nothing to resume — restore the previous snapshot so the
+            // UI doesn't lie about being playing.
+            _emit(previous);
+            return;
+          }
+          final atEnd =
+              _audio.player.processingState == ProcessingState.completed;
+          if (atEnd) {
+            await _audio.playFile(
+              path,
+              title: _snapshot.clipTitle ?? '',
+              subtitle: RuntimeCopy.l10n.libraryPreview,
+            );
+          } else {
+            await _audio.resume();
+          }
+          return;
+        }
+
+        if (!await _canPlay()) {
           _emit(previous);
           return;
         }
-        final atEnd =
-            _audio.player.processingState == ProcessingState.completed;
-        if (atEnd) {
-          await _audio.playFile(
-            path,
-            title: _snapshot.clipTitle ?? '',
-            subtitle: RuntimeCopy.l10n.libraryPreview,
-          );
-        } else {
-          await _audio.resume();
+        await _audio.resume();
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('resume: failed, rolling back snapshot: $e\n$st');
         }
-        return;
-      }
-
-      if (!await _canPlay()) {
         _emit(previous);
-        return;
+        if (!_errorController.isClosed) {
+          _errorController.add(PlaybackErrorEvent(
+            PlaybackErrorReason.decodeFailed,
+            clipTitle: previous.clipTitle,
+          ));
+        }
       }
-      await _audio.resume();
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('resume: failed, rolling back snapshot: $e\n$st');
-      }
-      _emit(previous);
-      if (!_errorController.isClosed) {
-        _errorController.add(PlaybackErrorEvent(
-          PlaybackErrorReason.decodeFailed,
-          clipTitle: previous.clipTitle,
-        ));
-      }
-    }
+    });
   }
 
   Future<void> stop() async {

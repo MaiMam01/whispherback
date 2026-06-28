@@ -189,6 +189,14 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> enterForeground() async {
     _keepAlive = true;
     if (_playingClip) return;
+    // Round 15: idempotent — skip the silence-loop rebuild when the
+    // loop is ALREADY running. Without this guard, the engine's 5-
+    // second heartbeat (Round 14) would re-run `setAudioSource(silence)`
+    // every tick, which on Samsung One UI 6 throws transient
+    // PlatformExceptions ("MediaSource currently in use") and on
+    // Vivo Funtouch occasionally crashes the audio_service binding
+    // outright. Only re-bind when we know the loop is dead.
+    if (_keepAliveRunning && _player.playing) return;
     await _startIdleKeepAlive();
   }
 
@@ -628,12 +636,35 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> play() async {
     if (!_playingClip) return;
 
-    await _ensureAudioSession();
-    final session = await AudioSession.instance;
-    await session.setActive(true);
+    // Round 15: each of these calls is independently try/caught so a
+    // single failure (e.g. audio focus revoked because we're rapidly
+    // toggling) cannot block the player.play() below or surface as
+    // an uncaught exception that crashes the activity. See the
+    // matching comment in `pause()` for the full failure mode.
+    try {
+      await _ensureAudioSession();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('handler.play: _ensureAudioSession failed: $e\n$st');
+      }
+    }
+    try {
+      final session = await AudioSession.instance;
+      await session.setActive(true);
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('handler.play: setActive failed: $e\n$st');
+      }
+    }
 
     if (_player.processingState == ProcessingState.completed) {
-      await _player.seek(Duration.zero);
+      try {
+        await _player.seek(Duration.zero);
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('handler.play: seek-to-zero failed: $e\n$st');
+        }
+      }
     }
 
     _publishClipControls(
@@ -643,13 +674,56 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
 
     try {
       await _player.play();
-      onPlayRequested?.call();
-    } catch (_) {
+      try {
+        onPlayRequested?.call();
+      } catch (_) {}
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('handler.play: _player.play failed (handled): $e\n$st');
+      }
       _publishClipControls(
         playing: false,
         processing: _player.processingState,
       );
-      rethrow;
+      // Round 15: do NOT rethrow. The coordinator's `resume()` already
+      // optimistically flipped the UI to "playing"; if we throw here
+      // the `_safeCall` wrapper swallows the error but the UI is now
+      // stuck on "playing" while the player is actually paused. By
+      // returning normally, the next `playerStateStream` event drives
+      // the UI back to its true state.
+    }
+  }
+
+  /// Round 15: hides the lock-screen media notification while keeping
+  /// the audio_service session alive so the next `playFile` can re-
+  /// attach without paying the FG-service rebind cost. Used by
+  /// `dismissPlayer`.
+  ///
+  /// CRITICAL: we also reset `_playingClip = false` so the next call
+  /// to `NotificationService.showActiveOngoing` actually shows the
+  /// WhisperBack-active card (it early-returns when `_playingClip`
+  /// is true). Without that reset, the user would see NEITHER the
+  /// media card (we just hid it) NOR the WhisperBack-active card
+  /// (the showActiveOngoing call short-circuits) — the QA report
+  /// "after cross icon, no notification is shown at all" is exactly
+  /// that gap.
+  Future<void> hideClipMediaNotification() async {
+    if (!_playingClip) return;
+    _playingClip = false;
+    try {
+      mediaItem.add(null);
+      queue.add([]);
+      playbackState.add(
+        playbackState.value.copyWith(
+          controls: const [],
+          processingState: AudioProcessingState.idle,
+          playing: false,
+        ),
+      );
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('hideClipMediaNotification failed (handled): $e\n$st');
+      }
     }
   }
 
@@ -662,8 +736,29 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
       processing: _player.processingState,
     );
 
-    await _player.pause();
-    onPauseRequested?.call();
+    // Round 15 hardening: any failure from `_player.pause()` MUST be
+    // swallowed locally. On Samsung One UI + just_audio, calling
+    // `pause()` while a previous `play()` is still being awaited by
+    // ExoPlayer's native thread throws a PlatformException("(-38)
+    // MediaPlayerNative") that — if rethrown — surfaces through
+    // audio_service's PlaybackEvent listener as an uncaught
+    // PlatformChannel error and crashes the host activity. The user's
+    // QA report "rapid pause/play crashes the app" is reliably
+    // reproducible on Galaxy A series with this exact failure mode.
+    // The optimistic UI flip above has already informed the coordinator;
+    // the player will settle into its real state on the next
+    // playerStateStream event regardless of whether THIS pause call
+    // succeeded.
+    try {
+      await _player.pause();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('handler.pause: _player.pause failed (handled): $e\n$st');
+      }
+    }
+    try {
+      onPauseRequested?.call();
+    } catch (_) {}
   }
 
   @override

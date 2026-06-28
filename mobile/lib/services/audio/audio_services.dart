@@ -302,6 +302,15 @@ class AudioPlaybackService {
   Future<void> pause() => _handler.pause();
   Future<void> resume() => _handler.play();
 
+  /// Hides the lock-screen media card without tearing down the audio
+  /// session. Used by `dismissPlayer` so the user's "cross icon" tap
+  /// removes the visible system notification too — without that,
+  /// pausing leaves the media card hovering on the lock-screen
+  /// indefinitely which the user perceives as "the player didn't
+  /// really close".
+  Future<void> hideClipMediaNotification() =>
+      _handler.hideClipMediaNotification();
+
   /// Seeks the currently playing clip to [position]. Safe no-op when nothing is
   /// playing (e.g. silent keep-alive) — we only forward the request while a
   /// real clip is active so we never scrub the loop.

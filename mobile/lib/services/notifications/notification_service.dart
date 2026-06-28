@@ -295,11 +295,46 @@ class NotificationService {
   /// throttled by Doze. 12 next-up alarms per schedule (typically a
   /// few hours of coverage at 3-minute intervals) is more than enough
   /// for that role.
+  /// Last-applied schedule fingerprint. We rebuild the AlarmManager
+  /// entries only when the schedule SET (id + start + end + interval +
+  /// daysMask + enabled + alarmEnabled) actually changes. Without this
+  /// the engine's 10-second tick re-registers up to 60 alarms × 50 ms
+  /// each = ~3 seconds of binder calls every tick, which on Samsung
+  /// One UI 6 occasionally trips the OS's ANR watcher and starves the
+  /// notification panel of refresh cycles (the QA report "notification
+  /// disappears intermittently"). Caching by fingerprint keeps the
+  /// alarms-up-to-date semantics while collapsing redundant work to
+  /// near-zero on idle ticks.
+  String? _lastSyncedFingerprint;
+  bool _lastSyncedActive = false;
+
+  static String _fingerprintFor(List<PlaybackSchedule> schedules) {
+    final parts = <String>[];
+    for (final s in schedules) {
+      if (!s.enabled || !s.alarmEnabled) continue;
+      parts.add(
+        '${s.id}|${s.startTime.toIso8601String()}|'
+        '${s.endTime?.toIso8601String() ?? ""}|'
+        '${s.intervalMinutes}|${s.daysMask}|'
+        '${s.playlistDurationMs}',
+      );
+    }
+    parts.sort();
+    return parts.join(';');
+  }
+
   Future<void> syncSchedules(
     List<PlaybackSchedule> schedules, {
     required bool active,
   }) async {
     await init();
+    final fingerprint = _fingerprintFor(schedules);
+    if (_lastSyncedFingerprint == fingerprint &&
+        _lastSyncedActive == active) {
+      return;
+    }
+    _lastSyncedFingerprint = fingerprint;
+    _lastSyncedActive = active;
     await _cancelAllScheduleAlarms();
     if (!active) return;
 
