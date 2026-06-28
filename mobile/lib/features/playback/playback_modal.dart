@@ -343,9 +343,13 @@ class PlaybackModal extends ConsumerWidget {
                                       _CtrlButton(
                                         semanticLabel: l10n.stopPlayback,
                                         icon: AppIcons.close,
+                                        // Same OEM activity-kill defence
+                                        // as the mini-player cross — see
+                                        // `PlaybackCoordinator.dismissPlayer`
+                                        // for the full rationale.
                                         onPressed: () => _safeCall(
-                                          coordinator.stop,
-                                          'stop',
+                                          coordinator.dismissPlayer,
+                                          'dismiss',
                                         ),
                                       ),
                                     ],

@@ -213,7 +213,10 @@ class NotificationService {
         ongoing: true,
         autoCancel: false,
         showWhen: false,
-        onlyAlertOnce: false,
+        // True so periodic re-posts (every 30s from the engine tick and
+        // every app resume) never produce a sound or peek/heads-up alert
+        // even on OEMs that ignore the channel's `playSound: false`.
+        onlyAlertOnce: true,
         // Explicit silhouette icon — same one the channel default falls
         // back to, but pinning it here too defends against OEMs that
         // ignore the channel-level icon in favour of the per-notification

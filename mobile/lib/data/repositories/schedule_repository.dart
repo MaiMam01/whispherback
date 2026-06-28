@@ -5,8 +5,18 @@ import '../../domain/entities/playback_schedule.dart';
 import '../database/database_helper.dart';
 
 class ScheduleConflictException implements Exception {
-  ScheduleConflictException(this.existingPlaylistName);
+  ScheduleConflictException(
+    this.existingPlaylistName, {
+    this.suggestedStartTime,
+  });
   final String existingPlaylistName;
+
+  /// A nearby start time that does NOT conflict with the existing
+  /// schedule (e.g. 2 minutes later than the user's pick). The UI can
+  /// surface this in the conflict dialog as a one-tap "Use ${time}
+  /// instead" action so the user is never stuck — every conflict has
+  /// an obvious next step.
+  final DateTime? suggestedStartTime;
 }
 
 class ScheduleRepository {
@@ -66,7 +76,19 @@ class ScheduleRepository {
         intervalMinutes: intervalMinutes,
         daysMask: daysMask,
       )) {
-        throw ScheduleConflictException(other.playlistName);
+        final suggested = _suggestNonConflictingStart(
+          requested: startTime,
+          endTime: endTime,
+          intervalMinutes: intervalMinutes,
+          daysMask: daysMask,
+          existing: existing
+              .where((e) => e.playlistId != playlistId && e.enabled)
+              .toList(),
+        );
+        throw ScheduleConflictException(
+          other.playlistName,
+          suggestedStartTime: suggested,
+        );
       }
     }
 
@@ -147,6 +169,49 @@ class ScheduleRepository {
     );
   }
 
+  /// Returns true ONLY when two schedules collide on their FIRST slot of an
+  /// overlapping day (i.e. their `startTime` is within 1 minute on a shared
+  /// weekday). Previously this method compared every clock-grid slot of one
+  /// schedule against every slot of the other and flagged any pair within
+  /// 30 seconds as a conflict — so a 100-minute interval schedule generated
+  /// ~15 slots per day and a 5-minute interval schedule generated ~288,
+  /// producing 4320 pairs to test. The chance that ANY pair was within
+  /// 30s was astronomically high even for schedules the user perceived as
+  /// completely non-conflicting (the QA report "100-min interval + ANY
+  /// interval → conflict error").
+  ///
+  /// The runtime engine (see `ScheduleEngine._slotTakenByOtherSchedule`)
+  /// already dedups by exact `lastFired.slot` minute equality, so a real
+  /// runtime collision cannot fire two playlists at the same instant. This
+  /// pre-save check now only catches the OBVIOUS case where two users
+  /// schedule the same start-time on the same days — a true UX-level
+  /// duplication. Everything else is the engine's job at fire time.
+  /// Walks forward 1 minute at a time (up to 4 hours) from [requested]
+  /// looking for the first start time that does NOT conflict with any
+  /// of [existing]. Returns null if every minute in the search window
+  /// conflicts (extremely rare — would require dozens of competing
+  /// schedules).
+  DateTime? _suggestNonConflictingStart({
+    required DateTime requested,
+    required DateTime? endTime,
+    required int intervalMinutes,
+    required int daysMask,
+    required List<PlaybackSchedule> existing,
+  }) {
+    for (var offsetMin = 1; offsetMin <= 240; offsetMin++) {
+      final candidate = requested.add(Duration(minutes: offsetMin));
+      final conflicts = existing.any((other) => _wouldConflict(
+            other,
+            startTime: candidate,
+            endTime: endTime,
+            intervalMinutes: intervalMinutes,
+            daysMask: daysMask,
+          ));
+      if (!conflicts) return candidate;
+    }
+    return null;
+  }
+
   bool _wouldConflict(
     PlaybackSchedule existing, {
     required DateTime startTime,
@@ -155,44 +220,14 @@ class ScheduleRepository {
     required int daysMask,
   }) {
     if ((existing.daysMask & daysMask) == 0) return false;
-
-    final existingSlots = _slotSeconds(
-      existing.startTime,
-      existing.endTime,
-      existing.intervalMinutes,
-    );
-    final newSlots = _slotSeconds(startTime, endTime, intervalMinutes);
-
-    for (final a in existingSlots) {
-      for (final b in newSlots) {
-        if ((a - b).abs() < 30) return true;
-      }
-    }
-    return false;
-  }
-
-  /// Seconds since midnight for each grid slot (30s conflict tolerance).
-  List<int> _slotSeconds(
-    DateTime start,
-    DateTime? end,
-    int intervalMinutes,
-  ) {
-    final startSeconds = start.hour * 3600 + start.minute * 60 + start.second;
-    final endMinutes = end != null ? end.hour * 60 + end.minute : null;
-    final startMinutes = start.hour * 60 + start.minute;
-    final overnight = endMinutes != null && endMinutes <= startMinutes;
-    final windowEndSeconds = endMinutes == null
-        ? startSeconds + (24 * 3600)
-        : (overnight ? endMinutes * 60 + 24 * 3600 : endMinutes * 60);
-
-    final slots = <int>[];
-    var cursor = startSeconds;
-    while (cursor <= windowEndSeconds) {
-      slots.add(cursor % (24 * 3600));
-      cursor += intervalMinutes * 60;
-      if (slots.length > 500) break;
-    }
-    return slots;
+    final existingStartMin =
+        existing.startTime.hour * 60 + existing.startTime.minute;
+    final newStartMin = startTime.hour * 60 + startTime.minute;
+    final delta = (existingStartMin - newStartMin).abs();
+    // 1-minute tolerance accounts for users who pick 9:00 vs 9:01 (clearly
+    // a "different" schedule from their POV). Wider tolerance would
+    // generate the false-positive QA reports.
+    return delta < 1;
   }
 
   PlaybackSchedule _fromRow(Map<String, Object?> row) {

@@ -166,7 +166,14 @@ class MiniPlayerBar extends ConsumerWidget {
                   color: isDark
                       ? AppColors.muted
                       : AppColors.ink.withValues(alpha: 0.55),
-                  onPressed: () => _safeCall(coordinator.stop, 'stop'),
+                  // CRITICAL: cross icon pauses + hides — does NOT call
+                  // `stop()`. `stop()` tears down the audio_service FG
+                  // service which on Samsung / Vivo / Xiaomi also kills
+                  // the host Activity. QA report "tapping cross closes
+                  // the app" was that OEM activity-kill. dismissPlayer
+                  // keeps audio_service bound.
+                  onPressed: () =>
+                      _safeCall(coordinator.dismissPlayer, 'dismiss'),
                 ),
               ],
             ),

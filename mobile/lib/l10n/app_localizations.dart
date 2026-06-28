@@ -994,6 +994,24 @@ class AppLocalizations {
         'Trùng với "$name". Hãy chỉnh giờ bắt đầu hoặc khoảng cách.',
       );
 
+  String get scheduleSuggestedStart => _s(
+        'Suggested start:',
+        'تجویز کردہ شروع:',
+        'البدء المقترح:',
+        'Voorgestelde starttijd:',
+        'Heure de début suggérée :',
+        'Thời điểm bắt đầu gợi ý:',
+      );
+
+  String get scheduleUseSuggestion => _s(
+        'Use suggestion',
+        'تجویز استعمال کریں',
+        'استخدام الاقتراح',
+        'Suggestie gebruiken',
+        'Utiliser la suggestion',
+        'Dùng gợi ý',
+      );
+
   // ── Playback ────────────────────────────────────────────────────────────────
   String get nowPlaying => _s('Now playing', 'اب چل رہا', 'يعمل الآن',
       'Nu aan het spelen', 'En lecture', 'Đang phát');

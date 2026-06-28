@@ -58,6 +58,11 @@ class ScheduledOverviewScreen extends ConsumerWidget {
                 schedules: schedules,
                 theme: theme,
                 timeFmt: timeFmt,
+                onResync: () => syncWhisperNotifications(
+                  appState: ref.read(appStateRepositoryProvider),
+                  schedules: ref.read(scheduleRepositoryProvider),
+                  prayer: ref.read(prayerRepositoryProvider),
+                ),
                 // True when the user has at least one ENABLED schedule but
                 // the master Active toggle is off — surfaces the banner that
                 // explains why nothing is firing (the #1 production support
@@ -162,6 +167,7 @@ class _ScheduleBody extends StatefulWidget {
     required this.onToggle,
     required this.showActiveOffWarning,
     required this.onActivate,
+    required this.onResync,
   });
 
   final List<PlaybackSchedule> schedules;
@@ -172,6 +178,10 @@ class _ScheduleBody extends StatefulWidget {
   final void Function(PlaybackSchedule schedule, bool enabled) onToggle;
   final bool showActiveOffWarning;
   final Future<void> Function() onActivate;
+  // Re-syncs the persistent notification so the headline "next at"
+  // matches the page's countdown. Called on initial frame so the
+  // user never sees a stale time when they open this page.
+  final Future<void> Function() onResync;
 
   @override
   State<_ScheduleBody> createState() => _ScheduleBodyState();
@@ -185,6 +195,18 @@ class _ScheduleBodyState extends State<_ScheduleBody> {
     super.initState();
     _countdownTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
+    });
+    // Force an immediate notification re-sync when this page is first
+    // opened so the headline "next at" stamp on the persistent
+    // notification matches whatever the page now displays. Without
+    // this, the user routinely sees a 30-60s drift between the two
+    // surfaces (notification was last synced when the engine ticked
+    // ~5 minutes ago; the page is computing live).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        unawaited(widget.onResync());
+      } catch (_) {}
     });
   }
 

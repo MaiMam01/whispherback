@@ -142,13 +142,36 @@ class ScheduleEngine {
     _stuckSince = null;
   }
 
+  /// Tracks the last time we proactively re-synced the persistent
+  /// notification. Without a regular re-sync, the displayed "next at"
+  /// time becomes stale between fires (which can be 10s of minutes
+  /// apart), so the user sees a different value in the notification
+  /// than on the schedule page. The page re-renders its countdown
+  /// every 30s via its own Timer; we mirror that cadence here so
+  /// the two surfaces stay aligned.
+  DateTime? _lastNotificationSync;
+  static const _notificationSyncCadence = Duration(seconds: 30);
+
   Future<void> _runTick() async {
-    if (!await _appState.isActive()) return;
+    if (!await _appState.isActive()) {
+      // Even when not Active, periodically poke the notification sync
+      // so a recent toggle-OFF cancels the ongoing card promptly.
+      await _maybeSyncNotifications(force: false);
+      return;
+    }
 
     if (_coordinator.snapshot.state == AppPlaybackState.scheduledPlaying &&
         _coordinator.snapshot.isPlaying) {
+      // Mid-playback the lock-screen media notification is authoritative;
+      // we don't need to refresh the ongoing card. But still keep the
+      // sync cadence moving so it re-syncs immediately after the clip
+      // ends.
       return;
     }
+
+    // Even on ticks where no slot fires, keep the notification countdown
+    // fresh so the schedule page and the notification stay in sync.
+    await _maybeSyncNotifications(force: false);
 
     final all = await _schedules.getAll();
     final now = DateTime.now();
@@ -198,6 +221,24 @@ class ScheduleEngine {
       // completion stamp overwrites this when playback finishes naturally.
       await _lastFired.setCompletion(schedule.id, slot);
 
+      // Defensive: ensure the foreground service is up-and-bound before
+      // we ask audio_service to switch from silence-keep-alive to clip
+      // playback. The QA report "schedule says NOW but no audio plays"
+      // can happen if the OS reclaimed the FG service while the engine
+      // was waiting for its next tick — the playFile call then silently
+      // no-ops because the underlying media session is detached. We
+      // re-enter the foreground binding (idempotent — `enterForeground`
+      // is a no-op if already bound) so the schedule fire below always
+      // talks to a live service.
+      try {
+        await _coordinator.ensureForegroundForSchedule();
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('ScheduleEngine: ensureForegroundForSchedule failed: '
+              '$e\n$st');
+        }
+      }
+
       // `requestScheduledPlay` can throw on DB lock / coordinator timeout /
       // any other unexpected failure. The stamps above were written
       // optimistically, so we MUST roll them back on EITHER `false` OR a
@@ -242,6 +283,28 @@ class ScheduleEngine {
 
       await onNotificationsSync?.call();
       break;
+    }
+  }
+
+  /// Calls `onNotificationsSync` if it has been longer than
+  /// [_notificationSyncCadence] since the last call (or always when
+  /// `force: true`). Each call is independently try/caught so a
+  /// notification-channel failure cannot break the tick loop.
+  Future<void> _maybeSyncNotifications({required bool force}) async {
+    final last = _lastNotificationSync;
+    final now = DateTime.now();
+    if (!force &&
+        last != null &&
+        now.difference(last) < _notificationSyncCadence) {
+      return;
+    }
+    _lastNotificationSync = now;
+    try {
+      await onNotificationsSync?.call();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('ScheduleEngine: periodic notification sync failed: $e\n$st');
+      }
     }
   }
 

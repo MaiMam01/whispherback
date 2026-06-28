@@ -669,6 +669,23 @@ class PlaybackCoordinator {
   ///
   /// [shuffle] is the schedule's own shuffle setting; when provided it
   /// overrides the playlist's shuffle flag for this run only.
+  /// Re-enters the audio_service foreground binding so a subsequent
+  /// `requestScheduledPlay` is guaranteed to talk to a live media session.
+  /// Idempotent — `_audio.enterForeground` is a no-op when the binding
+  /// is already up. Used by `ScheduleEngine` immediately before each
+  /// fire so an OS-reclaimed FG service can't silently swallow the play.
+  Future<void> ensureForegroundForSchedule() async {
+    if (!await _appState.isActive()) return;
+    try {
+      await _audio.enterForeground();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('ensureForegroundForSchedule: enterForeground failed: '
+            '$e\n$st');
+      }
+    }
+  }
+
   Future<bool> requestScheduledPlay(
     String playlistId, {
     String? scheduleId,
@@ -1074,6 +1091,76 @@ class PlaybackCoordinator {
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('pause: _audio.pause failed (UI already updated): $e\n$st');
+      }
+    }
+  }
+
+  /// Pauses the current clip AND hides the mini-player + modal — but does
+  /// NOT tear down the audio_service foreground service. This is what the
+  /// cross icon on the mini-player / modal calls. Distinct from [stop],
+  /// which kills the whole playback session and is reserved for the
+  /// "stop everything, return to activeIdle" semantics.
+  ///
+  /// Why this exists: calling `coordinator.stop()` from a cross-icon tap
+  /// goes through `audio_service.stop()` → `super.stop()` → Android FG
+  /// service teardown. On several OEMs (Samsung One UI 6, Vivo Funtouch
+  /// 14, Xiaomi MIUI), that teardown also kills the host Activity if the
+  /// FG-service binding was the only strong reference. The user's exact
+  /// QA report — "tapping the cross icon CRASHES the app instead of
+  /// pausing and hiding the bar" — was this OEM activity-kill. Dismiss
+  /// avoids the entire `super.stop()` path: it just pauses the player
+  /// and transitions the snapshot to `activeIdle` (if Active is on) so
+  /// the mini-player + modal both hide via their existing visibility
+  /// checks. The clip can be restarted with `playClip(...)` or via the
+  /// next schedule fire.
+  Future<void> dismissPlayer() async {
+    _userInitiatedPause = true;
+    _playlistClipIndex = null;
+    _libraryQueue = const [];
+    _libraryIndex = -1;
+    _activeScheduleId = null;
+    _activeScheduleShuffle = null;
+
+    bool wasActive = false;
+    try {
+      wasActive = await _appState.isActive();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('dismissPlayer: isActive lookup failed: $e\n$st');
+      }
+    }
+
+    // Optimistic UI flip: hide both surfaces by transitioning OUT of any
+    // playing state. The mini-player hides when state != manualPlaying
+    // && state != scheduledPlaying; the modal hides on `modalVisible:
+    // false`. Both happen here in a single emission.
+    _emit(PlaybackSnapshot(
+      state:
+          wasActive ? AppPlaybackState.activeIdle : AppPlaybackState.inactive,
+      isPlaying: false,
+      modalVisible: false,
+    ));
+
+    // Stop the clip session via the handler (clears the lock-screen
+    // notification, transitions back to keep-alive silence when Active
+    // is on). This deliberately does NOT call audio_service's top-level
+    // `stop()` — that's the path that tears down the FG service and
+    // kills the activity on OEMs. `_audio.stop()` here resolves to
+    // `_handler.stopClip()` which is hardened to skip `super.stop()`.
+    try {
+      await _audio.stop();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('dismissPlayer: _audio.stop failed: $e\n$st');
+      }
+    }
+    // Best-effort refresh of the active ongoing notification so it
+    // immediately reflects the new "no clip playing" state.
+    try {
+      await refreshScheduleNotifications?.call();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('dismissPlayer: notif refresh failed: $e\n$st');
       }
     }
   }

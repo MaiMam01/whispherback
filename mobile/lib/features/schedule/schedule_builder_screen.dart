@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/layout/shell_messenger.dart';
 import '../../core/theme/app_colors.dart';
@@ -243,19 +244,75 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
       if (!mounted) return;
       setState(() => _saving = false);
       final l10n = context.l10n;
-      await showDialog<void>(
+      final suggestion = e.suggestedStartTime;
+      final useSuggestion = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.scheduleConflict),
-          content: Text(l10n.scheduleConflictMessage(e.existingPlaylistName)),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.ok),
+        builder: (ctx) {
+          final theme = whisperTheme(ctx);
+          final dialogBg = theme.isDark ? AppColors.deep2 : Colors.white;
+          return AlertDialog(
+            backgroundColor: dialogBg,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.glassBorder),
             ),
-          ],
-        ),
+            title: Text(
+              l10n.scheduleConflict,
+              style: TextStyle(color: theme.foreground),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.scheduleConflictMessage(e.existingPlaylistName),
+                  style: TextStyle(color: theme.muted),
+                ),
+                if (suggestion != null) ...[
+                  const SizedBox(height: 12),
+                  // One-tap "Use ${time}" surface so the user is never
+                  // stuck. The repository's suggester walks forward 1
+                  // minute at a time up to 4 hours to find the first
+                  // non-conflicting start time.
+                  Text(
+                    '${l10n.scheduleSuggestedStart} '
+                    '${_formatSuggestion(suggestion)}',
+                    style: TextStyle(
+                      color: theme.foreground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              if (suggestion != null)
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(l10n.scheduleUseSuggestion),
+                ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.ok),
+              ),
+            ],
+          );
+        },
       );
+      if (useSuggestion == true && suggestion != null && mounted) {
+        setState(() {
+          _startTime = TimeOfDay(
+            hour: suggestion.hour,
+            minute: suggestion.minute,
+          );
+        });
+        // Re-attempt the save with the suggestion. The user only had
+        // to tap once to accept the suggestion; we transparently retry
+        // the persistence so there's no "OK then re-tap save" double
+        // tap UX.
+        await _save();
+      }
       return;
     } catch (e) {
       if (!mounted) return;
@@ -698,6 +755,13 @@ class _ScheduleBuilderScreenState extends ConsumerState<ScheduleBuilderScreen> {
         ),
       ),
     );
+  }
+
+  /// Formats a suggested start time for the conflict-dialog "Use ${time}"
+  /// hint. Picks the user's locale-appropriate 12/24-hour rendering.
+  String _formatSuggestion(DateTime when) {
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.jm(locale).format(when);
   }
 }
 
