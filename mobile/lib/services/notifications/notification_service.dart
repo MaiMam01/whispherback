@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -54,7 +55,14 @@ class NotificationService {
       _setLocalFromDeviceOffset();
     }
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // Notification small-icon MUST be a flat white silhouette on a
+    // transparent background; the OS applies the channel `notificationColor`
+    // at paint time. Using `@mipmap/ic_launcher` (the full-colour launcher)
+    // caused Android to silhouette it into a featureless white circle —
+    // the QA report "notification icon is just a white circle, not the
+    // WhisperBack logo". `@drawable/ic_notification` is our hand-crafted
+    // monochrome W silhouette and renders correctly on every OEM.
+    const androidInit = AndroidInitializationSettings('ic_notification');
     const darwinInit = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -123,8 +131,22 @@ class NotificationService {
     await init();
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
-    await android?.requestNotificationsPermission();
-    await android?.requestExactAlarmsPermission();
+    try {
+      await android?.requestNotificationsPermission();
+    } catch (_) {}
+    try {
+      await android?.requestExactAlarmsPermission();
+    } catch (_) {}
+    try {
+      // Android 14+: full-screen intent permission is required for
+      // schedule-alarm notifications to auto-launch the activity from
+      // screen-off. Without this permission, the alarm only posts a
+      // notification and the user has to tap it manually — the QA
+      // report "scheduled audio doesn't play when the screen is off"
+      // is exactly this. We request it eagerly so even cold-installs
+      // get the chance to opt in.
+      await android?.requestFullScreenIntentPermission();
+    } catch (_) {}
 
     final ios = _plugin.resolvePlatformSpecificImplementation<
         IOSFlutterLocalNotificationsPlugin>();
@@ -192,6 +214,12 @@ class NotificationService {
         autoCancel: false,
         showWhen: false,
         onlyAlertOnce: false,
+        // Explicit silhouette icon — same one the channel default falls
+        // back to, but pinning it here too defends against OEMs that
+        // ignore the channel-level icon in favour of the per-notification
+        // override.
+        icon: 'ic_notification',
+        color: const Color(0xFF2E8BFF),
         styleInformation: upcomingSummary != null
             ? BigTextStyleInformation(
                 upcomingSummary,
@@ -293,6 +321,8 @@ class NotificationService {
         priority: Priority.high,
         category: AndroidNotificationCategory.alarm,
         fullScreenIntent: true,
+        icon: 'ic_notification',
+        color: Color(0xFF2E8BFF),
       ),
       iOS: DarwinNotificationDetails(
         interruptionLevel: InterruptionLevel.timeSensitive,

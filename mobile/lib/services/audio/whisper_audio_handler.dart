@@ -281,13 +281,53 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
 
   Future<void> exitForeground() async {
     _keepAlive = false;
+    _keepAliveRunning = false;
     _playingClip = false;
     _standalonePlayback = false;
     _playlistMode = false;
     _clipTitle = null;
-    await _player.stop();
-    queue.add([]);
-    await super.stop();
+    // Each call is independently try/caught so the master Active
+    // toggle's OFF path never throws a PlatformException out to the
+    // UI callback. The user expects "tap toggle off" to ALWAYS
+    // succeed visually — any failure here just leaves residual
+    // session state that the OS reaps.
+    try {
+      await _player.stop();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('exitForeground: _player.stop failed: $e\n$st');
+      }
+    }
+    try {
+      mediaItem.add(null);
+      queue.add([]);
+    } catch (_) {}
+    try {
+      // Publish a fully-idle playback state BEFORE asking the service
+      // to stop. Without this, audio_service sometimes leaves a
+      // "WhisperBack — paused" notification stuck on the lock-screen
+      // for several seconds after the toggle goes off.
+      playbackState.add(
+        playbackState.value.copyWith(
+          controls: const [],
+          processingState: AudioProcessingState.idle,
+          playing: false,
+        ),
+      );
+    } catch (_) {}
+    try {
+      // Call super.stop() ONLY here, on the deliberate user-OFF action.
+      // The standalone-clip stop path skips this to avoid OEM
+      // activity-kill (see `stopClip` / `stop` notes above), but the
+      // user explicitly chose to stop the foreground service here so
+      // we tear it down cleanly. A PlatformException at this point
+      // still cannot crash the app because of the surrounding try.
+      await super.stop();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('exitForeground: super.stop failed: $e\n$st');
+      }
+    }
   }
 
   // ── Clip / playlist playback (Spotify-style media notification) ───────────
@@ -515,12 +555,23 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
 
     if (_standalonePlayback) {
       _standalonePlayback = false;
-      try {
-        await super.stop();
-      } catch (e, st) {
-        if (kDebugMode) {
-          debugPrint('stopClip: super.stop failed: $e\n$st');
-        }
+      // CRITICAL: do NOT call `super.stop()` here. `audio_service`'s
+      // `super.stop()` calls `stopSelf()` on the underlying Android
+      // foreground service. On Samsung One UI 6 / Vivo Funtouch 14
+      // and several Xiaomi MIUI builds that tear-down can also
+      // terminate the host Activity because the FG-service binding
+      // was the only strong reference keeping it alive. The user's
+      // exact QA report — "tapping the cross icon CLOSES the app
+      // instead of pausing the clip" — was this teardown. Leaving
+      // the media session bound is harmless: the next playFile()
+      // will reuse it; otherwise the OS reaps it when the process
+      // dies naturally. We've already published an empty
+      // playbackState above so the lock-screen notification fades
+      // away on its own.
+      if (kDebugMode) {
+        debugPrint(
+            'stopClip: standalone teardown — keeping AudioService bound to '
+            'avoid OEM activity-kill on super.stop()');
       }
     }
   }
@@ -657,12 +708,15 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     try {
       onStopRequested?.call();
     } catch (_) {}
-    try {
-      await super.stop();
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('stop: super.stop failed: $e\n$st');
-      }
+    // Do NOT call super.stop() here either — same OEM activity-kill
+    // hazard as stopClip's standalone branch. If the user toggled Active
+    // off, `_audio.exitForeground()` already published the
+    // empty/teardown playback state, so the persistent notification
+    // fades on its own. Calling super.stop() risks closing the entire
+    // app on Samsung / Vivo.
+    if (kDebugMode) {
+      debugPrint('stop: keep-alive teardown — skipping super.stop() '
+          'to avoid OEM activity-kill');
     }
   }
 

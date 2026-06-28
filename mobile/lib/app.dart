@@ -56,11 +56,31 @@ class _WhisperBackAppState extends ConsumerState<WhisperBackApp>
 
   Future<void> _refreshPermissionsAndSync() async {
     await ensureAndroidSchedulingPermissions();
-    await syncWhisperNotifications(
-      appState: ref.read(appStateRepositoryProvider),
-      schedules: ref.read(scheduleRepositoryProvider),
-      prayer: ref.read(prayerRepositoryProvider),
-    );
+    // Re-post the persistent notification IMMEDIATELY on resume and then
+    // again 500 ms later as a defensive double-tap. The QA report
+    // "notification bar becomes hidden when I open the app" was caused
+    // by some OEMs (Vivo / Xiaomi) silently dismissing the WhisperBack
+    // ongoing card during the activity transition. Re-posting on
+    // every resume is cheap (idempotent — `_plugin.show` with the
+    // same id just replaces) and guarantees the user always sees
+    // the card after switching back to the app.
+    try {
+      await syncWhisperNotifications(
+        appState: ref.read(appStateRepositoryProvider),
+        schedules: ref.read(scheduleRepositoryProvider),
+        prayer: ref.read(prayerRepositoryProvider),
+      );
+    } catch (_) {}
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    try {
+      await syncWhisperNotifications(
+        appState: ref.read(appStateRepositoryProvider),
+        schedules: ref.read(scheduleRepositoryProvider),
+        prayer: ref.read(prayerRepositoryProvider),
+      );
+    } catch (_) {}
   }
 
   Future<void> _initNotifications() async {

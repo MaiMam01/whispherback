@@ -1082,9 +1082,17 @@ class PlaybackCoordinator {
     _userInitiatedPause = false;
     // Optimistic UI flip first — the user expects the play icon to flip
     // to pause the instant they tap. We roll back below if the native
-    // call fails.
+    // call fails. CRITICAL: do NOT force `modalVisible: true`. The QA
+    // report "I tap pause, the detail popup opens, I tap resume and
+    // everything disappears" was exactly this bug — `resume` was
+    // forcing the modal open, the modal's own dismiss action then
+    // ran `dismissModal()` which set `modalVisible: false`, and the
+    // mini-player check `snapshot.modalVisible` was satisfied by
+    // the brief `true` window so it never re-attached. Preserve the
+    // user's current modal visibility instead — they keep the mini
+    // player if they were on it, or the modal if they were in it.
     final previous = _snapshot;
-    _emit(_snapshot.copyWith(isPlaying: true, modalVisible: true));
+    _emit(_snapshot.copyWith(isPlaying: true));
 
     try {
       // Library clip preview does not require the master toggle.

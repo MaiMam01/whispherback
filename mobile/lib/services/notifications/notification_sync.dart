@@ -34,12 +34,29 @@ Future<void> syncWhisperNotifications({
     final handler = whisperAudioHandler;
     final playingClip = handler.isPlayingClip;
 
-    final upcoming = ScheduleFireHelper.upcomingEvents(
-      enabled,
-      now,
-      lastFiredFor: lastFired.get,
-      limit: 4,
-    );
+    // Per-schedule next fire time, using interval-from-end math
+    // (`lastFired.completion + intervalMinutes`). We deliberately compute
+    // ONE upcoming event per schedule here — never N successive slots
+    // — because the user's interval semantics are "wait `intervalMinutes`
+    // after the previous clip FINISHES", not "fire every `intervalMinutes`
+    // on a clock grid". The latter is what `upcomingEvents` did before
+    // and it produced the QA-reported "3-minute interval shown in
+    // notification even though the playlist is 5 minutes long" bug:
+    // the clock-grid pre-computation ignored playlist duration entirely
+    // because we don't have a reliable per-clip duration estimate at
+    // notification time. Now we only commit to the SINGLE next slot
+    // (which the engine will replace after each fire completes).
+    final upcoming = <({DateTime when, String playlistName})>[];
+    for (final s in enabled) {
+      final last = lastFired.get(s.id);
+      final nextWhen = ScheduleFireHelper.nextFireTime(s, now, lastFired: last);
+      if (nextWhen == null) continue;
+      upcoming.add((
+        when: nextWhen,
+        playlistName: s.playlistName.isEmpty ? 'WhisperBack' : s.playlistName,
+      ));
+    }
+    upcoming.sort((a, b) => a.when.compareTo(b.when));
 
     String? nextUpcoming;
     String? upcomingSummary;

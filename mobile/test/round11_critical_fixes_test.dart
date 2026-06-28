@@ -138,7 +138,7 @@ void main() {
       final src = _readFile('lib/services/audio/whisper_audio_handler.dart');
       // Pin the structure: stopClip must contain multiple guarded blocks
       // around _player.stop, mediaItem.add, playbackState.add, and the
-      // keep-alive restart / super.stop branches.
+      // keep-alive restart branches.
       expect(
         src,
         contains('try {\n      await _player.stop();'),
@@ -149,16 +149,28 @@ void main() {
         contains('try {\n      mediaItem.add(null);'),
         reason: 'Guard around mediaItem.add is missing.',
       );
-      // Top-level stop override must also guard super.stop + stopClip + cbs.
+      // Top-level stop override must also guard stopClip().
       expect(
         src,
         contains('try {\n        await stopClip();'),
         reason: 'Guard around stopClip in the top-level stop is missing.',
       );
+      // Round 12 update: the stopClip standalone branch and the top-level
+      // stop override no longer call `super.stop()` at all. That call was
+      // the OEM activity-kill trigger ("clicking the cross icon CLOSES
+      // the app" on Samsung One UI / Vivo). super.stop() now only runs
+      // inside `exitForeground` (the deliberate user-toggled OFF path).
       expect(
         src,
-        contains('try {\n      await super.stop();'),
-        reason: 'Guard around super.stop in the top-level stop is missing.',
+        contains('keep-alive teardown — skipping super.stop()'),
+        reason: 'Top-level stop must explicitly skip super.stop() to avoid '
+            'the OEM activity-kill hazard.',
+      );
+      expect(
+        src,
+        contains('keeping AudioService bound to '),
+        reason: 'stopClip standalone branch must explicitly document that '
+            'it does not call super.stop().',
       );
     });
 
