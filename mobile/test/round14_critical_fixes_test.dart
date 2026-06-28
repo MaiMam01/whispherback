@@ -46,28 +46,38 @@ String _readFile(String relative) {
 }
 
 void main() {
-  group('Round 14-A — cross icon pauses (not stops) and re-tap re-shows', () {
-    test('dismissPlayer pauses the player instead of stopping it', () {
+  group('Round 14-A — cross icon hides the player without crashing the app', () {
+    test('dismissPlayer is serialised and branches on Active state', () {
       final src = _readFile('lib/services/playback/playback_coordinator.dart');
       final idx = src.indexOf('Future<void> dismissPlayer()');
       expect(idx, greaterThan(0),
           reason: 'dismissPlayer must remain on the coordinator API.');
       final body = src.substring(idx, idx + 3500);
+      // Round 18 contract: the dismiss path now branches.
+      //   Active mode → stop the clip player (which transitions
+      //     atomically into the silence keep-alive so the FG service
+      //     stays bound) — schedules keep firing in the background.
+      //   Inactive mode → pause (keeps clip position so user re-tap
+      //     resumes from where they left off) — no FG needed since
+      //     the user explicitly disabled background work.
       expect(
         body,
-        contains('await _audio.pause();'),
-        reason: 'dismissPlayer must pause — that preserves clip '
-            'position so a re-tap resumes and keeps the foreground '
-            'service bound so background scheduling can continue.',
+        contains('_serializePauseResume'),
+        reason: 'dismissPlayer must funnel through the pause/resume '
+            'gate so rapid cross/pause taps cannot have two native '
+            'player calls in flight at once.',
       );
       expect(
         body,
-        isNot(contains('await _audio.stop();')),
-        reason: 'dismissPlayer must NOT stop the audio service. '
-            'Round 13 stopped here; the user reported "re-tapping a '
-            'clip leaves the player hidden until I tap pause on the '
-            'old lock-screen card" — that was caused by tearing the '
-            'media session down underneath the resume.',
+        contains('wasActive'),
+        reason: 'dismissPlayer must check Active state to decide '
+            'whether to keep the FG service alive or release it.',
+      );
+      expect(
+        body,
+        contains('_audio.pause()'),
+        reason: 'The inactive branch must pause so the user can resume '
+            'from where they left off on the next clip tap.',
       );
     });
   });

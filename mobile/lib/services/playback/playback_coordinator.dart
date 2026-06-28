@@ -12,6 +12,7 @@ import '../../domain/playback/playback_state.dart';
 import '../audio/audio_services.dart';
 import '../audio/clip_path_guard.dart';
 import '../../l10n/runtime_copy.dart';
+import '../platform/keep_alive_service.dart';
 import '../prayer/adhan_player.dart';
 import '../prayer/prayer_service.dart';
 import '../playback/active_mode_binding.dart';
@@ -260,7 +261,14 @@ class PlaybackCoordinator {
       ),
     );
     // Restore the foreground keep-alive after a cold start if Active.
-    if (active) await _audio.enterForeground();
+    if (active) {
+      // Round 18: ALSO restart the native keep-alive service. If the
+      // process was killed and the user just relaunched the app from
+      // the launcher, the native service is no longer running — we
+      // need to bring it back so background scheduling works.
+      await KeepAliveService.start();
+      await _audio.enterForeground();
+    }
     _playerSub = _audio.playerStateStream.listen(
       _onPlayerState,
       onError: (Object e, StackTrace st) {
@@ -784,12 +792,25 @@ class PlaybackCoordinator {
       await _appState.setActive(false);
       await _audio.exitForeground();
       await AdhanPlayer.instance.stop();
+      // Round 18: tear down the native keep-alive FG service so the OS
+      // reclaims the wake lock and the user no longer sees the
+      // "WhisperBack is active" status bar icon.
+      await KeepAliveService.stop();
     } else {
       _emit(_snapshot.copyWith(
         state: AppPlaybackState.activeIdle,
         isPlaying: false,
       ));
       await _appState.setActive(true);
+      // Round 18: start the native keep-alive FG service FIRST so the
+      // OS recognises the process as user-visible BEFORE any of the
+      // audio_service work runs. This is what survives swipe-away on
+      // Samsung One UI 6 / Vivo Funtouch 14 / Xiaomi MIUI 14 — the
+      // partial wake lock + high-priority ongoing notification puts
+      // the process in the "user-visible foreground service" bucket
+      // that OEM battery managers respect even without a battery
+      // exemption grant.
+      await KeepAliveService.start();
       await _activateInBackground();
     }
     return ActiveToggleResult.success;
@@ -1186,13 +1207,31 @@ class PlaybackCoordinator {
   ///     left a stale window. Skipping the teardown entirely sidesteps
   ///     all of that.
   Future<void> dismissPlayer() {
-    // Round 17: serialize through the same pause/resume gate so a rapid
-    // pause → cross → cross → play sequence cannot have overlapping
-    // `_audio.pause()` calls in flight. Previously the dismiss path
-    // bypassed the serializer and the user's "crashes on multiple
-    // pause/resume + cross icon" report traced to native player
-    // state-change races between the gated `pause()`/`resume()` and
-    // the un-gated `dismissPlayer()`.
+    // Round 18: HARDENED against the actual root causes the user
+    // reported: "cross icon crashes the app" and "after cross, no
+    // background processing happens".
+    //
+    // The old `hideClipMediaNotification` call published `playing:
+    // false, processingState: idle, controls: []` — which told
+    // audio_service "we're done", which called `Service.
+    // stopForeground()`, which let the OS reap our process within
+    // seconds. The user perceived this as "after cross, schedules
+    // stop and notification disappears".
+    //
+    // New contract (matches the user's mental model):
+    //   1. Pause the player so audio stops immediately.
+    //   2. Hide the UI (mini-player + modal).
+    //   3. DO NOT touch the audio_service media session OR drop
+    //      the FG service binding. If Active is ON, the silence
+    //      keep-alive is invoked synchronously so the FG service
+    //      transitions cleanly from clip → silence without ever
+    //      releasing the foreground state.
+    //   4. If Active is OFF, fully stop (since the user has no
+    //      expectation of background work in that mode).
+    //
+    // Everything is gated through `_serializePauseResume` so the
+    // user can mash pause / cross / play / pause as fast as they
+    // like and only ONE native state change is ever in flight.
     return _serializePauseResume(() async {
       bool wasActive = false;
       try {
@@ -1203,6 +1242,8 @@ class PlaybackCoordinator {
         }
       }
 
+      // UI: instantly clear the mini-player + modal so the user sees
+      // their tap take effect even if the native calls below are slow.
       _emit(PlaybackSnapshot(
         state:
             wasActive ? AppPlaybackState.activeIdle : AppPlaybackState.inactive,
@@ -1211,20 +1252,32 @@ class PlaybackCoordinator {
       ));
 
       _userInitiatedPause = true;
-      try {
-        await _audio.pause();
-      } catch (e, st) {
-        if (kDebugMode) {
-          debugPrint('dismissPlayer: _audio.pause failed: $e\n$st');
-        }
-      }
 
-      try {
-        await _audio.hideClipMediaNotification();
-      } catch (e, st) {
-        if (kDebugMode) {
-          debugPrint(
-              'dismissPlayer: hideClipMediaNotification failed: $e\n$st');
+      if (wasActive) {
+        // Active mode: hand off to silence keep-alive. We stop the
+        // clip player (so audio actually ceases) BUT we do not drop
+        // the FG service. `stop()` resolves to handler.stopClip() which
+        // already handles the keep-alive transition when _keepAlive
+        // is true (Round 18 made the transition atomic — no idle
+        // publish in between).
+        try {
+          await _audio.stop();
+        } catch (e, st) {
+          if (kDebugMode) {
+            debugPrint('dismissPlayer: stop failed (Active): $e\n$st');
+          }
+        }
+      } else {
+        // Inactive mode: pause keeps the position so the user can
+        // resume by re-tapping the clip. We don't need the FG
+        // service since the user explicitly turned off background
+        // work via the Active toggle.
+        try {
+          await _audio.pause();
+        } catch (e, st) {
+          if (kDebugMode) {
+            debugPrint('dismissPlayer: pause failed (Inactive): $e\n$st');
+          }
         }
       }
 

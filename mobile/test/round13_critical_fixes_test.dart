@@ -93,31 +93,30 @@ void main() {
     });
 
     test(
-        'PlaybackCoordinator.dismissPlayer exists and pauses (not stops) the '
-        'underlying player so the FG service stays alive for background '
-        'scheduling', () {
+        'PlaybackCoordinator.dismissPlayer exists and routes through the '
+        'pause/resume serializer for crash safety', () {
       final src =
           _readFile('lib/services/playback/playback_coordinator.dart');
       final dismissIdx = src.indexOf('Future<void> dismissPlayer()');
       expect(dismissIdx, greaterThan(0),
           reason: 'dismissPlayer method is missing from the coordinator.');
       final body = src.substring(dismissIdx, dismissIdx + 3500);
-      // Round 14 contract: dismiss = pause + hide (not stop + hide).
-      // Stop tore down the FG service and confused the resume flow.
+      // Round 18 contract: branch on wasActive so the FG service stays
+      // alive in Active mode (clip→silence atomic handoff via stop()
+      // when keep-alive is set) and the process is fully released in
+      // Inactive mode (pause keeps clip position for resume).
       expect(
         body,
-        contains('await _audio.pause();'),
-        reason: 'dismissPlayer must call _audio.pause so the clip is '
-            'paused and resumable. Calling _audio.stop tears down the '
-            'media session, which then breaks both the resume flow and '
-            'the background FG service.',
+        contains('_audio.pause()'),
+        reason: 'dismissPlayer inactive branch must pause the player '
+            'so clip position is preserved.',
       );
       expect(
         body,
-        isNot(contains('await _audio.stop();')),
-        reason: 'dismissPlayer must NOT stop — that was the Round 13 '
-            'bug where re-tapping a clip left it hidden because the '
-            'media session had been torn down underneath.',
+        contains('_serializePauseResume'),
+        reason: 'dismissPlayer must funnel through the same gate as '
+            'pause/resume so rapid cross/pause taps cannot race '
+            'overlapping native player calls.',
       );
       expect(
         body,

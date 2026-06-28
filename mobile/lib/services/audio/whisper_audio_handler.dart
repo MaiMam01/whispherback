@@ -601,6 +601,41 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     // `_safeCall`, where the global zone handler still couldn't
     // prevent a UI lockup if the throw came inside a synchronous
     // event-bus emission. Now nothing here can ever escape.
+    // Round 18: when keep-alive is enabled, transition straight from
+    // the clip player to the silence loop WITHOUT publishing an idle
+    // playbackState in between. The old order (stop player → publish
+    // idle → start silence) gave audio_service a window (~50-200ms
+    // on slow Samsung firmware) to call `Service.stopForeground()`
+    // because it saw `playing: false`. The user's "after cross icon
+    // no background processing happens" trace was this exact gap —
+    // the silence loop didn't restart in time. Now we either go
+    // clip → silence atomically (Active ON) or clip → fully idle
+    // (Active OFF).
+    if (_keepAlive) {
+      // Stop the clip player but DO NOT publish playing:false. The
+      // next playbackState publish (inside _startIdleKeepAlive) is
+      // `playing: true` which keeps the FG service bound throughout.
+      try {
+        await _player.stop();
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('stopClip: _player.stop failed (keep-alive): $e\n$st');
+        }
+      }
+      try {
+        onClipSessionChanged?.call();
+      } catch (_) {}
+      _standalonePlayback = false;
+      try {
+        await _startIdleKeepAlive();
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('stopClip: keep-alive restart failed: $e\n$st');
+        }
+      }
+      return;
+    }
+
     try {
       await _player.stop();
     } catch (e, st) {
@@ -628,18 +663,6 @@ class WhisperAudioHandler extends BaseAudioHandler with SeekHandler {
     try {
       onClipSessionChanged?.call();
     } catch (_) {}
-
-    if (_keepAlive) {
-      _standalonePlayback = false;
-      try {
-        await _startIdleKeepAlive();
-      } catch (e, st) {
-        if (kDebugMode) {
-          debugPrint('stopClip: keep-alive restart failed: $e\n$st');
-        }
-      }
-      return;
-    }
 
     if (_standalonePlayback) {
       _standalonePlayback = false;

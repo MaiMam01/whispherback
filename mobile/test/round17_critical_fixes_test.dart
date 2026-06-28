@@ -180,7 +180,10 @@ void main() {
       final src = _readFile('lib/services/playback/playback_coordinator.dart');
       final dismissIdx = src.indexOf('Future<void> dismissPlayer()');
       expect(dismissIdx, greaterThan(0));
-      final body = src.substring(dismissIdx, dismissIdx + 600);
+      // Round 18: dismiss body grew significantly (branch + atomic
+      // hand-off) — search for the serializer call anywhere in the
+      // body, not just the first 600 chars.
+      final body = src.substring(dismissIdx, dismissIdx + 4000);
       expect(
         body,
         contains('_serializePauseResume('),

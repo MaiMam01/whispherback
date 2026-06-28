@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <!-- Android 14+: separate FG type for our process-keep-alive service so
+         the OS doesn't reject it as a duplicate of audio_service's
+         mediaPlayback service. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <!-- Scheduled alarm notifications (fire when app is closed) -->
@@ -59,6 +63,24 @@
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
+        </service>
+
+        <!-- WhisperBack native keep-alive service: holds a partial wake lock
+             and a high-priority ongoing notification so the OS process
+             survives swipe-away and aggressive OEM battery managers
+             (Samsung One UI / Vivo Funtouch / Xiaomi MIUI). This is
+             SEPARATE from audio_service's mediaPlayback FG service and
+             uses the `specialUse` FG type on Android 14+ to comply with
+             the OS's "one service per FG type" rule. -->
+        <service
+            android:name=".WhisperKeepAliveService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps WhisperBack alive so scheduled whispers play in the background." />
         </service>
         <receiver
             android:name="com.ryanheise.audioservice.MediaButtonReceiver"
