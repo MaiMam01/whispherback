@@ -394,6 +394,7 @@ The Round 21 → Round 22 split-brain problem (Dart and native each thought they
 | Steady-state AlarmManager binder call rate is < 1 call/minute (was ~800/minute pre-Round-23) | YES — `applySnapshot` fingerprint guard skips re-registration when nothing changed |
 | Native fire correctly advances `ScheduleLastFiredStore` so the notification card's "next at" line updates immediately after playback ends | YES — `_onNativePlaybackState(idle)` stamps `setCompletion` + triggers `refreshScheduleNotifications` |
 | Existing Round 21 / 22 regression tests still pass after Round 23 | YES — 288 fires per schedule required updating the native `MAX_ALARMS = 400` matcher; no other regressions |
+| GitHub Actions CI test job succeeds after `sqlite3 3.3.2` hash-mismatch fix | YES — pinned `sqlite3: ^3.3.3` (resolves to 3.3.4) as a direct dep so we control the version explicitly + added `hooks.user_defines.sqlite3.source: system` in `pubspec.yaml` so the build hook uses the OS-provided libsqlite3 instead of downloading the pinned binary (belt-and-suspenders against future upstream hash mismatches). The Round 22 CI failure `"Bad state: Hash of downloaded file libsqlite3.x64.linux.so is de78a2a1… , expected 9b1c8c24…"` is fixed at the root and will not regress even if a future 3.3.x reintroduces the bug |
 
 ### Round 22 — scheduled clip uses MEDIA volume (was alarm), notification pause/stop actually stops it, mini-player lights up when a schedule fires (post-Round 21 QA escalation)
 

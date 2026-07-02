@@ -47,6 +47,18 @@ dependencies:
   flutter_svg: ^2.0.17
   flutter_lucide: ^1.11.0
   sqflite_common_ffi: ^2.3.4
+  # Round 23 — pin `sqlite3` explicitly to 3.3.3+. Version 3.3.2's
+  # build hook pinned a sha256 for `libsqlite3.x64.linux.so` that no
+  # longer matched the binary served from the GitHub release (upstream
+  # bug — the file was re-uploaded but the pinned hash was not
+  # updated). This reproduced on every GitHub Actions Linux runner as:
+  #   "Bad state: Hash of downloaded file libsqlite3.x64.linux.so is
+  #    de78a2a1… , expected 9b1c8c24…"
+  # 3.3.3+ ships fresh, matching hashes; `^3.3.3` currently resolves to
+  # 3.3.4 which is what CI now uses. We keep it as a top-level dep
+  # (was transitive via sqflite_common_ffi) so we control the version
+  # explicitly and CI never regresses back to 3.3.2 automatically.
+  sqlite3: ^3.3.3
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +72,25 @@ dev_dependencies:
 dependency_overrides:
   # record 5.x pulls record_linux 0.7.x which breaks Windows/desktop builds
   record_linux: ^1.2.2
+
+# Round 23 — belt-and-suspenders defence against upstream `sqlite3`
+# hash-mismatch bugs (see the `sqlite3: ^3.3.3` note above). Telling
+# the sqlite3 build hook to `source: system` skips the binary download
+# entirely and uses the OS-provided libsqlite3 instead. This ONLY
+# affects host builds (CI test runs, Windows/Linux/macOS desktop) —
+# on Android and iOS the sqflite plugin bundles its own SQLite via
+# the platform channel and this hook config is a no-op.
+#
+# GitHub Actions `ubuntu-latest` runners ship with libsqlite3 in
+# /usr/lib, so `dlopen("libsqlite3.so")` resolves without a package
+# install. Local Windows/macOS developer machines fall back to the
+# bundled binary if the system lookup fails (which for us it won't,
+# since tests run on Linux CI and Windows dev boxes have SQLite via
+# `sqflite_common_ffi`'s own bundled fallback).
+hooks:
+  user_defines:
+    sqlite3:
+      source: system
 
 flutter:
   uses-material-design: true
