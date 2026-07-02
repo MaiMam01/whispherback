@@ -309,15 +309,11 @@ class PlaybackCoordinator {
     startModeMonitoring();
   }
 
-  /// Wall-clock at which the current native scheduled clip started
-  /// playing. Used on native-completion (state=idle) to stamp
-  /// `ScheduleLastFiredStore.setCompletion` so the Dart engine's next
-  /// tick — and the notification-card projection — advance to the
-  /// slot AFTER the one native just handled instead of firing it again.
-  DateTime? _nativeSlotStartedAt;
-
   /// Schedule id native is currently playing. Cached so the idle
-  /// transition can stamp the completion into the right store bucket.
+  /// transition can stamp the completion into the right store bucket
+  /// even when the idle callback arrives with `scheduleId=null` (which
+  /// happens after `stopSelfSafely` clears the fields between the state
+  /// write and the notification broadcast).
   String? _nativeActiveScheduleId;
 
   /// Mirrors a native-playback transition into the UI snapshot so the
@@ -356,7 +352,6 @@ class PlaybackCoordinator {
         // The Dart engine reads this store on its next tick and skips
         // any slot with a fresh stamp, so the double-fire race is closed.
         final startedAt = DateTime.now();
-        _nativeSlotStartedAt = startedAt;
         _nativeActiveScheduleId = native.scheduleId;
         _stampNativeFireStart(native.scheduleId, startedAt);
         _emit(_snapshot.copyWith(
@@ -383,12 +378,11 @@ class PlaybackCoordinator {
         // Round 23 — stamp actual completion so `next = completion +
         // interval` computes correctly, then rebuild the alarm table so
         // the tail stays populated. Without the refresh, if the user
-        // has 96 fires registered and the app runs in the background
-        // for weeks, the tail dries up around fire #96.
+        // has 288 fires registered and the app runs in the background
+        // for weeks, the tail eventually dries up.
         final endedAt = DateTime.now();
-        final scheduleId = _nativeActiveScheduleId;
+        final scheduleId = _nativeActiveScheduleId ?? native.scheduleId;
         _nativeActiveScheduleId = null;
-        _nativeSlotStartedAt = null;
         _stampNativeFireCompletion(scheduleId, endedAt);
         // Don't blow away the snapshot if the Dart side has since started
         // its own clip (e.g. user tapped Play); we only roll back our own
